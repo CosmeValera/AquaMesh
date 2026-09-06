@@ -10,9 +10,13 @@ const PAGE_TEXT = 'Each session burns tokens in two places.'
 const Host = ({
   enabled = true,
   onAskAi,
+  onGrowPage,
+  growPageCreditCost,
 }: {
   enabled?: boolean
   onAskAi?: (question: string) => void
+  onGrowPage?: (selection: string) => void
+  growPageCreditCost?: number
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
 
@@ -27,6 +31,8 @@ const Host = ({
         enabled={enabled}
         contextLabel="Token budgets"
         onAskAi={onAskAi}
+        onGrowPage={onGrowPage}
+        growPageCreditCost={growPageCreditCost}
       />
     </div>
   )
@@ -79,11 +85,35 @@ describe('TextSelectionActionBar', () => {
     render(<Host />)
     await showActionBar()
 
-    expect(screen.getByRole('button', { name: 'Highlight' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: 'Highlight' }),
+    ).toBeInTheDocument()
     expect(
       screen.getByRole('button', { name: 'Send to AI Chat' }),
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Copy' })).toBeInTheDocument()
+    // Growing a page is offered only where a guide can actually take one.
+    expect(
+      screen.queryByTestId('text-selection-grow-page'),
+    ).not.toBeInTheDocument()
+  })
+
+  it('turns the selected text into the seed for a new page', async () => {
+    const onGrowPage = vi.fn()
+    render(<Host onGrowPage={onGrowPage} growPageCreditCost={1} />)
+    await showActionBar()
+
+    const growPage = screen.getByRole('button', {
+      name: 'Dig into this (1)',
+    })
+    fireEvent.click(growPage)
+
+    expect(onGrowPage).toHaveBeenCalledWith('burns tokens')
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId('text-selection-action-bar'),
+      ).not.toBeInTheDocument(),
+    )
   })
 
   it('stays hidden while the page is being edited', async () => {
@@ -172,7 +202,9 @@ describe('TextSelectionActionBar', () => {
 
     expect(writeText).toHaveBeenCalledWith('burns tokens')
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument(),
+      expect(
+        screen.getByRole('button', { name: 'Copied' }),
+      ).toBeInTheDocument(),
     )
   })
 })

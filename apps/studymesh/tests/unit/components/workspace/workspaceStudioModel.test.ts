@@ -14,7 +14,7 @@ describe('workspaceStudioModel Quick Create', () => {
     expect(quickCreateLabels).toMatchObject({
       quiz: 'Quiz',
       flashcards: 'Flashcards',
-      improvedNotes: 'Expand on this',
+      podcast: 'Podcast',
     })
   })
 })

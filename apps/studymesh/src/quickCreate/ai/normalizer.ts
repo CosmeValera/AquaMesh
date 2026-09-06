@@ -298,11 +298,7 @@ export interface AiQuickCreateDraft {
   debugTrace?: AiGenerationDebugTrace
 }
 
-export type StudyMaterialResourceType =
-  | 'improvedNotes'
-  | 'flashcards'
-  | 'quiz'
-  | 'podcast'
+export type StudyMaterialResourceType = 'flashcards' | 'quiz' | 'podcast'
 export type StudyMaterialDetailLevel = 'short' | 'medium' | 'long'
 
 export interface NormalizeAiQuickCreateDraftOptions {
@@ -313,102 +309,18 @@ export interface NormalizeAiQuickCreateDraftOptions {
   detailLevel?: StudyMaterialDetailLevel
 }
 
-const markdownFromImprovedNotesDraft = (
-  draft: AiQuickCreateDraft,
-  fallbackTitle: string,
-): string => {
-  const parts: string[] = []
-  const contract = draft.strictContract
-
-  if (contract) {
-    parts.push(`# ${fallbackTitle}`)
-    if (contract.sourceSummary.bullets.length > 0) {
-      parts.push(
-        `## ${contract.sourceSummary.title}\n${contract.sourceSummary.bullets
-          .map((bullet) => `- ${bullet}`)
-          .join('\n')}`,
-      )
-    }
-
-    contract.conceptRecap.sections.forEach((section) => {
-      parts.push(
-        [
-          `## ${section.title}`,
-          ...section.bullets.map((bullet) => `- ${bullet}`),
-          section.example ? `Example: ${section.example}` : '',
-        ]
-          .filter(Boolean)
-          .join('\n'),
-      )
-    })
-  }
-
-  if (parts.length === 0 && draft.sourceSummary?.bullets.length) {
-    parts.push(
-      `# ${
-        draft.sourceSummary.title || fallbackTitle
-      }\n${draft.sourceSummary.bullets
-        .map((bullet) => `- ${bullet}`)
-        .join('\n')}`,
-    )
-  }
-
-  if (!contract) {
-    draft.objects.forEach((object) => {
-      if (object.kind === 'markdown') {
-        parts.push(object.markdown)
-      } else if (object.kind === 'note') {
-        parts.push(`## ${object.title || 'Note'}\n${object.body}`)
-      } else if (object.kind === 'list') {
-        parts.push(
-          `## ${object.title || 'Key points'}\n${object.items
-            .map((item) => `- ${item}`)
-            .join('\n')}`,
-        )
-      } else if (object.kind === 'term') {
-        parts.push(`## ${object.term}\n${object.definition}`)
-      }
-    })
-  }
-
-  if (parts.length === 0 && draft.rawNotes) {
-    parts.push(`# ${fallbackTitle}\n${draft.rawNotes}`)
-  }
-
-  return parts
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .join('\n\n')
-}
-
 export const applyStudyMaterialResourceTypeToDraft = (
   draft: AiQuickCreateDraft,
-  packId: string,
   resourceType?: StudyMaterialResourceType,
 ): AiQuickCreateDraft => {
   if (!resourceType) {
     return draft
   }
 
-  const title = draft.title || 'Notes Dashboard'
   const warnings = [...draft.warnings]
   let objects: StudyObject[] = []
 
-  if (resourceType === 'improvedNotes') {
-    const markdown = markdownFromImprovedNotesDraft(draft, title)
-    objects = markdown
-      ? [
-          {
-            id: `${packId}-improved-notes-1`,
-            kind: 'markdown',
-            title: 'Expand on this',
-            sourceLine: 1,
-            tags: ['quick-create', 'ai-generated', 'improved-notes'],
-            markdown,
-          },
-        ]
-      : []
-  } else if (resourceType === 'flashcards') {
+  if (resourceType === 'flashcards') {
     objects = draft.objects.filter(
       (object) => object.kind === 'qa' || object.kind === 'reveal',
     )
@@ -421,18 +333,7 @@ export const applyStudyMaterialResourceTypeToDraft = (
     return draft
   }
 
-  const hasFilteredContent =
-    resourceType === 'improvedNotes'
-      ? draft.objects.some(
-          (object) =>
-            object.kind !== 'markdown' &&
-            object.kind !== 'note' &&
-            object.kind !== 'list' &&
-            object.kind !== 'term',
-        )
-      : draft.objects.length !== objects.length
-
-  if (hasFilteredContent) {
+  if (draft.objects.length !== objects.length) {
     warnings.push('Filtered generated content to the selected resource type.')
   }
 

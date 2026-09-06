@@ -4,9 +4,12 @@ import {
   appendStudyGuideMarkdownPage,
   deleteStudyGuidePage,
   getStudyGuideCreationSourceText,
+  getStudyGuidePageDepths,
   getStudyGuidePageMarkdown,
+  getStudyGuidePageNumberLabels,
   reorderStudyGuidePage,
   stripDuplicateStudyGuideMarkdownTitle,
+  STUDY_GUIDE_PAGE_MAX_DEPTH,
 } from '../../../src/studyGuides/pages'
 import {
   buildStudyGuideKnowledgeBridgeBlocksPrompt,
@@ -247,7 +250,9 @@ describe('Study Guide Quick Start helpers', () => {
 
     expect(prompt).toContain('"keyIdea"')
     expect(prompt).toContain('"quickSummary"')
-    expect(prompt).toContain('Explain this through what the learner already knows')
+    expect(prompt).toContain(
+      'Explain this through what the learner already knows',
+    )
     expect(prompt).toContain('Specific related concept')
     expect(prompt).toContain('Bridge strength: strong')
     expect(prompt).toContain('Use these mapped pairs')
@@ -720,5 +725,139 @@ describe('Study Guide page management', () => {
     const deleted = deleteStudyGuidePage(makeStudyPath(), 'manual')
 
     expect(deleted.dashboards[deleted.selectedIndex].dashboardKey).toBe('quiz')
+  })
+})
+
+describe('Study Guide page tree', () => {
+  const makeGuide = (): StudyPathContainerState => ({
+    pathId: 'guide-1',
+    title: 'Sleep',
+    folderName: 'Sleep',
+    selectedIndex: 0,
+    pinnedDashboardKeys: [],
+    dashboards: [1, 2, 3].map((number) => ({
+      ...makePage(`Lesson ${number}`, `Lesson ${number} notes`, 'generator'),
+      dashboardKey: `page-${number}`,
+      dashboardIndex: number,
+      dashboardCount: 3,
+      folderName: 'Sleep',
+      deletable: false,
+    })),
+  })
+
+  const dug = (
+    studyPath: StudyPathContainerState,
+    parentPageKey: string,
+    title: string,
+  ) =>
+    appendStudyGuideMarkdownPage(studyPath, {
+      title,
+      markdown: `Notes about ${title}.`,
+      source: 'expanded',
+      parentPageKey,
+    })
+
+  it('appends a continuation last and digs a fragment page in behind its source', () => {
+    const continued = appendStudyGuideMarkdownPage(makeGuide(), {
+      title: 'Lesson 4',
+      markdown: 'The next lesson.',
+      source: 'expanded',
+    })
+
+    expect(continued.dashboards.map((page) => page.name)).toEqual([
+      'Lesson 1',
+      'Lesson 2',
+      'Lesson 3',
+      'Lesson 4',
+    ])
+    expect(continued.dashboards[3].parentPageKey).toBeUndefined()
+
+    const grown = dug(continued, 'page-2', 'Why REM matters')
+
+    expect(grown.dashboards.map((page) => page.name)).toEqual([
+      'Lesson 1',
+      'Lesson 2',
+      'Why REM matters',
+      'Lesson 3',
+      'Lesson 4',
+    ])
+    expect(grown.dashboards[2].parentPageKey).toBe('page-2')
+    expect(grown.selectedIndex).toBe(2)
+  })
+
+  it('numbers root pages as before and a dug-out page under its parent', () => {
+    const grown = dug(makeGuide(), 'page-2', 'Why REM matters')
+    const deeper = dug(
+      grown,
+      grown.dashboards[2].dashboardKey,
+      'Sleep spindles',
+    )
+    const labels = getStudyGuidePageNumberLabels(deeper)
+
+    expect(
+      deeper.dashboards.map((page) => labels.get(page.dashboardKey)),
+    ).toEqual(['01', '02', '02.1', '02.1.1', '03'])
+  })
+
+  it('refuses to nest past the depth cap', () => {
+    let guide = dug(makeGuide(), 'page-1', 'Level 1')
+    for (let level = 2; level <= STUDY_GUIDE_PAGE_MAX_DEPTH + 1; level += 1) {
+      const deepest = guide.dashboards[level - 1]
+      guide = dug(guide, deepest.dashboardKey, `Level ${level}`)
+    }
+
+    const depths = getStudyGuidePageDepths(guide)
+    const overDeep = guide.dashboards.find(
+      (page) => page.name === `Level ${STUDY_GUIDE_PAGE_MAX_DEPTH + 1}`,
+    )
+
+    expect(Math.max(...depths.values())).toBe(STUDY_GUIDE_PAGE_MAX_DEPTH)
+    expect(overDeep?.parentPageKey).toBeUndefined()
+  })
+
+  it('moves a whole branch when its top page is dragged', () => {
+    const grown = dug(makeGuide(), 'page-1', 'Why REM matters')
+    const moved = reorderStudyGuidePage(grown, 0, 3)
+
+    expect(moved.dashboards.map((page) => page.name)).toEqual([
+      'Lesson 2',
+      'Lesson 3',
+      'Lesson 1',
+      'Why REM matters',
+    ])
+    expect(moved.dashboards[3].parentPageKey).toBe('page-1')
+  })
+
+  it('promotes a dug-out page instead of deleting it with its parent', () => {
+    const guide = dug(
+      {
+        ...makeGuide(),
+        dashboards: makeGuide().dashboards.map((page) => ({
+          ...page,
+          deletable: true,
+        })),
+      },
+      'page-2',
+      'Why REM matters',
+    )
+    const deleted = deleteStudyGuidePage(guide, 'page-2')
+    const labels = getStudyGuidePageNumberLabels(deleted)
+
+    expect(deleted.dashboards.map((page) => page.name)).toEqual([
+      'Lesson 1',
+      'Why REM matters',
+      'Lesson 3',
+    ])
+    expect(deleted.dashboards[1].parentPageKey).toBeUndefined()
+    expect(
+      deleted.dashboards.map((page) => labels.get(page.dashboardKey)),
+    ).toEqual(['01', '02', '03'])
+  })
+
+  it('feeds grown pages back into the source text so a later page cannot repeat them', () => {
+    const grown = dug(makeGuide(), 'page-2', 'Why REM matters')
+    const source = getStudyGuideCreationSourceText(grown)
+
+    expect(source).toContain('Why REM matters')
   })
 })

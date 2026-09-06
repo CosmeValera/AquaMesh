@@ -5,13 +5,20 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { Divider, GlobalStyles, IconButton, Paper, Tooltip } from '@mui/material'
+import {
+  Divider,
+  GlobalStyles,
+  IconButton,
+  Paper,
+  Tooltip,
+} from '@mui/material'
 import { alpha, type Theme } from '@mui/material/styles'
 import BorderColorOutlinedIcon from '@mui/icons-material/BorderColorOutlined'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import CheckIcon from '@mui/icons-material/Check'
 import ContentCopyOutlinedIcon from '@mui/icons-material/ContentCopyOutlined'
 import FormatColorResetOutlinedIcon from '@mui/icons-material/FormatColorResetOutlined'
+import NoteAddOutlinedIcon from '@mui/icons-material/NoteAddOutlined'
 
 import { useInterfaceText } from '../../language/interfaceLanguage'
 import { PREFILL_DASHBOARD_CHAT_EVENT } from './workspaceEvents'
@@ -47,6 +54,9 @@ interface TextSelectionActionBarProps {
   enabled?: boolean
   contextLabel?: string | null
   onAskAi?: (question: string) => void
+  /** Absent when the page cannot be dug into, which hides the action. */
+  onGrowPage?: (selection: string) => void
+  growPageCreditCost?: number
 }
 
 const highlightPaintStyles = (theme: Theme) => ({
@@ -92,7 +102,10 @@ const barIconButtonSx = (active: boolean) => (theme: Theme) => {
 
 // A selection dragged past the last paragraph can end outside the page
 // container, so accept anything that still covers part of it.
-const rangeTouchesContainer = (range: Range, container: HTMLElement): boolean => {
+const rangeTouchesContainer = (
+  range: Range,
+  container: HTMLElement,
+): boolean => {
   if (container.contains(range.commonAncestorContainer)) {
     return true
   }
@@ -127,6 +140,8 @@ const TextSelectionActionBar: React.FC<TextSelectionActionBarProps> = ({
   enabled = true,
   contextLabel,
   onAskAi,
+  onGrowPage,
+  growPageCreditCost,
 }) => {
   const { t } = useInterfaceText()
   const barRef = useRef<HTMLDivElement | null>(null)
@@ -136,9 +151,8 @@ const TextSelectionActionBar: React.FC<TextSelectionActionBarProps> = ({
   const repaintFrameRef = useRef<number | null>(null)
   const copiedTimeoutRef = useRef<number | null>(null)
   const [highlights, setHighlights] = useState<StoredTextHighlight[]>([])
-  const [activeSelection, setActiveSelection] = useState<ActiveSelection | null>(
-    null,
-  )
+  const [activeSelection, setActiveSelection] =
+    useState<ActiveSelection | null>(null)
   const [copied, setCopied] = useState(false)
 
   const highlightsRef = useRef(highlights)
@@ -263,7 +277,11 @@ const TextSelectionActionBar: React.FC<TextSelectionActionBarProps> = ({
     }
 
     const isInsideBar = (target: EventTarget | null): boolean =>
-      Boolean(barRef.current && target instanceof Node && barRef.current.contains(target))
+      Boolean(
+        barRef.current &&
+          target instanceof Node &&
+          barRef.current.contains(target),
+      )
 
     const handlePointerDown = (event: Event) => {
       if (isInsideBar(event.target)) {
@@ -347,13 +365,22 @@ const TextSelectionActionBar: React.FC<TextSelectionActionBarProps> = ({
     const width = bar.offsetWidth
     const height = bar.offsetHeight
     const minLeft = BAR_MARGIN + width / 2
-    const maxLeft = Math.max(minLeft, window.innerWidth - width / 2 - BAR_MARGIN)
-    const left = Math.min(Math.max(rect.left + rect.width / 2, minLeft), maxLeft)
+    const maxLeft = Math.max(
+      minLeft,
+      window.innerWidth - width / 2 - BAR_MARGIN,
+    )
+    const left = Math.min(
+      Math.max(rect.left + rect.width / 2, minLeft),
+      maxLeft,
+    )
     const above = rect.top - height - BAR_MARGIN
     const top =
       above >= BAR_MARGIN
         ? above
-        : Math.min(rect.bottom + BAR_MARGIN, window.innerHeight - height - BAR_MARGIN)
+        : Math.min(
+            rect.bottom + BAR_MARGIN,
+            window.innerHeight - height - BAR_MARGIN,
+          )
 
     bar.style.left = `${Math.round(left)}px`
     bar.style.top = `${Math.round(Math.max(top, BAR_MARGIN))}px`
@@ -447,6 +474,19 @@ const TextSelectionActionBar: React.FC<TextSelectionActionBarProps> = ({
     dropSelection()
   }
 
+  const handleGrowPage = () => {
+    if (!activeSelection || !onGrowPage) {
+      return
+    }
+
+    onGrowPage(activeSelection.text)
+    dropSelection()
+  }
+
+  const growPageLabel =
+    growPageCreditCost && growPageCreditCost > 0
+      ? `${t('selection.growPage')} (${growPageCreditCost})`
+      : t('selection.growPage')
   const isHighlighted = Boolean(activeSelection?.overlappingIds.length)
   const highlightLabel = isHighlighted
     ? t('selection.removeHighlight')
@@ -505,6 +545,19 @@ const TextSelectionActionBar: React.FC<TextSelectionActionBarProps> = ({
               <ChatBubbleOutlineIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+          {onGrowPage ? (
+            <Tooltip title={growPageLabel}>
+              <IconButton
+                size="small"
+                aria-label={growPageLabel}
+                data-testid="text-selection-grow-page"
+                onClick={handleGrowPage}
+                sx={barIconButtonSx(false)}
+              >
+                <NoteAddOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : null}
           <Divider flexItem orientation="vertical" sx={{ my: 0.75 }} />
           <Tooltip title={copyLabel}>
             <IconButton

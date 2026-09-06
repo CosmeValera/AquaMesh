@@ -23,13 +23,21 @@ import {
   sanitizeStudyGuideBridgeCorrespondences,
   sanitizeStudyGuideLearnedSkillOptions,
   sanitizeStudyGuideNextIdeas,
+  sanitizeStudyGuidePageIdeas,
+  sanitizeStudyGuidePlannedLessons,
   type StudyGuideNextIdea,
+  type StudyGuidePageIdea,
+  type StudyGuidePlannedLesson,
   STUDY_GUIDE_BRIDGE_CORRESPONDENCE_SCHEMA,
   STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES,
   STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_SCHEMA,
   STUDY_GUIDE_LEARNED_SKILL_FIELD_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
+  STUDY_GUIDE_PAGE_IDEAS_INSTRUCTION,
+  STUDY_GUIDE_PAGE_IDEAS_SCHEMA,
+  STUDY_GUIDE_PLANNED_LESSONS_INSTRUCTION,
+  STUDY_GUIDE_PLANNED_LESSONS_SCHEMA,
   trimTitleToWordBoundary,
   trimToCompleteSentenceWithinChars,
 } from "../apps/studymesh/src/studyGuides/quickStart";
@@ -135,6 +143,8 @@ interface EnhancedStudyGuidePage {
   title: string;
   summary: string;
   rawNotes: string;
+  /** Follow-up pages offered from this page, generated with the guide. */
+  pageIdeas?: StudyGuidePageIdea[];
 }
 
 interface EnhancedStudyGuideQuizQuestion {
@@ -148,6 +158,9 @@ interface EnhancedStudyGuideQuizQuestion {
 const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
   "study-guide": 3,
   "quick-create": 1,
+  // One more page inside a guide the reader already paid for. Its own surface
+  // rather than 'quick-create' so the price can move without a migration.
+  "study-page": 1,
   chat: 1,
   // Follow-up model calls inside one chat message (answer, list repair).
   // The single chat credit is charged upfront by the planner call.
@@ -211,6 +224,7 @@ const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const VALID_SURFACES = new Set<HostedAiSurface>([
   "study-guide",
   "quick-create",
+  "study-page",
   "chat",
   "chat-followup",
   "podcast",
@@ -511,16 +525,16 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
     typeof statusSource.studyCredits === "number"
       ? statusSource.studyCredits
       : typeof statusSource.study_credits === "number"
-      ? statusSource.study_credits
-      : typeof statusSource.study_credit_balance === "number"
-      ? statusSource.study_credit_balance
-      : 0;
+        ? statusSource.study_credits
+        : typeof statusSource.study_credit_balance === "number"
+          ? statusSource.study_credit_balance
+          : 0;
   const nextDailyRefillAt =
     typeof statusSource.nextDailyRefillAt === "string"
       ? statusSource.nextDailyRefillAt
       : typeof statusSource.next_daily_refill_at === "string"
-      ? statusSource.next_daily_refill_at
-      : undefined;
+        ? statusSource.next_daily_refill_at
+        : undefined;
 
   return {
     available:
@@ -531,14 +545,14 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
       typeof statusSource.accountReady === "boolean"
         ? statusSource.accountReady
         : typeof statusSource.account_ready === "boolean"
-        ? statusSource.account_ready
-        : true,
+          ? statusSource.account_ready
+          : true,
     introSeen:
       typeof statusSource.introSeen === "boolean"
         ? statusSource.introSeen
         : typeof statusSource.intro_seen === "boolean"
-        ? statusSource.intro_seen
-        : false,
+          ? statusSource.intro_seen
+          : false,
     studyCredits,
     initialFreeCredits:
       typeof statusSource.initialFreeCredits === "number"
@@ -548,8 +562,8 @@ const normalizeStatus = (value: unknown): HostedAiStatus => {
       typeof statusSource.dailyFreeCreditFloor === "number"
         ? statusSource.dailyFreeCreditFloor
         : typeof statusSource.daily_free_credit_floor === "number"
-        ? statusSource.daily_free_credit_floor
-        : HOSTED_AI_DAILY_FREE_CREDIT_FLOOR,
+          ? statusSource.daily_free_credit_floor
+          : HOSTED_AI_DAILY_FREE_CREDIT_FLOOR,
     nextDailyRefillAt,
     costs: HOSTED_AI_CREDIT_COSTS,
     message:
@@ -634,6 +648,10 @@ export const getStageForSurface = (surface: HostedAiSurface): HostedAiStage => {
 
   if (surface === "quick-create") {
     return "quick_create";
+  }
+
+  if (surface === "study-page") {
+    return "study_guide_page_expand";
   }
 
   if (surface === "podcast") {
@@ -780,10 +798,13 @@ const normalizeEnhancedPage = (
     throw error;
   }
 
+  const pageIdeas = sanitizeStudyGuidePageIdeas(record.pageIdeas);
+
   return {
     title: stringValue(record.title) || fallbackTitle,
     summary: stringValue(record.summary) || `${fallbackTitle} lesson notes.`,
     rawNotes,
+    pageIdeas: pageIdeas.length ? pageIdeas : undefined,
   };
 };
 
@@ -974,26 +995,33 @@ const createQuizPractice = (questions: EnhancedStudyGuideQuizQuestion[]) => ({
   })),
 });
 
+// plannedLessons and pageIdeas ride inside this JSON rather than over a
+// transport callback: the client already parses this text, so the growth
+// offers arrive with the guide and cost no extra call.
 const buildEnhancedStudyGuideText = ({
   blueprint,
   pages,
   questions,
   quickStart,
+  plannedLessons,
 }: {
   blueprint: EnhancedStudyGuideBlueprint;
   pages: EnhancedStudyGuidePage[];
   questions: EnhancedStudyGuideQuizQuestion[];
   quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]>;
+  plannedLessons?: StudyGuidePlannedLesson[];
 }): string =>
   JSON.stringify({
     title: blueprint.title,
     folderName: blueprint.folderName,
     emoji: blueprint.emoji,
     quickStart,
+    plannedLessons: plannedLessons?.length ? plannedLessons : undefined,
     dashboards: pages.map((page, index) => ({
       title: page.title,
       summary: page.summary,
       rawNotes: page.rawNotes,
+      pageIdeas: page.pageIdeas,
       dashboardPurpose: index === pages.length - 1 ? "finalReview" : "lesson",
       practiceType: index === pages.length - 1 ? "quiz" : "none",
       layoutReason:
@@ -1085,8 +1113,8 @@ const extractChatCompletionText = (payload: ChatCompletionResponse): string => {
   return typeof content === "string"
     ? content
     : Array.isArray(content)
-    ? content.map((part) => part.text || "").join("")
-    : payload.choices?.[0]?.text || "";
+      ? content.map((part) => part.text || "").join("")
+      : payload.choices?.[0]?.text || "";
 };
 
 const extractResponsesApiText = (payload: ChatCompletionResponse): string =>
@@ -1710,20 +1738,20 @@ export const buildPodcastScriptPrompt = ({
     "If the source is thin, still create the best concise recap from available content without adding outside facts.",
     "This script is read aloud by text-to-speech, so write every turn to be heard, not read.",
     "Do not use emojis or decorative symbols.",
-    "Never leave symbols as symbols. Say arrows, ampersands, and similar marks as words in the podcast's language, for example \"leads to\" for an arrow and \"and\" for an ampersand.",
-    "Express math in spoken words instead of notation: \"x squared\" rather than \"x^2\", \"the square root of two\" rather than a root symbol, \"fifty percent\" rather than \"50%\".",
-    "Punctuation is never spoken, so it cannot group anything. Never use parentheses or brackets to group an expression; carry every grouping with words. Say \"the quantity x plus h, squared\" instead of \"(x plus h) squared\", and \"all over h\" instead of a fraction bar. When an expression could be heard two ways, restate it more explicitly.",
-    "Whenever anything is applied to a sum or difference, whether a function, a derivative, or an operation, first say the podcast language's phrase for \"the quantity\", then the sum. Without it the listener hears the sum as a separate term: \"the derivative of f of x plus g of x\" is heard as the derivative of f of x, plus g of x. All examples in these rules are written in English only to show the pattern; always translate the wording into the podcast's language and never copy an English phrase into a script in another language.",
-    "Whenever an exponent is more than a single symbol, use the podcast language's phrase for \"raised to the power of\" rather than its short form for \"to the\". The short form makes \"x to the n minus one\" ambiguous, because it is equally heard as x to the n, minus one.",
-    "Never state more than two decimal places, in digits or in spoken words. Name well-known constants and round them: say \"e, roughly two point seven\" and \"pi, roughly three point one four\". Never write \"2.71828\", \"3.14159\", \"two point seven one eight\", or \"three point one four one\". Round or approximate any long figure, for example \"roughly 1.2 million\". Keep ordinary numbers, short counts, and dates as normal spoken words; simplify numbers, never drop them.",
-    "Write abbreviations out as words instead of dotted forms, in the podcast's language, for example \"in the afternoon\" instead of \"p.m.\", \"for example\" instead of \"e.g.\", and \"and so on\" instead of \"etc.\".",
-    "Speak every title, term, file name, and address as ordinary words. Never read a slug or identifier literally: say \"derivatives in calculus\" instead of \"derivatives-calculus\", and expand hyphenated, underscored, or camelCase names into natural speech.",
+    'Never leave symbols as symbols. Say arrows, ampersands, and similar marks as words in the podcast\'s language, for example "leads to" for an arrow and "and" for an ampersand.',
+    'Express math in spoken words instead of notation: "x squared" rather than "x^2", "the square root of two" rather than a root symbol, "fifty percent" rather than "50%".',
+    'Punctuation is never spoken, so it cannot group anything. Never use parentheses or brackets to group an expression; carry every grouping with words. Say "the quantity x plus h, squared" instead of "(x plus h) squared", and "all over h" instead of a fraction bar. When an expression could be heard two ways, restate it more explicitly.',
+    'Whenever anything is applied to a sum or difference, whether a function, a derivative, or an operation, first say the podcast language\'s phrase for "the quantity", then the sum. Without it the listener hears the sum as a separate term: "the derivative of f of x plus g of x" is heard as the derivative of f of x, plus g of x. All examples in these rules are written in English only to show the pattern; always translate the wording into the podcast\'s language and never copy an English phrase into a script in another language.',
+    'Whenever an exponent is more than a single symbol, use the podcast language\'s phrase for "raised to the power of" rather than its short form for "to the". The short form makes "x to the n minus one" ambiguous, because it is equally heard as x to the n, minus one.',
+    'Never state more than two decimal places, in digits or in spoken words. Name well-known constants and round them: say "e, roughly two point seven" and "pi, roughly three point one four". Never write "2.71828", "3.14159", "two point seven one eight", or "three point one four one". Round or approximate any long figure, for example "roughly 1.2 million". Keep ordinary numbers, short counts, and dates as normal spoken words; simplify numbers, never drop them.',
+    'Write abbreviations out as words instead of dotted forms, in the podcast\'s language, for example "in the afternoon" instead of "p.m.", "for example" instead of "e.g.", and "and so on" instead of "etc.".',
+    'Speak every title, term, file name, and address as ordinary words. Never read a slug or identifier literally: say "derivatives in calculus" instead of "derivatives-calculus", and expand hyphenated, underscored, or camelCase names into natural speech.',
     "Keep each turn under about 600 characters. If a spoken-out explanation runs long, split it across turns instead of packing one turn.",
     // The enumerated ban below was already in place when a live turn said "The
     // notes mention that ...", so listing more nouns is not what was missing. The
     // added sentence names the construction instead: attributing a fact to
     // anything at all is what has to stop, whatever the thing is called.
-    "The hosts are explaining what they already know, not reading from a handout. Never say \"the guide\", \"the source\", \"the document\", \"the notes\", or any equivalent phrase in the podcast's language; state the idea directly as their own explanation. Never attribute a fact to any written thing at all: no \"it says\", \"they mention\", \"according to\", or similar. Every statement is simply what the host knows.",
+    'The hosts are explaining what they already know, not reading from a handout. Never say "the guide", "the source", "the document", "the notes", or any equivalent phrase in the podcast\'s language; state the idea directly as their own explanation. Never attribute a fact to any written thing at all: no "it says", "they mention", "according to", or similar. Every statement is simply what the host knows.',
     // Three wordings have now asked for questions by describing what a question
     // does — "one per chapter", "a genuine question answered in the next turn",
     // "at least three exchanges" — and live runs landed at 2, 1, and 0. The last
@@ -2501,6 +2529,8 @@ interface NormalizedMonolithGuide {
   quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]>;
   /** Follow-up guides offered once the learner claims the topic. */
   nextGuideIdeas: StudyGuideNextIdea[];
+  /** Lessons the plan named and this guide did not write. */
+  plannedLessons: StudyGuidePlannedLesson[];
   pages: EnhancedStudyGuidePage[];
   contextPlan?: {
     /** Derived from correspondences, never asserted by the model. */
@@ -2528,6 +2558,7 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
       required: ["keyIdea", "quickSummary"],
     },
     nextGuideIdeas: STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
+    plannedLessons: STUDY_GUIDE_PLANNED_LESSONS_SCHEMA,
     ...(includeContext
       ? {
           contextPlan: {
@@ -2575,8 +2606,9 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
           title: { type: "STRING" },
           summary: { type: "STRING" },
           rawNotes: { type: "STRING" },
+          pageIdeas: STUDY_GUIDE_PAGE_IDEAS_SCHEMA,
         },
-        required: ["title", "summary", "rawNotes"],
+        required: ["title", "summary", "rawNotes", "pageIdeas"],
       },
     },
   },
@@ -2586,6 +2618,7 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
     "emoji",
     "quickStart",
     "nextGuideIdeas",
+    "plannedLessons",
     ...(includeContext ? ["contextPlan"] : []),
     "pages",
   ],
@@ -2611,7 +2644,8 @@ Return strict JSON only:
   "folderName": "...",
   "emoji": "one emoji",
   "quickStart": { "keyIdea": "one sentence, max 35 words", "quickSummary": "two short paragraphs" },
-  "nextGuideIdeas": [{ "axis": "curiosity | utility | connection", "label": "...", "prompt": "..." }],${
+  "nextGuideIdeas": [{ "axis": "curiosity | utility | connection", "label": "...", "prompt": "..." }],
+  "plannedLessons": [{ "title": "...", "summary": "..." }],${
     userKnownTopics.length
       ? `
   "contextPlan": {
@@ -2626,7 +2660,7 @@ Return strict JSON only:
       : ""
   }
   "pages": [
-    { "title": "01 - ...", "summary": "one preview sentence", "rawNotes": "Markdown lesson notes" }
+    { "title": "01 - ...", "summary": "one preview sentence", "rawNotes": "Markdown lesson notes", "pageIdeas": [{ "axis": "mechanism | example | limit", "label": "...", "prompt": "..." }] }
   ]
 }
 
@@ -2643,6 +2677,8 @@ Rules:
 - quickSummary: 60-85 words, 2 short paragraphs, every paragraph ends with a complete sentence.
 - Choose a concise, topic-specific folderName and exactly one topic-matching emoji.
 - ${STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION}
+- ${STUDY_GUIDE_PAGE_IDEAS_INSTRUCTION}
+- ${STUDY_GUIDE_PLANNED_LESSONS_INSTRUCTION}
 - Do not include quiz questions inside rawNotes.${
   userKnownTopics.length
     ? `
@@ -2748,8 +2784,8 @@ export const normalizeMonolithGuide = (
     const bridgeStrength = !selectedTopics.length
       ? "none"
       : mappedStrength === "none"
-      ? "weak"
-      : mappedStrength;
+        ? "weak"
+        : mappedStrength;
     const breaksAt = trimTitleToWordBoundary(
       stringValue(planRecord.breaksAt),
       90,
@@ -2761,7 +2797,8 @@ export const normalizeMonolithGuide = (
       selectedTopics,
       personalizedQuickStart,
       // Only a weak bridge shows a fit caveat; a strong one is not hedged.
-      reason: bridgeStrength === "weak" ? breaksAt || reason || undefined : undefined,
+      reason:
+        bridgeStrength === "weak" ? breaksAt || reason || undefined : undefined,
       bridgeBlock:
         bridgeTitle && bridgeBody
           ? { title: bridgeTitle, body: bridgeBody }
@@ -2772,6 +2809,7 @@ export const normalizeMonolithGuide = (
   return {
     title: humanizeGuideTitle(stringValue(record.title) || titleFallback),
     nextGuideIdeas: sanitizeStudyGuideNextIdeas(record.nextGuideIdeas),
+    plannedLessons: sanitizeStudyGuidePlannedLessons(record.plannedLessons),
     folderName: humanizeGuideTitle(
       stringValue(record.folderName) || folderNameFallback,
     ),
@@ -2883,7 +2921,10 @@ export const generateMonolithHostedStudyGuide = async ({
     guide.quickStart;
   let bridgeBlocks: HostedAiGatewayResponse["bridgeBlocks"] = [];
   const contextPlan = guide.contextPlan;
-  if (contextPlan?.personalizedQuickStart && contextPlan.selectedTopics.length) {
+  if (
+    contextPlan?.personalizedQuickStart &&
+    contextPlan.selectedTopics.length
+  ) {
     // Both a plain and a bridged Quick Start always exist together (they come
     // from the same monolith call), so the learner can toggle either way
     // regardless of which one leads by default.
@@ -2967,6 +3008,7 @@ export const generateMonolithHostedStudyGuide = async ({
       pages,
       questions,
       quickStart,
+      plannedLessons: guide.plannedLessons,
     }),
     quickStart,
     bridgeBlocks,
@@ -2994,8 +3036,8 @@ const handleGenerate = async (
   const mainStage: HostedAiStage = includeQuickStart
     ? "study_guide_monolith"
     : isFreeSurface
-    ? getStageForSurface(surface)
-    : request.stage || getStageForSurface(surface);
+      ? getStageForSurface(surface)
+      : request.stage || getStageForSurface(surface);
   const model = getHostedTextModelForStage(provider, mainStage);
   const usageModel = getHostedUsageModelLabel(provider, model);
   const requestId = randomUUID();

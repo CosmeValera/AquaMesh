@@ -16,6 +16,7 @@ import hostedAiHandler, {
   getHostedOpenAiModelForStage,
   getHostedTextModel,
   getHostedTextProvider,
+  getStageForSurface,
 } from '../../../../../api/hosted-ai'
 import dashboardSourceHandler from '../../../../../api/dashboard-source'
 import podcastAudioCleanupHandler from '../../../../../api/podcast-audio-cleanup'
@@ -1205,6 +1206,12 @@ describe('API payment and hosted AI hardening', () => {
     )
   })
 
+  it('routes the study-page surface to the page-expand stage', () => {
+    expect(getStageForSurface('study-page')).toBe('study_guide_page_expand')
+    expect(getStageForSurface('quick-create')).toBe('quick_create')
+    expect(getStageForSurface('study-guide')).toBe('study_guide_main')
+  })
+
   it('shuffles hosted final quiz options deterministically', () => {
     const questions = Array.from({ length: 6 }, (_, index) => ({
       question: `Application question ${index + 1}?`,
@@ -1525,9 +1532,7 @@ describe('API payment and hosted AI hardening', () => {
           // inside is still unparseable, which is what this test is about.
           return Promise.resolve(
             jsonResponse({
-              output: [
-                { type: 'message', content: [{ text: 'not json' }] },
-              ],
+              output: [{ type: 'message', content: [{ text: 'not json' }] }],
             }),
           )
         }

@@ -52,7 +52,15 @@ import {
   createStudyGuideRecord,
   isStudyGuidesStorageQuotaError,
 } from '../../studyGuides/storage'
+import { readQuickCreateAiSettings } from '../../quickCreate/ai'
+import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
 import { readCreatedNextIdeaPrompts } from '../../studyGuides/nextGuideIdeas'
+import {
+  consumeStudyGuidePlannedLesson,
+  createStudyGuideGrowthPageDraft,
+  readStudyGuideGrowthParentKey,
+  type StudyGuideGrowthSeed,
+} from '../../studyGuides/pageGrowth'
 import {
   createStudyGuidePageHref,
   OPEN_STUDY_GUIDE_PAGE_LINK_EVENT,
@@ -141,6 +149,12 @@ const GuideWorkspacePage = () => {
   const [messages, setMessages] = useState<DashboardChatMessage[]>([])
   const [editingPageKey, setEditingPageKey] = useState<string | null>(null)
   const [quickCreateError, setQuickCreateError] = useState('')
+  const [growingPage, setGrowingPage] = useState(false)
+  // Only hosted mode spends Carrots, so only hosted mode shows a price.
+  const studyPageCreditCost =
+    (readQuickCreateAiSettings().provider || 'hosted') === 'hosted'
+      ? getHostedAiCreditCost('study-page')
+      : 0
   const [workspaceStorageError, setWorkspaceStorageError] = useState(false)
   const [queuedChatDraft, setQueuedChatDraft] = useState<{
     id: string
@@ -377,6 +391,49 @@ const GuideWorkspacePage = () => {
     return true
   }
 
+  const growPage = async (seed: StudyGuideGrowthSeed) => {
+    if (!record || growingPage) {
+      return
+    }
+
+    setGrowingPage(true)
+    setQuickCreateError('')
+    try {
+      const draft = await createStudyGuideGrowthPageDraft(
+        record.studyPath,
+        seed,
+      )
+      // Commit against the newest guide, not the snapshot the model started
+      // from: chat or Quick Create may have added a page in the meantime.
+      const latestStudyPath = recordRef.current?.studyPath || record.studyPath
+      const grown = appendStudyGuideMarkdownPage(latestStudyPath, {
+        title: draft.title,
+        markdown: draft.markdown,
+        source: 'expanded',
+        parentPageKey: readStudyGuideGrowthParentKey(seed),
+      })
+      persistStudyPath(
+        seed.kind === 'continue'
+          ? {
+              ...grown,
+              plannedLessons: consumeStudyGuidePlannedLesson(
+                grown,
+                seed.lesson,
+              ),
+            }
+          : grown,
+      )
+    } catch (error) {
+      setQuickCreateError(
+        error instanceof Error && error.message
+          ? error.message
+          : t('workspace.growPageFailed'),
+      )
+    } finally {
+      setGrowingPage(false)
+    }
+  }
+
   const linkAssistantCitations = (message: DashboardChatMessage): string => {
     const content = stripAssistantSourcesFooter(message.content)
     if (!message.sourceRefs?.length) {
@@ -531,7 +588,6 @@ const GuideWorkspacePage = () => {
 
   const enqueueQuickCreatePageCommit = (
     page: AiGeneratedStudyGuidePage,
-    resourceType: QuickCreateActionInput,
     signal?: AbortSignal,
   ) => {
     const commit = quickCreateCommitQueueRef.current.then(() => {
@@ -557,13 +613,6 @@ const GuideWorkspacePage = () => {
       }
       quickCreateCommitRecordRef.current = nextRecord
       quickCreateCommitStudyPathRef.current = nextRecord.studyPath
-
-      const request = normalizeQuickCreateActionInput(resourceType)
-      const newPage =
-        nextRecord.studyPath.dashboards[nextRecord.studyPath.selectedIndex]
-      if (request.resourceType === 'improvedNotes') {
-        setEditingPageKey(newPage?.dashboardKey || null)
-      }
     })
 
     quickCreateCommitQueueRef.current = commit.catch(() => undefined)
@@ -627,7 +676,7 @@ const GuideWorkspacePage = () => {
         return
       }
 
-      await enqueueQuickCreatePageCommit(page, request, options?.signal)
+      await enqueueQuickCreatePageCommit(page, options?.signal)
     } catch (error) {
       if (isAbortError(error)) {
         return
@@ -694,6 +743,9 @@ const GuideWorkspacePage = () => {
         editingPageKey={editingPageKey}
         onEditingPageKeyChange={setEditingPageKey}
         onAddPage={addManualPage}
+        onGrowPage={(seed) => void growPage(seed)}
+        growPageCreditCost={studyPageCreditCost}
+        growingPage={growingPage}
         onAskAi={askAiFromStudyBlock}
         createdNextIdeaPrompts={createdNextIdeaPrompts}
         pendingCitationHighlight={pendingCitationHighlight}
@@ -726,6 +778,12 @@ const GuideWorkspacePage = () => {
           }
         }}
         variant="mobile"
+        onGrowPage={(seed) => {
+          setMobileSection('study-guide')
+          void growPage(seed)
+        }}
+        growPageCreditCost={studyPageCreditCost}
+        growingPage={growingPage}
       />
     </Paper>
   ) : null
@@ -754,6 +812,16 @@ const GuideWorkspacePage = () => {
         }
         showCloseButton={!isMobile}
         onAddAssistantMessageToGuide={addAssistantMessageToGuide}
+        onGrowPage={(prompt) => {
+          void growPage({
+            kind: 'prompt',
+            sourcePageKey:
+              record.studyPath.dashboards[record.studyPath.selectedIndex]
+                ?.dashboardKey,
+            prompt,
+          })
+        }}
+        growPageCreditCost={studyPageCreditCost}
         onAddExternalSourceToGuide={addExternalSourceToGuide}
         onOpenSource={openChatSource}
         onQuickCreatePage={quickCreatePage}

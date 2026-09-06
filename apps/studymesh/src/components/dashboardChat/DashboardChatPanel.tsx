@@ -28,6 +28,7 @@ import { alpha } from '@mui/material/styles'
 import type { SxProps, Theme } from '@mui/material/styles'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import NoteAddOutlinedIcon from '@mui/icons-material/NoteAddOutlined'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
@@ -86,7 +87,6 @@ import {
   quickCreateActionGroups,
   quickCreateActions,
   type QuickCreateAction,
-  type QuickCreateActionGroup,
   type QuickCreateActionId,
   type QuickCreateActionRequest,
   type QuickCreateSourceScope,
@@ -167,6 +167,9 @@ interface DashboardChatPanelProps {
   onClose: () => void
   showCloseButton?: boolean
   onAddAssistantMessageToGuide?: (message: DashboardChatMessage) => void
+  /** Absent outside a Study Guide, where there is no guide to grow. */
+  onGrowPage?: (prompt: string) => void
+  growPageCreditCost?: number
   onAddExternalSourceToGuide?: (source: DashboardExternalSource) => void
   onOpenSource?: (source: DashboardAnswerSourceRef) => void
   onQuickCreatePage?: (
@@ -333,22 +336,9 @@ const titleFromQuestion = (question: string) => {
     : title || 'New chat'
 }
 
-type DashboardChatQuickCreateAction = QuickCreateAction & {
-  id: Exclude<QuickCreateActionId, 'improvedNotes'>
-}
+const dashboardChatQuickCreateActions = quickCreateActions
 
-const isDashboardChatQuickCreateAction = (
-  action: QuickCreateAction,
-): action is DashboardChatQuickCreateAction => action.id !== 'improvedNotes'
-
-const dashboardChatQuickCreateActions = quickCreateActions.filter(
-  isDashboardChatQuickCreateAction,
-)
-
-const quickCreateIcons: Record<
-  Exclude<QuickCreateActionId, 'improvedNotes'>,
-  React.ReactNode
-> = {
+const quickCreateIcons: Record<QuickCreateActionId, React.ReactNode> = {
   quiz: <QuizIcon fontSize="small" />,
   flashcards: <StyleIcon fontSize="small" />,
   podcast: <PodcastsIcon fontSize="small" />,
@@ -356,15 +346,6 @@ const quickCreateIcons: Record<
 
 const quickCreateCreditCost = getHostedAiCreditCost('quick-create')
 const chatCreditCost = getHostedAiCreditCost('chat')
-
-const getQuickCreateGroupLabelKey = (group: QuickCreateActionGroup) => {
-  switch (group) {
-    case 'Practice':
-      return 'chat.quickCreateGroupPractice'
-    case 'Notes':
-      return 'chat.quickCreateGroupNotes'
-  }
-}
 
 const getQuickCreateActionLabelKey = (actionId: QuickCreateActionId) => {
   switch (actionId) {
@@ -374,8 +355,6 @@ const getQuickCreateActionLabelKey = (actionId: QuickCreateActionId) => {
       return 'chat.quickCreateFlashcards'
     case 'podcast':
       return 'chat.quickCreatePodcast'
-    case 'improvedNotes':
-      return 'chat.quickCreateExpand'
   }
 }
 
@@ -387,8 +366,6 @@ const getQuickCreateActionDescriptionKey = (actionId: QuickCreateActionId) => {
       return 'chat.quickCreateFlashcardsDescription'
     case 'podcast':
       return 'chat.quickCreatePodcastDescription'
-    case 'improvedNotes':
-      return 'chat.quickCreateExpandDescription'
   }
 }
 
@@ -600,7 +577,7 @@ const isAbortError = (error: unknown): boolean =>
 
 interface PendingQuickCreateTask {
   id: string
-  actionId: Exclude<QuickCreateActionId, 'improvedNotes'>
+  actionId: QuickCreateActionId
   resourceType: QuickCreateActionRequest['resourceType']
   label: string
   sourceScope?: QuickCreateSourceScope
@@ -616,6 +593,8 @@ const DashboardChatPanel = ({
   onClose,
   showCloseButton = true,
   onAddAssistantMessageToGuide,
+  onGrowPage,
+  growPageCreditCost,
   onAddExternalSourceToGuide,
   onOpenSource,
   onQuickCreatePage,
@@ -2896,7 +2875,7 @@ const DashboardChatPanel = ({
     )
   }
 
-  const runQuickCreate = async (action: DashboardChatQuickCreateAction) => {
+  const runQuickCreate = async (action: QuickCreateAction) => {
     if (!onQuickCreatePage) {
       return
     }
@@ -2978,7 +2957,7 @@ const DashboardChatPanel = ({
           action.group,
           t(getQuickCreateActionLabelKey(action.id)),
           t(getQuickCreateActionDescriptionKey(action.id)),
-          t(getQuickCreateGroupLabelKey(action.group)),
+          t('chat.quickCreateGroupPractice'),
         ]
           .join(' ')
           .toLowerCase()
@@ -3063,7 +3042,7 @@ const DashboardChatPanel = ({
                   color="text.secondary"
                   fontWeight={600}
                 >
-                  {t(getQuickCreateGroupLabelKey(group))}
+                  {t('chat.quickCreateGroupPractice')}
                 </Typography>
               </Divider>
               {actions.map((action) => {
@@ -3136,6 +3115,71 @@ const DashboardChatPanel = ({
             </Stack>
           )
         })}
+        {onGrowPage ? (
+          <Stack spacing={0.5}>
+            <Divider textAlign="left">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={600}
+              >
+                {t('chat.growPageGroup')}
+              </Typography>
+            </Divider>
+            <Button
+              disabled={!draft.trim()}
+              data-testid="chat-quick-create-grow-page"
+              onClick={() => {
+                onGrowPage(draft.trim())
+                setDraft('')
+                setQuickCreateMenuAnchor(null)
+              }}
+              sx={{
+                justifyContent: 'flex-start',
+                alignItems: 'flex-start',
+                gap: 1,
+                minHeight: 64,
+                borderRadius: 1.5,
+                px: 1,
+                py: 1,
+                textAlign: 'left',
+                textTransform: 'none',
+                color: 'text.primary',
+                '&.Mui-disabled': { color: 'text.disabled' },
+              }}
+            >
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  justifyContent="space-between"
+                  sx={{ minWidth: 0 }}
+                >
+                  <Typography
+                    variant="body2"
+                    fontWeight={600}
+                    noWrap
+                    sx={{ minWidth: 0 }}
+                  >
+                    {t('chat.growPage')}
+                  </Typography>
+                  {showCreditCosts ? (
+                    <StudyCreditCostLabel
+                      amount={growPageCreditCost || 0}
+                      variant="badge"
+                    />
+                  ) : null}
+                </Stack>
+                <Typography variant="caption" color="text.secondary">
+                  {draft.trim()
+                    ? t('chat.growPageDescription')
+                    : t('chat.growPageNeedsDraft')}
+                </Typography>
+              </Box>
+            </Button>
+          </Stack>
+        ) : null}
       </Stack>
     </Box>
   )
@@ -3487,8 +3531,27 @@ const DashboardChatPanel = ({
     )
   }
 
+  /** The question this answer replied to, for turning it into a real page. */
+  const readAnsweredQuestion = (
+    message: DashboardChatMessage,
+  ): string | null => {
+    const messageIndex = messagesRef.current.findIndex(
+      ({ id }) => id === message.id,
+    )
+    if (messageIndex < 0) {
+      return null
+    }
+
+    const question = [...messagesRef.current.slice(0, messageIndex)]
+      .reverse()
+      .find((candidate) => candidate.role === 'user')?.content
+
+    return question?.trim() || null
+  }
+
   const renderAssistantActions = (message: DashboardChatMessage) => {
     const canAddToGuide = Boolean(onAddAssistantMessageToGuide)
+    const answeredQuestion = onGrowPage ? readAnsweredQuestion(message) : null
 
     const actions = (
       <>
@@ -3530,6 +3593,22 @@ const DashboardChatPanel = ({
               sx={userActionIconButtonSx}
             >
               <AddCircleOutlineIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ) : null}
+        {answeredQuestion ? (
+          <Tooltip title={t('chat.growPageFromAnswer')}>
+            <IconButton
+              size="small"
+              aria-label={t('chat.growPageFromAnswer')}
+              data-testid="chat-grow-page-from-answer"
+              onClick={(event) => {
+                event.stopPropagation()
+                onGrowPage?.(answeredQuestion)
+              }}
+              sx={userActionIconButtonSx}
+            >
+              <NoteAddOutlinedIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         ) : null}
@@ -3600,8 +3679,8 @@ const DashboardChatPanel = ({
         '&:hover': composerReadOnly
           ? undefined
           : {
-            borderColor: alpha(theme.palette.primary.main, 0.42),
-          },
+              borderColor: alpha(theme.palette.primary.main, 0.42),
+            },
         '&:focus-within': {
           borderColor: 'primary.main',
           boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.14)}`,
@@ -3610,14 +3689,14 @@ const DashboardChatPanel = ({
         // renders at an opacity too low to read as an intentional label.
         ...(composerReadOnly
           ? {
-            '& .MuiInputBase-input.Mui-disabled': {
-              WebkitTextFillColor: alpha(theme.palette.text.primary, 0.62),
-            },
-            '& .MuiInputBase-input::placeholder': {
-              color: alpha(theme.palette.text.primary, 0.62),
-              opacity: 1,
-            },
-          }
+              '& .MuiInputBase-input.Mui-disabled': {
+                WebkitTextFillColor: alpha(theme.palette.text.primary, 0.62),
+              },
+              '& .MuiInputBase-input::placeholder': {
+                color: alpha(theme.palette.text.primary, 0.62),
+                opacity: 1,
+              },
+            }
           : {}),
       }) satisfies SxProps<Theme>,
     [composerReadOnly, theme.palette.mode, theme.palette.primary.main],
@@ -5120,7 +5199,9 @@ const DashboardChatPanel = ({
           ) : null}
           <Box
             data-testid="dashboard-chat-composer"
-            onMouseDown={composerReadOnly ? undefined : focusComposerFromSurface}
+            onMouseDown={
+              composerReadOnly ? undefined : focusComposerFromSurface
+            }
             sx={[composerSurfaceSx, composerResizeSx]}
           >
             <InputBase

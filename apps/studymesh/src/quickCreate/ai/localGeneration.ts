@@ -25,10 +25,15 @@ import {
   createAiOutputLanguageInstruction,
   isLocalAiContentLanguageSupported,
 } from '../../language/contentLanguage'
-import type { StudyGuideNextIdea } from '../../state/store'
+import type {
+  StudyGuideNextIdea,
+  StudyGuidePlannedLesson,
+} from '../../state/store'
 import {
   sanitizeStudyGuideNextIdeas,
+  sanitizeStudyGuidePlannedLessons,
   STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
+  STUDY_GUIDE_PLANNED_LESSONS_INSTRUCTION,
 } from '../../studyGuides/quickStart'
 
 type LocalObjectKind =
@@ -172,6 +177,12 @@ interface LocalStudyPathPlan {
   emoji?: string
   /** Optional: the local model often omits it, and the guide still ships. */
   nextGuideIdeas?: StudyGuideNextIdea[]
+  /**
+   * Optional for the same reason. Per-page `pageIdeas` are deliberately not
+   * asked of the local model: it is weak and schemaless, and the deterministic
+   * fallback derives page ideas from the page itself for free.
+   */
+  plannedLessons?: StudyGuidePlannedLesson[]
   dashboards: LocalStudyPathPlanItem[]
 }
 
@@ -225,8 +236,7 @@ const titleValue = (value: unknown, fallback: string): string =>
 
 const localBadTextPattern =
   /\btarget rule\b|\bformation rule\b|proposed that matter\s*:|what rule does|how do you form|what do the notes say|according to the notes|which statement matches|core idea behind/i
-const localMarkdownFragmentPattern =
-  /(?:^|\s)#{1,6}\s|\*\*|__|`|\[[^\]]+\]\(/i
+const localMarkdownFragmentPattern = /(?:^|\s)#{1,6}\s|\*\*|__|`|\[[^\]]+\]\(/i
 const localSectionHeadingPattern =
   /\b(?:chart structure|common beginner mistake|common mistakes|context bridge|final takeaway|key idea|quick summary|scope note|what to remember now)\b/i
 
@@ -1133,7 +1143,7 @@ const conceptFlashcard = (
 })
 
 const localResourceLimits: Record<
-  Exclude<StudyMaterialResourceType, 'improvedNotes' | 'podcast'>,
+  Exclude<StudyMaterialResourceType, 'podcast'>,
   Record<StudyMaterialDetailLevel, { min: number; max: number }>
 > = {
   flashcards: {
@@ -1408,43 +1418,29 @@ const localQuickCreatePrompt = ({
         ? 'Style preference: Exam-like. Use realistic assessment-style questions with plausible distractors and applied scenarios.'
         : 'Style preference: Mixed. Balance recall with reasoning, conceptual understanding, applied scenarios, and common mistakes.'
   const resourceRules =
-    resourceType === 'improvedNotes'
-      ? `Create one "Expand on this" resource. Allowed kind only: markdown.
+    resourceType === 'flashcards'
+      ? `Create ${flashcardCount} flashcards. Allowed kind only: qa.
 Use this shape:
 {"title":"${title.replace(
           /"/g,
           '',
-        )}","objects":[{"kind":"markdown","title":"Expand on this","markdown":"Clear organized Markdown with headings and bullets"}]}
-Rules: one markdown object only. No quizzes. No flashcards. ${localHardRule} ${
-          detailLevel === 'short'
-            ? 'Keep it concise.'
-            : detailLevel === 'long'
-              ? 'Include deeper explanations and examples.'
-              : 'Use balanced detail.'
-        }`
-      : resourceType === 'flashcards'
-        ? `Create ${flashcardCount} flashcards. Allowed kind only: qa.
+        )}","objects":[{"kind":"qa","question":"...","answer":"..."}]}
+Rules: qa objects only. No markdown. No quizzes. Each flashcard must test exactly one term, rule, formula step, contrast, exception, or use case. Answers must be self-contained and teach the idea, not one-word fragments. ${localHardRule}`
+      : resourceType === 'quiz'
+        ? `Create ${quizCount} quiz questions. Allowed kind only: quiz.
 Use this shape:
 {"title":"${title.replace(
             /"/g,
             '',
-          )}","objects":[{"kind":"qa","question":"...","answer":"..."}]}
-Rules: qa objects only. No markdown. No quizzes. Each flashcard must test exactly one term, rule, formula step, contrast, exception, or use case. Answers must be self-contained and teach the idea, not one-word fragments. ${localHardRule}`
-        : resourceType === 'quiz'
-          ? `Create ${quizCount} quiz questions. Allowed kind only: quiz.
-Use this shape:
-{"title":"${title.replace(
-              /"/g,
-              '',
-            )}","objects":[{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"}]}
+          )}","objects":[{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"}]}
 Rules: quiz objects only. Every quiz must be multipleChoice with 3-4 real options. No shortAnswer, typed-answer, quizSingle, free-response, markdown, or flashcards. Options must be real choices, not placeholders. Never use A/B/C, option A, all of the above, duplicate choices, or source-sentence copies. ${localHardRule} ${quizStyleRule} Preferably don't copy source sentences.`
-          : `Create exactly 6 simple study objects from the source.
+        : `Create exactly 6 simple study objects from the source.
 Allowed kinds only: markdown, qa, quiz, list.
 Use this shape:
 {"title":"${title.replace(
-              /"/g,
-              '',
-            )}","objects":[{"kind":"markdown","title":"Explanation","markdown":"2-4 short sentences"},{"kind":"qa","question":"...","answer":"..."},{"kind":"qa","question":"...","answer":"..."},{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"},{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"},{"kind":"list","title":"Key points","items":["...","...","..."]}]}`
+            /"/g,
+            '',
+          )}","objects":[{"kind":"markdown","title":"Explanation","markdown":"2-4 short sentences"},{"kind":"qa","question":"...","answer":"..."},{"kind":"qa","question":"...","answer":"..."},{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"},{"kind":"quiz","question":"...","quizMode":"multipleChoice","options":["A","B","C"],"correctIndex":0,"answer":"A","explanation":"why"},{"kind":"list","title":"Key points","items":["...","...","..."]}]}`
 
   return `Return JSON only. No prose. No markdown fences.
 ${resourceRules}
@@ -1473,7 +1469,7 @@ const localStudyPathPlannerPrompt = (
 Plan a Study Guide with exactly ${count} lesson dashboards for "${title}".
 
 Shape:
-{"title":"...","folderName":"...","emoji":"...","nextGuideIdeas":[{"axis":"curiosity","label":"...","prompt":"..."}],"dashboards":[{"title":"01 - ...","goal":"...","sections":[{"title":"...","goal":"...","focus":"...; ...; ..."},{"title":"...","goal":"...","focus":"...; ...; ..."}],"avoid":"...; ..."}]}
+{"title":"...","folderName":"...","emoji":"...","nextGuideIdeas":[{"axis":"curiosity","label":"...","prompt":"..."}],"plannedLessons":[{"title":"...","summary":"..."}],"dashboards":[{"title":"01 - ...","goal":"...","sections":[{"title":"...","goal":"...","focus":"...; ...; ..."},{"title":"...","goal":"...","focus":"...; ...; ..."}],"avoid":"...; ..."}]}
 
 Topic:
 ${compactPrompt}
@@ -1484,6 +1480,7 @@ Rules:
 - dashboards must contain exactly ${count} dashboards.
 - emoji must be exactly one topic-specific emoji for the Study Guide.
 - ${STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION}
+- ${STUDY_GUIDE_PLANNED_LESSONS_INSTRUCTION}
 - Every dashboard title must start with 01 -, 02 -, etc.
 - Each dashboard must have exactly 2 sections.
 - Each section has only title, goal, and focus.
@@ -1685,7 +1682,6 @@ export const generateQuickCreateWithLocalAi = async (
           resourceType: options.resourceType,
           detailLevel: options.detailLevel,
         }),
-        options.packId,
         options.resourceType,
       )
       const limits = getLocalResourceLimits({
@@ -2382,6 +2378,7 @@ const normalizeLocalStudyPathPlan = (
   // Optional field: a local model that skips or mangles it loses the offer,
   // never the guide, so it stays out of the repair and salvage paths.
   const nextGuideIdeas = sanitizeStudyGuideNextIdeas(record.nextGuideIdeas)
+  const plannedLessons = sanitizeStudyGuidePlannedLessons(record.plannedLessons)
 
   return {
     plan: {
@@ -2393,6 +2390,7 @@ const normalizeLocalStudyPathPlan = (
       ),
       emoji: stringValue(record.emoji).trim() || undefined,
       nextGuideIdeas: nextGuideIdeas.length ? nextGuideIdeas : undefined,
+      plannedLessons: plannedLessons.length ? plannedLessons : undefined,
       dashboards,
     },
     warnings,
@@ -4071,6 +4069,7 @@ export const generateStudyPathWithLocalAi = async (
     folderName: plan.folderName,
     emoji: plan.emoji,
     nextGuideIdeas: plan.nextGuideIdeas,
+    plannedLessons: plan.plannedLessons,
     contentLanguage: options.outputLanguage,
     dashboards,
     warnings: [

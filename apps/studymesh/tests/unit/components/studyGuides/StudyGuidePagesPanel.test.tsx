@@ -146,7 +146,9 @@ describe('StudyGuidePagesPanel', () => {
     expect(
       screen.queryByLabelText('Delete page: Core lesson'),
     ).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Delete page: Manual note')).toBeInTheDocument()
+    expect(
+      screen.getByLabelText('Delete page: Manual note'),
+    ).toBeInTheDocument()
     expect(screen.queryByText('03 - Quiz')).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /^03 Quiz$/ }))
@@ -177,12 +179,9 @@ describe('StudyGuidePagesPanel', () => {
     setPageRowRects()
     const panel = screen.getByTestId('study-guide-pages-panel-desktop')
 
-    fireEvent.dragStart(
-      screen.getByLabelText('Drag page to reorder: Quiz'),
-      {
-        dataTransfer,
-      },
-    )
+    fireEvent.dragStart(screen.getByLabelText('Drag page to reorder: Quiz'), {
+      dataTransfer,
+    })
     dragOverAt(panel, 80, dataTransfer)
     expect(screen.getByTestId('study-guide-page-row-0')).toHaveAttribute(
       'data-drop-before',
@@ -328,5 +327,152 @@ describe('StudyGuidePagesPanel', () => {
       'user-1/guide-1/podcast-audio-to-delete.mp3',
     )
     expect(onStudyPathChange.mock.calls[0][0].dashboards).toHaveLength(2)
+  })
+})
+
+describe('StudyGuidePagesPanel growth', () => {
+  const createGrowableStudyPath = (): StudyPathContainerState => {
+    const studyPath = createStudyPath()
+    return {
+      ...studyPath,
+      selectedIndex: 0,
+      plannedLessons: [
+        { title: 'Cell signalling', summary: 'Trace one signal end to end.' },
+      ],
+      // Depth-first order: a dug-out page sits directly behind its parent.
+      dashboards: [
+        studyPath.dashboards[0],
+        {
+          name: 'Why membranes leak',
+          layout: { type: 'row' },
+          dashboardKey: 'dug-out',
+          dashboardIndex: 2,
+          dashboardCount: 4,
+          folderName: 'Biology',
+          createdBy: 'expanded',
+          deletable: true,
+          parentPageKey: 'core',
+        },
+        ...studyPath.dashboards.slice(1),
+      ],
+    }
+  }
+
+  it('numbers a dug-out page under its parent', () => {
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createGrowableStudyPath()}
+        onStudyPathChange={vi.fn()}
+        variant="desktop"
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: /^01\.1 Why membranes leak$/ }),
+    ).toBeInTheDocument()
+  })
+
+  it('shows a page as a root page once it no longer sits under its parent', () => {
+    const studyPath = createGrowableStudyPath()
+
+    render(
+      <StudyGuidePagesPanel
+        studyPath={{
+          ...studyPath,
+          dashboards: [
+            studyPath.dashboards[0],
+            ...studyPath.dashboards.slice(2),
+            studyPath.dashboards[1],
+          ],
+        }}
+        onStudyPathChange={vi.fn()}
+        variant="desktop"
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: /^04 Why membranes leak$/ }),
+    ).toBeInTheDocument()
+  })
+
+  it('offers continuing the guide, digging into the page, and a blank page', () => {
+    const onGrowPage = vi.fn()
+    const onAddPage = vi.fn()
+
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createGrowableStudyPath()}
+        onStudyPathChange={vi.fn()}
+        onAddPage={onAddPage}
+        onGrowPage={onGrowPage}
+        growPageCreditCost={1}
+        variant="desktop"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Page' }))
+
+    expect(screen.getByText('Next: Cell signalling')).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('study-guide-add-page-continue'))
+    expect(onGrowPage).toHaveBeenCalledWith({
+      kind: 'continue',
+      lesson: {
+        title: 'Cell signalling',
+        summary: 'Trace one signal end to end.',
+      },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Page' }))
+    fireEvent.click(screen.getByRole('button', { name: /Blank page/ }))
+    expect(onAddPage).toHaveBeenCalled()
+  })
+
+  it('grows a page from a written prompt and keeps the button disabled until then', () => {
+    const onGrowPage = vi.fn()
+
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createGrowableStudyPath()}
+        onStudyPathChange={vi.fn()}
+        onGrowPage={onGrowPage}
+        variant="desktop"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Page' }))
+    const submit = screen.getByRole('button', { name: /Create page/ })
+    expect(submit).toBeDisabled()
+
+    fireEvent.change(
+      screen.getByPlaceholderText('What should the new page cover?'),
+      { target: { value: 'How ion channels open' } },
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Create page/ }))
+
+    expect(onGrowPage).toHaveBeenCalledWith({
+      kind: 'prompt',
+      sourcePageKey: 'core',
+      prompt: 'How ion channels open',
+    })
+  })
+
+  it('keeps the old blank-page behaviour when growth is not wired up', () => {
+    const onAddPage = vi.fn()
+
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createGrowableStudyPath()}
+        onStudyPathChange={vi.fn()}
+        onAddPage={onAddPage}
+        variant="desktop"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Page' }))
+
+    expect(onAddPage).toHaveBeenCalled()
+    expect(
+      screen.queryByTestId('study-guide-add-page-menu'),
+    ).not.toBeInTheDocument()
   })
 })

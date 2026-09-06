@@ -18,8 +18,12 @@ import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined'
 import type { StudyPathContainerState } from '../../state/store'
 import {
   deleteStudyGuidePage,
+  getStudyGuidePageDepths,
+  getStudyGuidePageNumberLabels,
   reorderStudyGuidePage,
 } from '../../studyGuides/pages'
+import type { StudyGuideGrowthSeed } from '../../studyGuides/pageGrowth'
+import StudyGuideAddPageMenu from './StudyGuideAddPageMenu'
 import { collectPodcastAudioPathsFromPage } from '../../studyGuides/podcasts'
 import { deleteHostedAiPodcastAudio } from '../../quickCreate/ai'
 import { isStaticPodcastAudioPath } from '../podcast/PodcastPlayerProvider'
@@ -44,6 +48,10 @@ interface StudyGuidePagesPanelProps {
   onAddPage?: () => void
   onPageSelected?: () => void
   variant: StudyGuidePagesPanelVariant
+  /** Absent on read-only hosts such as the demo guide. */
+  onGrowPage?: (seed: StudyGuideGrowthSeed) => void
+  growPageCreditCost?: number
+  growingPage?: boolean
 }
 
 const pageIconButtonSx =
@@ -80,14 +88,20 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
   onAddPage,
   onPageSelected,
   variant,
+  onGrowPage,
+  growPageCreditCost,
+  growingPage,
 }) => {
   const { t } = useInterfaceText()
   const [open, setOpen] = useState(true)
   const [panelWidth, setPanelWidth] = useState(248)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [insertionIndex, setInsertionIndex] = useState<number | null>(null)
+  const [addPageAnchor, setAddPageAnchor] = useState<HTMLElement | null>(null)
   const pageRowRefs = useRef<Array<HTMLDivElement | null>>([])
   const mobile = variant === 'mobile'
+  const pageDepths = getStudyGuidePageDepths(studyPath)
+  const pageNumberLabels = getStudyGuidePageNumberLabels(studyPath)
   const selectedIndex = Math.min(
     Math.max(studyPath.selectedIndex || 0, 0),
     Math.max(studyPath.dashboards.length - 1, 0),
@@ -292,7 +306,10 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
         <Stack spacing={0.5}>
           {studyPath.dashboards.map((page, index) => {
             const active = index === selectedIndex
-            const pageOrder = String(index + 1).padStart(2, '0')
+            const depth = pageDepths.get(page.dashboardKey) || 0
+            const pageOrder =
+              pageNumberLabels.get(page.dashboardKey) ||
+              String(index + 1).padStart(2, '0')
             const pageTitle = stripLeadingPageNumber(page.name)
             return (
               <Box
@@ -330,7 +347,8 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                 }
                 sx={(theme) => ({
                   mx: 0,
-                  pl: 2.25,
+                  // Pages dug out of another page sit under it, indented.
+                  pl: 2.25 + depth * 1.5,
                   pr: mobile ? 0.75 : 1,
                   py: 0.5,
                   borderRadius: 1,
@@ -431,8 +449,8 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
                       variant="caption"
                       fontWeight={700}
                       sx={{
-                        width: 24,
-                        flex: '0 0 24px',
+                        minWidth: 24,
+                        flex: '0 0 auto',
                         fontVariantNumeric: 'tabular-nums',
                         color: active ? 'primary.main' : 'text.secondary',
                         lineHeight: 1.4,
@@ -527,24 +545,51 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
           ) : null}
         </Stack>
       </Box>
-      {onAddPage ? (
+      {onAddPage || onGrowPage ? (
         <Box sx={{ p: 1.25, borderTop: 1, borderColor: 'divider' }}>
           <Button
             fullWidth
             variant="outlined"
             startIcon={<AddIcon fontSize="small" />}
-            onClick={onAddPage}
+            disabled={growingPage}
+            onClick={(event) => {
+              // Without growth wired up the button keeps its old behaviour of
+              // dropping a blank page straight in.
+              if (!onGrowPage) {
+                onAddPage?.()
+                return
+              }
+
+              setAddPageAnchor(event.currentTarget)
+            }}
             sx={{
               borderRadius: 1,
               textTransform: 'none',
               bgcolor: 'background.paper',
               borderColor: 'divider',
               color: 'text.primary',
+              '&.Mui-disabled': {
+                borderColor: 'divider',
+                color: 'text.disabled',
+              },
             }}
           >
-            {t('workspace.addPage')}
+            {growingPage ? t('workspace.growingPage') : t('workspace.addPage')}
           </Button>
         </Box>
+      ) : null}
+      {onGrowPage ? (
+        <StudyGuideAddPageMenu
+          studyPath={studyPath}
+          anchorEl={addPageAnchor}
+          open={Boolean(addPageAnchor)}
+          mobile={mobile}
+          busy={growingPage}
+          creditCost={growPageCreditCost}
+          onClose={() => setAddPageAnchor(null)}
+          onGrow={onGrowPage}
+          onAddBlankPage={onAddPage}
+        />
       ) : null}
       {!mobile ? (
         <Box

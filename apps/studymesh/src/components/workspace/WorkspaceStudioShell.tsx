@@ -16,7 +16,6 @@ import DashboardIcon from '@mui/icons-material/Dashboard'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import AddIcon from '@mui/icons-material/Add'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-import AutoStoriesIcon from '@mui/icons-material/AutoStories'
 import QuizIcon from '@mui/icons-material/Quiz'
 import RouteIcon from '@mui/icons-material/Route'
 import StyleIcon from '@mui/icons-material/Style'
@@ -96,7 +95,6 @@ const quickCreateIcons: Record<StudyMaterialResourceType, React.ReactNode> = {
   quiz: <QuizIcon fontSize="small" />,
   flashcards: <StyleIcon fontSize="small" />,
   podcast: <PodcastsIcon fontSize="small" />,
-  improvedNotes: <AutoStoriesIcon fontSize="small" />,
 }
 
 const studyGuideCreditCost = getHostedAiCreditCost('study-guide')
@@ -121,11 +119,6 @@ const detailLevelCountLimits: Record<
   StudyMaterialResourceType,
   Record<StudyMaterialDetailLevel, { max: number }>
 > = {
-  improvedNotes: {
-    short: { max: 700 },
-    medium: { max: 1400 },
-    long: { max: 2600 },
-  },
   flashcards: {
     short: { max: 30 },
     medium: { max: 50 },
@@ -183,11 +176,7 @@ const getReviewableObjects = (
   resourceType: StudyMaterialResourceType,
   detailLevel: StudyMaterialDetailLevel,
 ) => {
-  const filtered = objects.filter((object) =>
-    resourceType === 'improvedNotes'
-      ? object.kind === 'markdown'
-      : isReviewableStudyObject(object),
-  )
+  const filtered = objects.filter(isReviewableStudyObject)
 
   if (resourceType !== 'flashcards' && resourceType !== 'quiz') {
     return filtered
@@ -220,10 +209,6 @@ const resourceTypeTitle = (resourceType?: string | null) => {
     return 'Podcast'
   }
 
-  if (resourceType === 'improvedNotes') {
-    return 'Expand on this'
-  }
-
   return 'Dashboard'
 }
 
@@ -238,10 +223,6 @@ const generationMaterialLabel = (draft: GenerationDraft) => {
 
   if (draft.selectedResourceType === 'flashcards') {
     return 'flashcards'
-  }
-
-  if (draft.selectedResourceType === 'improvedNotes') {
-    return 'Expand on this'
   }
 
   return 'material'
@@ -313,10 +294,10 @@ const sanitizePersistedGenerationDraft = (
     draft.status === 'generating'
       ? 'failed'
       : draft.status === 'ready' ||
-        draft.status === 'failed' ||
-        draft.status === 'cancelled'
-      ? draft.status
-      : null
+          draft.status === 'failed' ||
+          draft.status === 'cancelled'
+        ? draft.status
+        : null
 
   if (!status) {
     return null
@@ -820,10 +801,10 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
             state === 'running'
               ? 'generating'
               : state === 'complete'
-              ? 'ready'
-              : state === 'error'
-              ? 'failed'
-              : 'editing'
+                ? 'ready'
+                : state === 'error'
+                  ? 'failed'
+                  : 'editing'
 
           return {
             ...draft,
@@ -890,14 +871,14 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
           queueReadyCount === 1 ? '' : 's'
         } ready`
       : queueGeneratingCount > 0
-      ? `${queueGeneratingCount} generation${
-          queueGeneratingCount === 1 ? '' : 's'
-        } running`
-      : queueFailedCount > 0
-      ? `${queueFailedCount} generation${
-          queueFailedCount === 1 ? '' : 's'
-        } failed`
-      : 'Creation queue'
+        ? `${queueGeneratingCount} generation${
+            queueGeneratingCount === 1 ? '' : 's'
+          } running`
+        : queueFailedCount > 0
+          ? `${queueFailedCount} generation${
+              queueFailedCount === 1 ? '' : 's'
+            } failed`
+          : 'Creation queue'
 
   useEffect(() => {
     if (
@@ -1177,21 +1158,22 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
       storedSnapshot?.flow === 'quick-create'
         ? storedSnapshot
         : draft.flow === 'quick-create' &&
-          draft.retryResourceType &&
-          draft.retrySourceText &&
-          draft.retryTitle
-        ? {
-            flow: 'quick-create' as const,
-            resourceType: draft.retryResourceType,
-            sourceText: draft.retrySourceText,
-            title: draft.retryTitle,
-            detailLevel:
-              (draft.detailLevel as StudyMaterialDetailLevel) ||
-              quickDetailLevel,
-            difficulty: draft.retryDifficulty || quickDifficulty,
-            provider: (draft.aiProvider as QuickCreateAiProvider) || aiProvider,
-          }
-        : null
+            draft.retryResourceType &&
+            draft.retrySourceText &&
+            draft.retryTitle
+          ? {
+              flow: 'quick-create' as const,
+              resourceType: draft.retryResourceType,
+              sourceText: draft.retrySourceText,
+              title: draft.retryTitle,
+              detailLevel:
+                (draft.detailLevel as StudyMaterialDetailLevel) ||
+                quickDetailLevel,
+              difficulty: draft.retryDifficulty || quickDifficulty,
+              provider:
+                (draft.aiProvider as QuickCreateAiProvider) || aiProvider,
+            }
+          : null
 
     if (draft.flow === 'quick-create' && quickCreateRetry) {
       void runDirectQuickCreateCreate(
@@ -1616,9 +1598,7 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     : null
   const activeMaterial = activeMaterialDraft?.generatedMaterial
   const activeMaterialFolder =
-    activeMaterial?.type === 'quiz' ||
-    activeMaterial?.type === 'flashcards' ||
-    activeMaterial?.type === 'improvedNotes'
+    activeMaterial?.type === 'quiz' || activeMaterial?.type === 'flashcards'
       ? quickCreateFolders[activeMaterial.type]
       : undefined
   const promoteActiveMaterialToDashboard = () => {
@@ -1809,75 +1789,68 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
         gap: 1,
       }}
     >
-      {(['quiz', 'flashcards', 'improvedNotes'] as const).map(
-        (resourceType) => {
-          const accent = quickCreateAccents[resourceType]
-          const displayLabel =
-            resourceType === 'improvedNotes'
-              ? 'Expand'
-              : quickCreateLabels[resourceType]
+      {(['quiz', 'flashcards'] as const).map((resourceType) => {
+        const accent = quickCreateAccents[resourceType]
+        const displayLabel = quickCreateLabels[resourceType]
 
-          return (
-            <Paper
-              key={resourceType}
-              component="button"
-              type="button"
-              aria-label={`Quick Create ${displayLabel}`}
-              disabled={!canCreate}
-              elevation={0}
-              onClick={() => {
-                if (!canCreate) {
-                  return
-                }
+        return (
+          <Paper
+            key={resourceType}
+            component="button"
+            type="button"
+            aria-label={`Quick Create ${displayLabel}`}
+            disabled={!canCreate}
+            elevation={0}
+            onClick={() => {
+              if (!canCreate) {
+                return
+              }
 
-                runQuickCreate(resourceType)
-              }}
-              sx={{
-                minHeight: { xs: 82, sm: 110 },
-                p: { xs: 1.15, sm: 1.35 },
-                borderRadius: 2,
-                border: 1,
-                borderColor: alpha(accent, 0.26),
-                bgcolor: alpha(accent, 0.06),
-                color: 'text.primary',
-                cursor: canCreate ? 'pointer' : 'not-allowed',
-                textAlign: 'center',
-                opacity: canCreate ? 1 : 0.48,
-                '&:hover': {
-                  borderColor: canCreate ? accent : alpha(accent, 0.26),
-                  bgcolor: canCreate ? alpha(accent, 0.1) : alpha(accent, 0.06),
-                },
-              }}
-            >
-              <Stack spacing={0.75} alignItems="center">
-                <Box sx={{ color: accent }}>
-                  {quickCreateIcons[resourceType]}
-                </Box>
-                <Stack
-                  direction="row"
-                  spacing={0.65}
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <Typography variant="subtitle2" fontWeight={900}>
-                    {displayLabel}
-                  </Typography>
-                  {aiProvider === 'hosted' ? (
-                    <StudyCreditCostLabel
-                      amount={quickCreateCreditCost}
-                      variant="badge"
-                    />
-                  ) : null}
-                </Stack>
+              runQuickCreate(resourceType)
+            }}
+            sx={{
+              minHeight: { xs: 82, sm: 110 },
+              p: { xs: 1.15, sm: 1.35 },
+              borderRadius: 2,
+              border: 1,
+              borderColor: alpha(accent, 0.26),
+              bgcolor: alpha(accent, 0.06),
+              color: 'text.primary',
+              cursor: canCreate ? 'pointer' : 'not-allowed',
+              textAlign: 'center',
+              opacity: canCreate ? 1 : 0.48,
+              '&:hover': {
+                borderColor: canCreate ? accent : alpha(accent, 0.26),
+                bgcolor: canCreate ? alpha(accent, 0.1) : alpha(accent, 0.06),
+              },
+            }}
+          >
+            <Stack spacing={0.75} alignItems="center">
+              <Box sx={{ color: accent }}>{quickCreateIcons[resourceType]}</Box>
+              <Stack
+                direction="row"
+                spacing={0.65}
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Typography variant="subtitle2" fontWeight={900}>
+                  {displayLabel}
+                </Typography>
+                {aiProvider === 'hosted' ? (
+                  <StudyCreditCostLabel
+                    amount={quickCreateCreditCost}
+                    variant="badge"
+                  />
+                ) : null}
               </Stack>
-            </Paper>
-          )
-        },
-      )}
+            </Stack>
+          </Paper>
+        )
+      })}
     </Box>
   )
 
@@ -2125,8 +2098,8 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                     isGenerating && draft.flow === 'study-path'
                       ? 'Creating quick guide...'
                       : isGenerating
-                      ? `Generating ${materialLabel}...`
-                      : formatDraftTitle(draft)
+                        ? `Generating ${materialLabel}...`
+                        : formatDraftTitle(draft)
                   const generatingDetail =
                     draft.flow === 'study-path'
                       ? [
@@ -2146,12 +2119,12 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   const detail = isCancelled
                     ? draft.error || 'Stopped - Retry'
                     : isFailed
-                    ? draft.error || 'Retry'
-                    : isReady
-                    ? opened
-                      ? 'Opened'
-                      : 'Ready - Open'
-                    : generatingDetail
+                      ? draft.error || 'Retry'
+                      : isReady
+                        ? opened
+                          ? 'Opened'
+                          : 'Ready - Open'
+                        : generatingDetail
                   const statusIcon =
                     isFailed || isCancelled ? (
                       <ErrorOutlineIcon fontSize="small" color="error" />
@@ -2202,16 +2175,16 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                         borderColor: showAcknowledgedPulse
                           ? 'warning.main'
                           : isReady
-                          ? alpha(theme.palette.success.main, 0.45)
-                          : isFailed || isCancelled
-                          ? alpha(theme.palette.error.main, 0.35)
-                          : alpha(theme.palette.warning.main, 0.36),
+                            ? alpha(theme.palette.success.main, 0.45)
+                            : isFailed || isCancelled
+                              ? alpha(theme.palette.error.main, 0.35)
+                              : alpha(theme.palette.warning.main, 0.36),
                         borderRadius: 2,
                         bgcolor: isReady
                           ? alpha(theme.palette.success.main, 0.075)
                           : isFailed || isCancelled
-                          ? alpha(theme.palette.error.main, 0.055)
-                          : alpha(theme.palette.warning.main, 0.07),
+                            ? alpha(theme.palette.error.main, 0.055)
+                            : alpha(theme.palette.warning.main, 0.07),
                         color: 'text.primary',
                         cursor: isReady ? 'pointer' : 'default',
                         textAlign: 'left',
@@ -2261,10 +2234,10 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                                 1,
                               )} generation failed`
                             : isCancelled
-                            ? `${materialLabel[0].toUpperCase()}${materialLabel.slice(
-                                1,
-                              )} generation stopped`
-                            : label}
+                              ? `${materialLabel[0].toUpperCase()}${materialLabel.slice(
+                                  1,
+                                )} generation stopped`
+                              : label}
                         </Typography>
                         <Typography
                           variant="caption"
@@ -2543,70 +2516,70 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
 
   const collapsedCreationActions = (
     <>
-      {(
-        ['quiz', 'flashcards', 'improvedNotes'] as StudyMaterialResourceType[]
-      ).map((resourceType) => (
-        <Tooltip
-          key={resourceType}
-          title={
-            aiProvider === 'hosted' ? (
-              <Stack direction="row" spacing={0.75} alignItems="center">
-                <span>{quickCreateLabels[resourceType]} -</span>
-                <StudyCreditCostLabel
-                  amount={quickCreateCreditCost}
-                  variant="tooltip"
-                />
-              </Stack>
-            ) : (
-              quickCreateLabels[resourceType]
-            )
-          }
-          placement="right"
-        >
-          <Box component="span" sx={{ display: 'grid' }}>
-            <Box
-              className="studymesh-creation-quick-action"
-              component="button"
-              type="button"
-              aria-label={`Quick Create ${quickCreateLabels[resourceType]}`}
-              disabled={!canRunQuickCreate}
-              onClick={(event) => {
-                event.stopPropagation()
-                if (!canRunQuickCreate) {
-                  return
-                }
-                handleCollapsedQuickCreateClick(resourceType)
-              }}
-              sx={{
-                width: 30,
-                height: 30,
-                border: 1,
-                borderColor: alpha(quickCreateAccents[resourceType], 0.32),
-                borderRadius: 1.25,
-                bgcolor: alpha(quickCreateAccents[resourceType], 0.1),
-                color: quickCreateAccents[resourceType],
-                display: 'grid',
-                placeItems: 'center',
-                cursor: canRunQuickCreate ? 'pointer' : 'not-allowed',
-                opacity: canRunQuickCreate ? 1 : 0.42,
-                '&:hover': {
-                  borderColor: canRunQuickCreate
-                    ? quickCreateAccents[resourceType]
-                    : alpha(quickCreateAccents[resourceType], 0.32),
-                  bgcolor: canRunQuickCreate
-                    ? alpha(quickCreateAccents[resourceType], 0.18)
-                    : alpha(quickCreateAccents[resourceType], 0.1),
-                },
-                '& svg': {
-                  margin: '0 -2px',
-                },
-              }}
-            >
-              {quickCreateIcons[resourceType]}
+      {(['quiz', 'flashcards'] as StudyMaterialResourceType[]).map(
+        (resourceType) => (
+          <Tooltip
+            key={resourceType}
+            title={
+              aiProvider === 'hosted' ? (
+                <Stack direction="row" spacing={0.75} alignItems="center">
+                  <span>{quickCreateLabels[resourceType]} -</span>
+                  <StudyCreditCostLabel
+                    amount={quickCreateCreditCost}
+                    variant="tooltip"
+                  />
+                </Stack>
+              ) : (
+                quickCreateLabels[resourceType]
+              )
+            }
+            placement="right"
+          >
+            <Box component="span" sx={{ display: 'grid' }}>
+              <Box
+                className="studymesh-creation-quick-action"
+                component="button"
+                type="button"
+                aria-label={`Quick Create ${quickCreateLabels[resourceType]}`}
+                disabled={!canRunQuickCreate}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  if (!canRunQuickCreate) {
+                    return
+                  }
+                  handleCollapsedQuickCreateClick(resourceType)
+                }}
+                sx={{
+                  width: 30,
+                  height: 30,
+                  border: 1,
+                  borderColor: alpha(quickCreateAccents[resourceType], 0.32),
+                  borderRadius: 1.25,
+                  bgcolor: alpha(quickCreateAccents[resourceType], 0.1),
+                  color: quickCreateAccents[resourceType],
+                  display: 'grid',
+                  placeItems: 'center',
+                  cursor: canRunQuickCreate ? 'pointer' : 'not-allowed',
+                  opacity: canRunQuickCreate ? 1 : 0.42,
+                  '&:hover': {
+                    borderColor: canRunQuickCreate
+                      ? quickCreateAccents[resourceType]
+                      : alpha(quickCreateAccents[resourceType], 0.32),
+                    bgcolor: canRunQuickCreate
+                      ? alpha(quickCreateAccents[resourceType], 0.18)
+                      : alpha(quickCreateAccents[resourceType], 0.1),
+                  },
+                  '& svg': {
+                    margin: '0 -2px',
+                  },
+                }}
+              >
+                {quickCreateIcons[resourceType]}
+              </Box>
             </Box>
-          </Box>
-        </Tooltip>
-      ))}
+          </Tooltip>
+        ),
+      )}
     </>
   )
 
@@ -2667,8 +2640,8 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
               queueReadyCount > 0
                 ? 'success.main'
                 : queueFailedCount > 0 && queueGeneratingCount === 0
-                ? 'error.main'
-                : 'warning.main',
+                  ? 'error.main'
+                  : 'warning.main',
             flex: '0 0 auto',
             '&::after':
               queueGeneratingCount > 0
@@ -2836,14 +2809,14 @@ const WorkspaceStudioShell = ({ children }: { children: React.ReactNode }) => {
                   queueReadyCount > 0
                     ? 'success.main'
                     : queueFailedCount > 0 && queueGeneratingCount === 0
-                    ? 'error.main'
-                    : 'warning.main',
+                      ? 'error.main'
+                      : 'warning.main',
                 boxShadow:
                   queueReadyCount > 0
                     ? statusMarkerGlow.complete
                     : queueFailedCount > 0 && queueGeneratingCount === 0
-                    ? statusMarkerGlow.error
-                    : statusMarkerGlow.running,
+                      ? statusMarkerGlow.error
+                      : statusMarkerGlow.running,
                 color:
                   queueReadyCount > 0
                     ? 'success.contrastText'

@@ -27,15 +27,23 @@ import {
 import type { StrongAiCallOptions, StrongAiProviderId } from './strongProviders'
 import type {
   StudyGuideNextIdea,
+  StudyGuidePageIdea,
+  StudyGuidePlannedLesson,
   StudyGuideQuickStart,
 } from '../../state/store'
 import {
   sanitizeStudyGuideLearnedSkillOptions,
   sanitizeStudyGuideNextIdeas,
+  sanitizeStudyGuidePageIdeas,
+  sanitizeStudyGuidePlannedLessons,
   sanitizeStudyGuideQuickStart,
   STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
+  STUDY_GUIDE_PAGE_IDEAS_INSTRUCTION,
+  STUDY_GUIDE_PAGE_IDEAS_SCHEMA,
+  STUDY_GUIDE_PLANNED_LESSONS_INSTRUCTION,
+  STUDY_GUIDE_PLANNED_LESSONS_SCHEMA,
 } from '../../studyGuides/quickStart'
 import {
   createAiOutputLanguageInstruction,
@@ -82,11 +90,6 @@ const geminiDetailTargets: Record<
   StudyMaterialResourceType,
   Record<StudyMaterialDetailLevel, string>
 > = {
-  improvedNotes: {
-    short: '400-700 words',
-    medium: '900-1400 words',
-    long: '1800-2600 words',
-  },
   flashcards: {
     short: '20-30 flashcards',
     medium: '40-50 flashcards',
@@ -96,6 +99,11 @@ const geminiDetailTargets: Record<
     short: '6-10 multiple-choice questions',
     medium: '30-40 multiple-choice questions',
     long: '30-40 multiple-choice questions',
+  },
+  podcast: {
+    short: '400-700 words of script',
+    medium: '900-1400 words of script',
+    long: '1800-2600 words of script',
   },
 }
 
@@ -163,6 +171,8 @@ export interface AiStudyPathDashboardDraft extends AiQuickCreateDraft {
   supportArtifacts?: AiStudyPathSupportArtifacts
   qualityScore?: number
   qualityIssues?: string[]
+  /** Follow-up pages offered from this dashboard, generated with the guide. */
+  pageIdeas?: StudyGuidePageIdea[]
 }
 
 export interface AiStudyPathDraft {
@@ -175,6 +185,8 @@ export interface AiStudyPathDraft {
   learnedSkillOptions?: string[]
   /** Follow-up guides offered once the learner claims the topic. */
   nextGuideIdeas?: StudyGuideNextIdea[]
+  /** Lessons the plan named and this guide did not write. */
+  plannedLessons?: StudyGuidePlannedLesson[]
   dashboards: AiStudyPathDashboardDraft[]
   warnings: string[]
   blueprint?: AiStudyPathBlueprint
@@ -217,6 +229,8 @@ interface AiStudyPathBlueprint {
   }>
   lessons: AiStudyPathBlueprintLesson[]
   finalReviewPlan: string[]
+  /** Lessons the plan named on purpose and this guide will not write. */
+  plannedLessons: StudyGuidePlannedLesson[]
 }
 
 export interface GenerateStudyPathWithAiOptions {
@@ -551,6 +565,7 @@ const studyPathSchema = {
       items: { type: 'STRING' },
     },
     nextGuideIdeas: STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
+    plannedLessons: STUDY_GUIDE_PLANNED_LESSONS_SCHEMA,
     dashboards: {
       type: 'ARRAY',
       items: {
@@ -559,6 +574,7 @@ const studyPathSchema = {
           title: { type: 'STRING' },
           summary: { type: 'STRING' },
           rawNotes: { type: 'STRING' },
+          pageIdeas: STUDY_GUIDE_PAGE_IDEAS_SCHEMA,
           dashboardPurpose: {
             type: 'STRING',
             enum: [
@@ -627,6 +643,7 @@ const studyPathSchema = {
     'quickStart',
     'learnedSkillOptions',
     'nextGuideIdeas',
+    'plannedLessons',
     'dashboards',
   ],
 }
@@ -723,6 +740,7 @@ const studyPathBlueprintSchema = {
       items: studyPathBlueprintLessonSchema,
     },
     finalReviewPlan: textArraySchema,
+    plannedLessons: STUDY_GUIDE_PLANNED_LESSONS_SCHEMA,
   },
   required: [
     'title',
@@ -1463,13 +1481,11 @@ export const generateQuickCreateWithAi = async ({
           ? `Use an active-practice mix: ${practiceProfile.targetQuizzes} quizzes, ${practiceProfile.targetFlashcards} flashcards, and about ${practiceProfile.targetSupport} summaries/definitions/review prompts. Quizzes should be 50-60% of the pack and flashcards 20-30%.`
           : 'Use the selected non-practice targets and still create the requested number of useful reviewable items.'
   const resourceInstruction =
-    resourceType === 'improvedNotes'
-      ? 'Selected resource type: Expand on this. Create one polished expanded note set from the source. Stay close to the provided content and preserve the same learner level, vocabulary difficulty, and topic depth as the original source. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless they are clearly needed to explain the source. Organize the notes into teachable sections such as: source summary, key concepts, examples, common mistakes or misconceptions, and compact takeaways. Use clear explanations, but keep the complexity appropriate to the source. Do not create quiz questions or flashcards. Leave practice.multipleChoice and flashcards empty.'
-      : resourceType === 'flashcards'
-        ? 'Selected resource type: Flashcards. Create only active-recall flashcards from the source, with the same reasoning/application quality expected from quizzes. Each front should ask the learner to use, choose, compare, diagnose, predict, explain, or repair a concept, not repeat a source sentence or ask for a pasted definition. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Use answer backs that teach briefly, not one-word fragments. Keep sourceSummary brief, leave conceptRecap sections empty, and leave practice.multipleChoice empty.'
-        : resourceType === 'quiz'
-          ? 'Selected resource type: Quiz. Create only multiple-choice quiz questions from the source. Fill practice.multipleChoice only. Never create typed-answer, short-answer, quizSingle, or free-response questions. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Prefer scenario, application, contrast, error-fixing, and why/how questions over simple recall. Keep sourceSummary brief, leave conceptRecap sections empty, and leave flashcards empty.'
-          : 'Wrong Selected resource type.'
+    resourceType === 'flashcards'
+      ? 'Selected resource type: Flashcards. Create only active-recall flashcards from the source, with the same reasoning/application quality expected from quizzes. Each front should ask the learner to use, choose, compare, diagnose, predict, explain, or repair a concept, not repeat a source sentence or ask for a pasted definition. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Use answer backs that teach briefly, not one-word fragments. Keep sourceSummary brief, leave conceptRecap sections empty, and leave practice.multipleChoice empty.'
+      : resourceType === 'quiz'
+        ? 'Selected resource type: Quiz. Create only multiple-choice quiz questions from the source. Fill practice.multipleChoice only. Never create typed-answer, short-answer, quizSingle, or free-response questions. Match the source learner level, vocabulary difficulty, and topic depth. Do not introduce advanced terms, extra concepts, or deeper rabbit holes unless clearly needed. Prefer scenario, application, contrast, error-fixing, and why/how questions over simple recall. Keep sourceSummary brief, leave conceptRecap sections empty, and leave flashcards empty.'
+        : 'Wrong Selected resource type.'
   const detailInstruction =
     detailLevel === 'short'
       ? 'Detail level: Short. Keep notes concise and generate a small focused set.'
@@ -1539,7 +1555,6 @@ Rules:
 - Use concrete rule labels in conceptRecap sections, such as "Subjunctive trigger: il faut que", not headings or sentence fragments.
 - Generate summaries, flashcards, and quizzes from learning concepts, not by copying first sentences, headings, examples, or dashboard instructions.
 - Never use weak standalone concepts such as Goal, Example, Active, It, Avoir, Etre, Quantity, or De. Do not create title-like, instruction-like, or very short fragments as study objects.
-- Expand on this must read like a useful student handout: headings, concise explanations, examples, contrasts, and common mistakes when grounded. Do not just summarize the input paragraph-by-paragraph.
 - Flashcards must behave like quiz-style retrieval prompts without answer options. Prefer scenario, application, contrast, error-fixing, why/how, exception, and common-mistake fronts over "What is X?" definition cards.
 - Flashcards must be atomic and rule-specific, such as "A sentence uses il faut que before a new subject. What mood should the following verb use, and why?" Back sides must be self-contained and include enough context to learn from the card alone.
 - Flashcard fronts must be original prompts. Do not copy headings, first sentences, examples, or glossary lines from the source. Avoid text-literal fronts like "Define X", "What does the text say about X?", or "What is the meaning of X?" unless the source is purely vocabulary.
@@ -1654,7 +1669,6 @@ The previous response failed JSON formatting. Retry with a simpler response:
       rawNotes,
       rawAiResponse: text,
     }),
-    packId,
     resourceType,
   )
 
@@ -1880,6 +1894,7 @@ const normalizeStudyPathBlueprint = (
       .filter((module) => module.title || module.goal),
     lessons,
     finalReviewPlan: stringArrayFromUnknown(record.finalReviewPlan),
+    plannedLessons: sanitizeStudyGuidePlannedLessons(record.plannedLessons),
   }
 }
 
@@ -1920,6 +1935,7 @@ Planning requirements:
 - Avoid vague lesson titles such as "Introduction", "Practice", or "Review" unless they include topic-specific words.
 - Include 1-3 modules. lessonIndexes are zero-based indexes into lessons.
 - For each lesson, include contentMode, sectionPlan, mustTeach, workedExample, misconceptionChecks, and retrievalPractice.
+- ${STUDY_GUIDE_PLANNED_LESSONS_INSTRUCTION}
 - Across the full Study Guide, choose only 1-2 dashboards for visible quiz practice. Prefer lesson 2 and, for a 5+ page guide, the final review/application page. Use practiceType "none" on the other dashboards.
 - Do not write full dashboard notes yet.
 Title fallback: ${title}
@@ -2001,12 +2017,14 @@ Required dashboard fields:
       "optionFeedback": [{ "option": "...", "explanation": "specific feedback for this option" }]
     }]
   },
-  "flashcards": ${isLeanStudyGuide ? '[]' : '[{ "front": "...", "back": "..." }]'}
+  "flashcards": ${isLeanStudyGuide ? '[]' : '[{ "front": "...", "back": "..." }]'},
+  "pageIdeas": [{ "axis": "mechanism | example | limit", "label": "...", "prompt": "..." }]
 }
 
 Quality rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
 - Keep every support item in that output language too: practice.multipleChoice questions/options/hints/explanations and flashcard front/back strings.
+- ${STUDY_GUIDE_PAGE_IDEAS_INSTRUCTION}
 - rawNotes must be 350-800 words of real teaching, formatted as Markdown with short topic-specific sections.
 - Never reuse a generic section scaffold across dashboards. Avoid generic headings like "Goal", "Content", "Common Mistakes/Misconceptions", and "Quick Recall".
 - Use the lesson contentMode:
@@ -2405,6 +2423,7 @@ const generateStudyPathJsonWithPipeline = async ({
     title: blueprint.title || title,
     folderName: blueprint.folderName || folderName,
     dashboardCountReason: blueprint.dashboardCountReason,
+    plannedLessons: blueprint.plannedLessons,
     dashboards,
   }
   const text = JSON.stringify(pathJson)
@@ -2454,9 +2473,11 @@ Return exactly this structure:
   },
   "learnedSkillOptions": ["..."],
   "nextGuideIdeas": [{ "axis": "curiosity | utility | connection", "label": "...", "prompt": "..." }],
+  "plannedLessons": [{ "title": "...", "summary": "..." }],
   "dashboards": [
     {
       "title": "01 - Content 1",
+      "pageIdeas": [{ "axis": "mechanism | example | limit", "label": "...", "prompt": "..." }],
       "summary": "One sentence preview",
       "dashboardPurpose": "lesson",
       "practiceType": "quiz",
@@ -2495,6 +2516,8 @@ Rules:
 - Choose exactly one topic-specific emoji for the Study Guide. It must be a single emoji character or emoji sequence, not text, and it should match the user's topic.
 - ${STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION}
 - ${STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION}
+- ${STUDY_GUIDE_PAGE_IDEAS_INSTRUCTION}
+- ${STUDY_GUIDE_PLANNED_LESSONS_INSTRUCTION}
 - Create exactly ${dashboardCount} ordered lesson dashboards, grouped mentally into 1-3 modules. Give each dashboard a useful topic-specific title.
 ${isLeanStudyGuide ? '- Lean hosted profile: create exactly 3 dashboards. Do not choose more or fewer pages.\n- Lean hosted profile: rawNotes must be 180-260 words per dashboard.\n- Lean hosted profile: for programming languages, frameworks, CLIs, config tools, APIs, or infrastructure tools, include small fenced code/config blocks inside rawNotes when code is the clearest example. Prefer 1-2 short examples across the guide over prose-only explanations.\n- Lean hosted profile: only the final dashboard may include practice.multipleChoice.\n- Lean hosted profile: final dashboard must include exactly 3 multiple-choice questions, exactly 3 options per question, and short explanations only.\n- Lean hosted profile: base guide must not include flashcards, podcast material, supportArtifacts, glossary, contrastTable, discussionPrompts, answerKey, or checkpointRubric.\n- Lean hosted profile: sourceSummary and conceptRecap should be minimal compatibility fields only.' : ''}
 - Treat this as a bounded learning sprint, not a complete course on everything. Include scope in lesson choices: what gets covered now, what waits for later.
@@ -2547,7 +2570,7 @@ ${prompt}`
 The previous response failed JSON formatting. Retry with a simpler response:
 - Return plain JSON only.
 - Return syntactically valid JSON with all commas and braces in place.
-- Use only the Study Guide fields: title, folderName, emoji, quickStart, learnedSkillOptions, nextGuideIdeas, dashboards, summary, rawNotes, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
+- Use only the Study Guide fields: title, folderName, emoji, quickStart, learnedSkillOptions, nextGuideIdeas, plannedLessons, dashboards, summary, rawNotes, pageIdeas, dashboardPurpose, practiceType, layoutReason, sourceRefs, sourceSummary, conceptRecap, practice, flashcards.
 - For normal lesson dashboards selected for quiz practice, keep practiceType quiz or mixed and include 3-6 multiple-choice questions. Use practiceType none for the other dashboards.
 - If lean hosted profile rules are present, preserve them: exactly 3 dashboards, no flashcards, and only final page has exactly 3 multiple-choice questions.
 - Do not use markdown code fences.
@@ -2947,6 +2970,7 @@ ${prompt}`
       }
 
       warnings.push(...draft.warnings)
+      const pageIdeas = sanitizeStudyGuidePageIdeas(input.pageIdeas)
 
       const dashboard = {
         ...draft,
@@ -2968,6 +2992,7 @@ ${prompt}`
         supportArtifacts,
         qualityScore: quality?.score,
         qualityIssues: quality?.issues,
+        pageIdeas: pageIdeas.length ? pageIdeas : undefined,
         objects: finalObjects,
         warnings: [],
         debugTrace,
@@ -3003,6 +3028,7 @@ ${prompt}`
     record.learnedSkillOptions,
   )
   const nextGuideIdeas = sanitizeStudyGuideNextIdeas(record.nextGuideIdeas)
+  const plannedLessons = sanitizeStudyGuidePlannedLessons(record.plannedLessons)
 
   return {
     title:
@@ -3026,6 +3052,7 @@ ${prompt}`
       ? learnedSkillOptions
       : undefined,
     nextGuideIdeas: nextGuideIdeas.length ? nextGuideIdeas : undefined,
+    plannedLessons: plannedLessons.length ? plannedLessons : undefined,
     dashboards,
     warnings,
     blueprint,

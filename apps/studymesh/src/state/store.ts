@@ -36,8 +36,19 @@ export interface StudyPathDashboardItem {
   sourceRefs?: StudyPathSourceRef[]
   contentLanguage?: StudyMeshLanguageCode
   contentLanguageSource?: ContentLanguageSource
-  createdBy?: 'generator' | 'chat' | 'quickCreate' | 'manual'
+  createdBy?: 'generator' | 'chat' | 'quickCreate' | 'manual' | 'expanded'
   deletable?: boolean
+  /**
+   * Set when this page was dug out of another one, so the pages panel can
+   * indent it and a reader can walk back up. Root pages leave it unset; the
+   * pages array itself stays flat and depth-first.
+   */
+  parentPageKey?: string
+  /**
+   * Follow-up pages offered from this page. Generated with the guide, so the
+   * offer costs no extra model call.
+   */
+  pageIdeas?: StudyGuidePageIdea[]
 }
 
 export interface StudyGuideQuickStartVariant {
@@ -68,6 +79,31 @@ export interface StudyGuideNextIdea {
   prompt: string
 }
 
+/**
+ * How a follow-up page digs into material the guide already put on the page.
+ * Deliberately disjoint from `StudyGuideNextIdeaAxis`: the guide slate is
+ * banned from suggesting depth, so depth is what a page is for.
+ */
+export type StudyGuidePageIdeaAxis = 'mechanism' | 'example' | 'limit'
+
+/** One follow-up page the reader can dig out of a page they are reading. */
+export interface StudyGuidePageIdea {
+  /** Absent on guides from providers that answer without a response schema. */
+  axis?: StudyGuidePageIdeaAxis
+  label: string
+  prompt: string
+}
+
+/**
+ * A lesson the plan named but the guide did not write. Kept so a guide can
+ * offer its own next page instead of guessing one from the pages it already
+ * has, and so the offer can be previewed before any model call is paid for.
+ */
+export interface StudyGuidePlannedLesson {
+  title: string
+  summary: string
+}
+
 export interface StudyPathContainerState {
   pathId: string
   title: string
@@ -93,6 +129,12 @@ export interface StudyPathContainerState {
    * the guide, so the offer costs no extra model call.
    */
   nextGuideIdeas?: StudyGuideNextIdea[]
+  /**
+   * Lessons the plan named and the guide did not write. Generated with the
+   * guide, so offering the next page costs no extra model call. Consumed one
+   * at a time as the reader grows the guide.
+   */
+  plannedLessons?: StudyGuidePlannedLesson[]
   dashboards: StudyPathDashboardItem[]
   selectedIndex: number
   pinnedDashboardKeys?: string[]

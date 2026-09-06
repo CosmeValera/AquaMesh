@@ -24,6 +24,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import EditIcon from '@mui/icons-material/Edit'
+import SubdirectoryArrowLeftIcon from '@mui/icons-material/SubdirectoryArrowLeft'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import {
   DashboardLayout,
@@ -35,7 +36,9 @@ import {
   getStudyGuidePageMarkdown,
   isEditableMarkdownStudyGuidePage,
   updateStudyGuideMarkdownPage,
+  getStudyGuidePageNumberLabels,
 } from '../../studyGuides/pages'
+import type { StudyGuideGrowthSeed } from '../../studyGuides/pageGrowth'
 import StudyGuideLinearLayout from './StudyGuideLinearLayout'
 import StudyGuidePageEditor from './StudyGuidePageEditor'
 import { useNavigate } from 'react-router-dom'
@@ -93,6 +96,10 @@ interface StudyPathWorkspaceViewProps {
   editingPageKey?: string | null
   onEditingPageKeyChange?: (pageKey: string | null) => void
   onAddPage?: () => void
+  /** Absent on read-only hosts such as the demo guide. */
+  onGrowPage?: (seed: StudyGuideGrowthSeed) => void
+  growPageCreditCost?: number
+  growingPage?: boolean
   onAskAi?: (question: string) => void
   /** Overrides the default "My guides" crumb, e.g. for the public /try demo. */
   breadcrumb?: { label: string; onClick: () => void }
@@ -167,7 +174,11 @@ const StudyGuideQuickStartCard = ({
             size="small"
             color="warning"
             variant="outlined"
-            sx={{ height: 18, fontSize: '0.65rem', '& .MuiChip-label': { px: 0.75 } }}
+            sx={{
+              height: 18,
+              fontSize: '0.65rem',
+              '& .MuiChip-label': { px: 0.75 },
+            }}
           />
         </Tooltip>
       </Stack>
@@ -182,9 +193,9 @@ const StudyGuideQuickStartCard = ({
     ? { text: t('workspace.weakBadge'), tooltip: forcedBridge.weakFitReason }
     : forcedBridge && !forcedBridge.bridgeTopics?.length
       ? {
-        text: t('workspace.genericBadge'),
-        tooltip: t('workspace.genericBadgeReason'),
-      }
+          text: t('workspace.genericBadge'),
+          tooltip: t('workspace.genericBadgeReason'),
+        }
       : undefined
 
   return (
@@ -281,9 +292,9 @@ const StudyGuideQuickStartCard = ({
                       defaultSegmentLabel,
                       quickStart.weakFitReason
                         ? {
-                          text: t('workspace.weakBadge'),
-                          tooltip: quickStart.weakFitReason,
-                        }
+                            text: t('workspace.weakBadge'),
+                            tooltip: quickStart.weakFitReason,
+                          }
                         : undefined,
                     )}
                   />
@@ -419,6 +430,9 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   editingPageKey = null,
   onEditingPageKeyChange,
   onAddPage,
+  onGrowPage,
+  growPageCreditCost,
+  growingPage,
   onAskAi,
   breadcrumb,
   createdNextIdeaPrompts,
@@ -444,6 +458,21 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const currentLesson = studyPath.dashboards[selectedIndex]
   const currentPageKey = currentLesson?.dashboardKey || null
   const currentPageEditable = isEditableMarkdownStudyGuidePage(currentLesson)
+  const currentPageNumberLabel = currentPageKey
+    ? getStudyGuidePageNumberLabels(studyPath).get(currentPageKey)
+    : undefined
+  // A page dug out of another one offers a way back up; root pages do not.
+  const parentPage = useMemo(() => {
+    const parentKey = currentLesson?.parentPageKey
+    if (!parentKey) {
+      return null
+    }
+
+    const index = studyPath.dashboards.findIndex(
+      (dashboard) => dashboard.dashboardKey === parentKey,
+    )
+    return index < 0 ? null : { index, name: studyPath.dashboards[index].name }
+  }, [currentLesson?.parentPageKey, studyPath.dashboards])
   const showQuickStart =
     selectedIndex === 0 &&
     Boolean(studyPath.quickStart?.keyIdea && studyPath.quickStart.quickSummary)
@@ -548,7 +577,8 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
         if (retriesLeft > 0) {
           frame = window.requestAnimationFrame(() => attempt(retriesLeft - 1))
         } else {
-          handledCitationRequestIdRef.current = pendingCitationHighlight.requestId
+          handledCitationRequestIdRef.current =
+            pendingCitationHighlight.requestId
         }
         return
       }
@@ -570,10 +600,10 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
           found ||
           (candidate
             ? paintTransientHighlight(
-              container,
-              candidate,
-              CITATION_HIGHLIGHT_REGISTRY_NAME,
-            )
+                container,
+                candidate,
+                CITATION_HIGHLIGHT_REGISTRY_NAME,
+              )
             : null),
         null,
       )
@@ -649,6 +679,11 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const handleAddPage = () => {
     saveCurrentPageScroll()
     onAddPage?.()
+  }
+
+  const handleGrowPage = (seed: StudyGuideGrowthSeed) => {
+    saveCurrentPageScroll()
+    onGrowPage?.(seed)
   }
 
   const updateCurrentMarkdownPage = (title: string, markdown: string) => {
@@ -756,10 +791,43 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
             >
               {currentLesson.name}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {t('workspace.pageLabel')} {selectedIndex + 1}/
-              {studyPath.dashboards.length}
-            </Typography>
+            <Stack
+              direction="row"
+              spacing={0.75}
+              alignItems="center"
+              flexWrap="wrap"
+            >
+              <Typography variant="caption" color="text.secondary">
+                {t('workspace.pageLabel')}{' '}
+                {currentPageNumberLabel || selectedIndex + 1}/
+                {studyPath.dashboards.length}
+              </Typography>
+              {parentPage ? (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  icon={<SubdirectoryArrowLeftIcon fontSize="small" />}
+                  label={t('workspace.pageParentReturn').replace(
+                    '{title}',
+                    parentPage.name,
+                  )}
+                  onClick={() => selectLesson(parentPage.index)}
+                  data-testid="study-guide-parent-page-chip"
+                  sx={(theme) => ({
+                    height: 22,
+                    maxWidth: 220,
+                    color: 'text.primary',
+                    borderColor: theme.palette.divider,
+                    bgcolor: 'background.paper',
+                    '& .MuiChip-icon': { color: 'text.secondary', ml: 0.5 },
+                    '&:hover': {
+                      borderColor: alpha(theme.palette.primary.main, 0.42),
+                      bgcolor: alpha(theme.palette.primary.main, 0.06),
+                    },
+                  })}
+                />
+              ) : null}
+            </Stack>
           </Box>
         </Stack>
         <Stack
@@ -840,6 +908,9 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
             onStudyPathChange={handleStudyPathChange}
             onAddPage={handleAddPage}
             variant="desktop"
+            onGrowPage={onGrowPage ? handleGrowPage : undefined}
+            growPageCreditCost={growPageCreditCost}
+            growingPage={growingPage}
           />
         ) : null}
         <Box
@@ -892,6 +963,17 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
         enabled={!isEditingCurrentPage}
         contextLabel={currentLesson.name}
         onAskAi={onAskAi}
+        onGrowPage={
+          onGrowPage && currentPageKey && !growingPage
+            ? (selection) =>
+                handleGrowPage({
+                  kind: 'fragment',
+                  sourcePageKey: currentPageKey,
+                  selection,
+                })
+            : undefined
+        }
+        growPageCreditCost={growPageCreditCost}
       />
     </Box>
   )

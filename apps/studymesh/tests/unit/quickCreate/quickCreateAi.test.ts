@@ -267,12 +267,15 @@ describe('quick create AI settings', () => {
     expect(HOSTED_AI_CREDIT_COSTS).toEqual({
       'study-guide': 3,
       'quick-create': 1,
+      'study-page': 1,
       chat: 1,
       'chat-followup': 0,
       podcast: 1,
     })
     expect(getHostedAiCreditCost('study-guide')).toBe(3)
     expect(getHostedAiCreditCost('podcast')).toBe(1)
+    // Growing a guide by one page costs a third of a whole new guide.
+    expect(getHostedAiCreditCost('study-page')).toBe(1)
   })
 
   it('routes hosted Quick Create through the hosted gateway without a browser API key', async () => {
@@ -955,32 +958,18 @@ describe('quick create AI normalizer', () => {
         'Il faut que triggers the subjunctive and students should practice the rule.',
     })
 
-    const improvedNotes = applyStudyMaterialResourceTypeToDraft(
-      draft,
-      'resource-pack',
-      'improvedNotes',
-    )
-    expect(improvedNotes.objects).toEqual([
-      expect.objectContaining({
-        kind: 'markdown',
-        title: 'Expand on this',
-        markdown: expect.stringContaining('Subjunctive trigger: il faut que'),
-      }),
-    ])
-
     const flashcards = applyStudyMaterialResourceTypeToDraft(
       draft,
-      'resource-pack',
       'flashcards',
     )
     expect(flashcards.objects.map((object) => object.kind)).toEqual(['qa'])
 
-    const quiz = applyStudyMaterialResourceTypeToDraft(
-      draft,
-      'resource-pack',
-      'quiz',
-    )
+    const quiz = applyStudyMaterialResourceTypeToDraft(draft, 'quiz')
     expect(quiz.objects.map((object) => object.kind)).toEqual(['quiz'])
+
+    // Podcast has no object filter of its own; the draft passes through.
+    const podcast = applyStudyMaterialResourceTypeToDraft(draft, 'podcast')
+    expect(podcast).toBe(draft)
   })
 })
 

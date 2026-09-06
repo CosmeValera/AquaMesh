@@ -136,7 +136,11 @@ const abstractHeadNouns = new Set([
 ])
 
 const hasAbstractHeadNoun = (value: string): boolean => {
-  const words = value.toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean)
+  const words = value
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
   const head = words[words.length - 1]
 
   return Boolean(head) && abstractHeadNouns.has(head)
@@ -287,8 +291,8 @@ export const deriveStudyGuideBridgeStrategy = (
   strength === 'strong'
     ? 'analogy_skeleton'
     : strength === 'weak'
-    ? 'direct_comparison'
-    : 'none'
+      ? 'direct_comparison'
+      : 'none'
 
 export interface StudyGuideQuickStartRelevanceDecision {
   shouldUseKnownTopic: boolean
@@ -466,7 +470,9 @@ export const ensureForcedStudyGuideQuickStartRelevanceDecision = (
       : 'Learner asked to see this topic through their own knowledge.',
     bridgeStrength: strength === 'none' ? 'weak' : strength,
     bridgeStrategy:
-      strength === 'none' ? 'light_reference' : deriveStudyGuideBridgeStrategy(strength),
+      strength === 'none'
+        ? 'light_reference'
+        : deriveStudyGuideBridgeStrategy(strength),
   }
 }
 
@@ -523,7 +529,10 @@ export const parseStudyGuideKnownTopicPrefilterResult = (
   text: string,
   candidateTopics: string[],
 ): string[] => {
-  const fallback = candidateTopics.slice(0, STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX)
+  const fallback = candidateTopics.slice(
+    0,
+    STUDY_GUIDE_KNOWN_TOPIC_PREFILTER_MAX,
+  )
   const candidateByLower = new Map(
     candidateTopics.map((topic) => [topic.toLowerCase(), topic]),
   )
@@ -673,15 +682,27 @@ export {
   normalizeStudyGuideTitle,
   sanitizeStudyGuideLearnedSkillOptions,
   sanitizeStudyGuideNextIdeas,
+  sanitizeStudyGuidePageIdeas,
+  sanitizeStudyGuidePlannedLessons,
   STUDY_GUIDE_LEARNED_SKILL_FIELD_INSTRUCTION,
   STUDY_GUIDE_LEARNED_SKILL_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEA_AXES,
   STUDY_GUIDE_NEXT_IDEA_MAX,
   STUDY_GUIDE_NEXT_IDEAS_INSTRUCTION,
   STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
+  STUDY_GUIDE_PAGE_IDEA_AXES,
+  STUDY_GUIDE_PAGE_IDEA_MAX,
+  STUDY_GUIDE_PAGE_IDEAS_INSTRUCTION,
+  STUDY_GUIDE_PAGE_IDEAS_SCHEMA,
+  STUDY_GUIDE_PLANNED_LESSON_MAX,
+  STUDY_GUIDE_PLANNED_LESSONS_INSTRUCTION,
+  STUDY_GUIDE_PLANNED_LESSONS_SCHEMA,
   trimTitleToWordBoundary,
   type StudyGuideNextIdea,
   type StudyGuideNextIdeaAxis,
+  type StudyGuidePageIdea,
+  type StudyGuidePageIdeaAxis,
+  type StudyGuidePlannedLesson,
 } from './studyGuideTitles'
 
 const normalizeParagraphs = (value: string): string[] =>
@@ -1011,9 +1032,9 @@ ${
 - Never offer the two subjects being different kinds of thing as a limitation. Every explanation through a known topic crosses subjects; saying so teaches nothing.
 - Any caveat in quickSummary must be about the topic itself (a boundary, a common misconception, something the learner would get wrong), not about the known topic being imperfect.`
     : forcedBridge
-    ? `- Force bridge was requested, but no known topic mapped onto this one. Use a neutral beginner-friendly explanation.
+      ? `- Force bridge was requested, but no known topic mapped onto this one. Use a neutral beginner-friendly explanation.
 - Do not invent a bridge. Include one brief caveat, boundary, or common misconception about the topic in quickSummary.`
-    : `- No known topic mapped onto this one. Do not force a personalized analogy.
+      : `- No known topic mapped onto this one. Do not force a personalized analogy.
 - Use a neutral beginner-friendly explanation and include one brief caveat, boundary, or common misconception about the topic in quickSummary.`
 }
 - Target topic type: ${decision.targetTopicType}.

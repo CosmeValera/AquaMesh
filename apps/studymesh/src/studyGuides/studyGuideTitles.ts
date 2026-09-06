@@ -7,9 +7,18 @@
 import type {
   StudyGuideNextIdea,
   StudyGuideNextIdeaAxis,
+  StudyGuidePageIdea,
+  StudyGuidePageIdeaAxis,
+  StudyGuidePlannedLesson,
 } from '../state/store'
 
-export type { StudyGuideNextIdea, StudyGuideNextIdeaAxis }
+export type {
+  StudyGuideNextIdea,
+  StudyGuideNextIdeaAxis,
+  StudyGuidePageIdea,
+  StudyGuidePageIdeaAxis,
+  StudyGuidePlannedLesson,
+}
 
 /**
  * A model title is only slug-shaped when every part looks like a slug part, so
@@ -91,6 +100,65 @@ export const STUDY_GUIDE_NEXT_IDEAS_SCHEMA = {
     required: ['axis', 'label', 'prompt'],
   },
 }
+
+/**
+ * One follow-up page per axis. All three stay on material this page already
+ * put in front of the reader: a page is a zoom, not a new subject. This is the
+ * exact space `STUDY_GUIDE_NEXT_IDEA_AXES` refuses, so the two slates can
+ * never offer the same thing.
+ */
+export const STUDY_GUIDE_PAGE_IDEA_AXES = [
+  'mechanism',
+  'example',
+  'limit',
+] as const
+
+export const STUDY_GUIDE_PAGE_IDEA_MAX = STUDY_GUIDE_PAGE_IDEA_AXES.length
+const STUDY_GUIDE_PAGE_IDEA_LABEL_MAX_CHARS = 48
+const STUDY_GUIDE_PAGE_IDEA_PROMPT_MAX_CHARS = 240
+
+export const STUDY_GUIDE_PAGE_IDEAS_SCHEMA = {
+  type: 'ARRAY',
+  items: {
+    type: 'OBJECT',
+    properties: {
+      axis: { type: 'STRING' },
+      label: { type: 'STRING' },
+      prompt: { type: 'STRING' },
+    },
+    required: ['axis', 'label', 'prompt'],
+  },
+}
+
+export const STUDY_GUIDE_PLANNED_LESSON_MAX = 4
+const STUDY_GUIDE_PLANNED_LESSON_TITLE_MAX_CHARS = 64
+const STUDY_GUIDE_PLANNED_LESSON_SUMMARY_MAX_CHARS = 160
+
+export const STUDY_GUIDE_PLANNED_LESSONS_SCHEMA = {
+  type: 'ARRAY',
+  items: {
+    type: 'OBJECT',
+    properties: {
+      title: { type: 'STRING' },
+      summary: { type: 'STRING' },
+    },
+    required: ['title', 'summary'],
+  },
+}
+
+// One wording for all three providers so the offer reads the same everywhere.
+export const STUDY_GUIDE_PAGE_IDEAS_INSTRUCTION = `pageIdeas: exactly ${STUDY_GUIDE_PAGE_IDEA_MAX} follow-up pages per dashboard, one per axis, in this order:
+  1. axis "mechanism": how the thing this page states actually works underneath. The page names a rule or an effect; this digs into why it holds.
+  2. axis "example": one concrete case worked end to end, using something this page already mentioned.
+  3. axis "limit": where what this page teaches stops holding, which cases break it, or what it is commonly confused with.
+  Every idea must stay on material that is already on this dashboard. Never introduce a new subject, a neighbouring field, or an application the dashboard does not mention.
+  Each idea: "axis" is exactly one of mechanism, example, limit. "label" names the angle in 2-5 words. "prompt" is one first-person sentence, such as "Show me how X actually works".
+  Never mention RabbitHole, guides, pages, or quizzes inside the prompt.`
+
+export const STUDY_GUIDE_PLANNED_LESSONS_INSTRUCTION = `plannedLessons: ${STUDY_GUIDE_PLANNED_LESSON_MAX} lessons this topic needs that nothing else in this response covers, in the order they should be read.
+  These are the lessons you would write next if the guide were longer. They continue the syllabus; they are not deeper passes over material this response already plans or writes.
+  Each lesson: "title" is 3-8 words naming the lesson. "summary" is one sentence on what the reader would be able to do after it.
+  Never repeat a lesson or dashboard title from this response, and never restate the claimable skill.`
 
 // One claimable name per guide. The reader picks nothing; a picker made the
 // same guide look like it taught different things on every visit.
@@ -216,6 +284,125 @@ export const sanitizeStudyGuideNextIdeas = (
           ),
       )
     : ideas
+}
+
+const readStudyGuidePageIdeaAxis = (
+  value: unknown,
+): StudyGuidePageIdeaAxis | undefined => {
+  const axis = (typeof value === 'string' ? value : '').trim().toLowerCase()
+
+  return STUDY_GUIDE_PAGE_IDEA_AXES.find((candidate) => candidate === axis)
+}
+
+// Same shape as the next-idea sanitizer: hosted, BYO strong and Google local
+// all emit pageIdeas inside a call they already make, so they all land here.
+export const sanitizeStudyGuidePageIdeas = (
+  value: unknown,
+): StudyGuidePageIdea[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const seenLabels = new Set<string>()
+  const seenAxes = new Set<StudyGuidePageIdeaAxis>()
+  const ideas: StudyGuidePageIdea[] = []
+
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      continue
+    }
+
+    const record = entry as Record<string, unknown>
+    const label = trimTitleToWordBoundary(
+      normalizeStudyGuideTitle(record.label),
+      STUDY_GUIDE_PAGE_IDEA_LABEL_MAX_CHARS,
+    )
+    const prompt = trimTitleToWordBoundary(
+      (typeof record.prompt === 'string' ? record.prompt : '')
+        .replace(/\s+/g, ' ')
+        .trim(),
+      STUDY_GUIDE_PAGE_IDEA_PROMPT_MAX_CHARS,
+    )
+    const key = label.toLowerCase()
+    if (!label || !prompt || seenLabels.has(key)) {
+      continue
+    }
+
+    // Google local AI runs without a response schema and drops the axis often.
+    // An idea without one keeps its place in the order the model returned.
+    const axis = readStudyGuidePageIdeaAxis(record.axis)
+    if (axis) {
+      if (seenAxes.has(axis)) {
+        continue
+      }
+
+      seenAxes.add(axis)
+    }
+
+    seenLabels.add(key)
+    ideas.push(axis ? { axis, label, prompt } : { label, prompt })
+    if (ideas.length >= STUDY_GUIDE_PAGE_IDEA_MAX) {
+      break
+    }
+  }
+
+  return ideas.every((idea) => idea.axis)
+    ? [...ideas].sort(
+        (left, right) =>
+          STUDY_GUIDE_PAGE_IDEA_AXES.indexOf(
+            left.axis as StudyGuidePageIdeaAxis,
+          ) -
+          STUDY_GUIDE_PAGE_IDEA_AXES.indexOf(
+            right.axis as StudyGuidePageIdeaAxis,
+          ),
+      )
+    : ideas
+}
+
+/**
+ * Keeps the plan's unwritten lessons in the order the model returned them:
+ * they continue a syllabus, so their order is the reading order and there is
+ * no canonical sort to fall back on.
+ */
+export const sanitizeStudyGuidePlannedLessons = (
+  value: unknown,
+): StudyGuidePlannedLesson[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  const seenTitles = new Set<string>()
+  const lessons: StudyGuidePlannedLesson[] = []
+
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+      continue
+    }
+
+    const record = entry as Record<string, unknown>
+    const title = trimTitleToWordBoundary(
+      normalizeStudyGuideTitle(record.title),
+      STUDY_GUIDE_PLANNED_LESSON_TITLE_MAX_CHARS,
+    )
+    const summary = trimTitleToWordBoundary(
+      (typeof record.summary === 'string' ? record.summary : '')
+        .replace(/\s+/g, ' ')
+        .trim(),
+      STUDY_GUIDE_PLANNED_LESSON_SUMMARY_MAX_CHARS,
+    )
+    const key = title.toLowerCase()
+    if (!title || seenTitles.has(key)) {
+      continue
+    }
+
+    seenTitles.add(key)
+    lessons.push({ title, summary })
+    if (lessons.length >= STUDY_GUIDE_PLANNED_LESSON_MAX) {
+      break
+    }
+  }
+
+  return lessons
 }
 
 /**

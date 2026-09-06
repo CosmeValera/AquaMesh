@@ -157,7 +157,7 @@ const DemoGuidePage = () => {
   ) => {
     const actionId = request.actionId
     if (!content || !isBonusActionId(actionId)) {
-      setNudgeReason('expandOnThis')
+      setNudgeReason('lockedQuickCreate')
       return
     }
 
@@ -165,7 +165,7 @@ const DemoGuidePage = () => {
       (candidate) => candidate.actionId === actionId,
     )
     if (!bonus) {
-      setNudgeReason('expandOnThis')
+      setNudgeReason('lockedQuickCreate')
       return
     }
 
@@ -222,11 +222,11 @@ const DemoGuidePage = () => {
     () =>
       studyPath
         ? {
-          id: studyPath.pathId,
-          name: studyPath.title,
-          kind: 'studyPathContainer',
-          studyPath,
-        }
+            id: studyPath.pathId,
+            name: studyPath.title,
+            kind: 'studyPathContainer',
+            studyPath,
+          }
         : undefined,
     [studyPath],
   )

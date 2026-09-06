@@ -1,7 +1,6 @@
 import {
   createQuickCreateDashboardLayout,
   createQuickCreateOrchestratorWidgets,
-  type StudyObject,
   type QuickCreateWidgetRecord,
   type QuickCreateDashboardLayoutMode,
 } from '../quickCreate'
@@ -13,7 +12,6 @@ import {
   readQuickCreateAiSettings,
   resolveQuickCreateAiCredentials,
   type QuickCreateAiProvider,
-  type AiQuickCreateDraft,
   type AiStudyPathDraft,
   type StudyMaterialResourceType,
 } from '../quickCreate/ai'
@@ -240,6 +238,7 @@ export const generateStudyPathStateFromPrompt = async ({
         contentLanguageSource: resolvedLanguage.source,
         createdBy: 'generator',
         deletable: false,
+        pageIdeas: dashboard.pageIdeas,
       }
     },
   )
@@ -260,66 +259,11 @@ export const generateStudyPathStateFromPrompt = async ({
     quickStart: draft.quickStart,
     learnedSkillOptions: draft.learnedSkillOptions,
     nextGuideIdeas: draft.nextGuideIdeas,
+    plannedLessons: draft.plannedLessons,
     dashboards,
     selectedIndex: 0,
     pinnedDashboardKeys: [],
   }
-}
-
-const objectToMarkdown = (object: StudyObject): string => {
-  const title = object.title ? `### ${object.title}\n\n` : ''
-
-  if (object.kind === 'markdown') {
-    return object.markdown
-  }
-
-  if (object.kind === 'note') {
-    return `${title}${object.body}`
-  }
-
-  if (object.kind === 'term') {
-    return `${title}- **${object.term}:** ${object.definition}`
-  }
-
-  if (object.kind === 'list') {
-    return `${title}${object.items
-      .map((item, index) => `${object.ordered ? `${index + 1}.` : '-'} ${item}`)
-      .join('\n')}`
-  }
-
-  if (object.kind === 'comparison') {
-    return `${title}| ${object.columns.join(' | ')} |\n| ${object.columns
-      .map(() => '---')
-      .join(' | ')} |\n${object.rows
-      .map((row) => `| ${row.join(' | ')} |`)
-      .join('\n')}`
-  }
-
-  if (object.kind === 'qa') {
-    return `${title}**Q:** ${object.question}\n\n**A:** ${object.answer}`
-  }
-
-  return title || ''
-}
-
-const draftToMarkdown = (draft: AiQuickCreateDraft): string => {
-  const chunks = [`# ${draft.title || 'Expanded notes'}`]
-  if (draft.sourceSummary?.bullets?.length) {
-    chunks.push(
-      `## ${draft.sourceSummary.title || 'Summary'}\n\n${draft.sourceSummary.bullets
-        .map((bullet) => `- ${bullet}`)
-        .join('\n')}`,
-    )
-  }
-
-  chunks.push(
-    ...draft.objects
-      .map(objectToMarkdown)
-      .map((chunk) => chunk.trim())
-      .filter(Boolean),
-  )
-
-  return chunks.join('\n\n')
 }
 
 const createPodcastWidget = (
@@ -482,7 +426,6 @@ export const createAiQuickCreatePageDraft = async ({
     quiz: 'Quiz',
     flashcards: 'Flashcards',
     podcast: 'Podcast',
-    improvedNotes: 'Expanded notes',
   }
   const draft = await generateQuickCreateWithAi({
     provider,
@@ -497,7 +440,7 @@ export const createAiQuickCreatePageDraft = async ({
         : resourceType === 'flashcards'
           ? ['flashcards']
           : ['summaries', 'definitions', 'lists'],
-    generationAmount: resourceType === 'improvedNotes' ? 'few' : 'medium',
+    generationAmount: 'medium',
     resourceType,
     detailLevel: 'medium',
     quizQuestionStyle: 'mixed',
@@ -505,15 +448,6 @@ export const createAiQuickCreatePageDraft = async ({
     signal,
   })
   throwIfAborted(signal)
-
-  if (resourceType === 'improvedNotes') {
-    return {
-      kind: 'markdown',
-      title: draft.title || labels[resourceType],
-      markdown: draftToMarkdown(draft),
-      source: 'quickCreate',
-    }
-  }
 
   const widgets = createQuickCreateOrchestratorWidgets(
     {

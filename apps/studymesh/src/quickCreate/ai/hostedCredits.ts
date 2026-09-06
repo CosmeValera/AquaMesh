@@ -32,6 +32,7 @@ export const HOSTED_AI_INSUFFICIENT_CREDITS_EVENT =
 export type HostedAiSurface =
   | 'study-guide'
   | 'quick-create'
+  | 'study-page'
   | 'chat'
   | 'chat-followup'
   | 'podcast'
@@ -55,6 +56,9 @@ export type HostedAiStage =
 export const HOSTED_AI_CREDIT_COSTS: Record<HostedAiSurface, number> = {
   'study-guide': 3,
   'quick-create': 1,
+  // One more page inside a guide the reader already paid for. Its own surface
+  // rather than 'quick-create' so the price can move without a migration.
+  'study-page': 1,
   chat: 1,
   // Follow-up model calls inside one chat message (answer, list repair).
   // The single chat credit is charged upfront by the planner call.

@@ -21,7 +21,7 @@ type DemoTextKey = Parameters<ReturnType<typeof useInterfaceText>['t']>[0]
 export type DemoNudgeReason =
   | 'askAi'
   | 'addPage'
-  | 'expandOnThis'
+  | 'lockedQuickCreate'
   | 'alreadyCreated'
 
 // One shared title, one body per reason: the invitation is always the same,
@@ -29,7 +29,7 @@ export type DemoNudgeReason =
 const reasonBodyKeys: Record<DemoNudgeReason, DemoTextKey> = {
   askAi: 'demo.nudgeAskAi',
   addPage: 'demo.nudgeAddPage',
-  expandOnThis: 'demo.nudgeExpandOnThis',
+  lockedQuickCreate: 'demo.nudgeQuickCreate',
   alreadyCreated: 'demo.nudgeAlreadyCreated',
 }
 

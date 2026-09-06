@@ -237,6 +237,17 @@ const translations = {
     'workspace.closePages': 'Close Pages',
     'workspace.closePagesPanel': 'Close Pages panel',
     'workspace.addPage': 'Add Page',
+    'workspace.addPageMenuTitle': 'Add a page',
+    'workspace.addPageContinue': 'Continue the guide',
+    'workspace.addPageContinueNext': 'Next: {title}',
+    'workspace.addPageDeeper': 'Dig into this page',
+    'workspace.addPagePrompt': 'Ask for a page',
+    'workspace.addPagePromptPlaceholder': 'What should the new page cover?',
+    'workspace.addPagePromptSubmit': 'Create page',
+    'workspace.addPageBlank': 'Blank page',
+    'workspace.growingPage': 'Writing the new page...',
+    'workspace.growPageFailed': 'The new page could not be created.',
+    'workspace.pageParentReturn': 'Back to {title}',
     'workspace.resizePagesPanel': 'Resize Pages panel',
     'workspace.dragPageToReorder': 'Drag page to reorder',
     'workspace.movePageUp': 'Move page up',
@@ -255,6 +266,7 @@ const translations = {
     'selection.askAi': 'Send to AI Chat',
     'selection.copy': 'Copy',
     'selection.copied': 'Copied',
+    'selection.growPage': 'Dig into this',
     'pageEditor.pageTitle': 'Page title',
     'pageEditor.pageBody': 'Page body',
     'pageEditor.startWritingNotes': 'Start writing notes...',
@@ -286,6 +298,12 @@ const translations = {
     'chat.generateExamQuestions': 'Generate exam-style questions',
     'chat.closeAiChat': 'Close AI Chat',
     'chat.addToStudyGuide': 'Add to Quick Guide',
+    'chat.growPageGroup': 'Guide',
+    'chat.growPage': 'Add as a page',
+    'chat.growPageDescription':
+      'Write a new page from the draft in the message box.',
+    'chat.growPageNeedsDraft': 'Write what the page should cover first.',
+    'chat.growPageFromAnswer': 'Turn this question into a page',
     'chat.addAnswerToStudyGuide': 'Add answer to Quick Guide',
     'chat.studyGuideSource': 'Quick Guide source',
     'chat.currentPageSource': 'Current page',
@@ -329,7 +347,6 @@ const translations = {
     'chat.resizeInput': 'Resize AI Chat input',
     'chat.thinking': 'Thinking...',
     'chat.quickCreateGroupPractice': 'Practice',
-    'chat.quickCreateGroupNotes': 'Notes',
     'chat.quickCreateQuiz': 'Quiz',
     'chat.quickCreateQuizDescription':
       'Create practice questions from this material.',
@@ -339,9 +356,6 @@ const translations = {
     'chat.quickCreatePodcast': 'Podcast',
     'chat.quickCreatePodcastDescription':
       'Create a short audio recap from this material.',
-    'chat.quickCreateExpand': 'Expand on this',
-    'chat.quickCreateExpandDescription':
-      'Turn this material into clearer study notes.',
     'chat.smalltalkGotIt': 'Got it. What would you like to look at next?',
     'chat.smalltalkCapabilities':
       'I can explain this Quick Guide, summarize pages, compare concepts, make practice questions, and help connect the material to reliable web sources when the guide is missing something.',
@@ -526,8 +540,8 @@ const translations = {
       'In your own guides you can select any part of a page and ask about it. Sign up to try it on something you are actually studying.',
     'demo.nudgeAddPage':
       'The sample has a fixed set of pages. Your own guides keep growing: add a page whenever you want to go further.',
-    'demo.nudgeExpandOnThis':
-      'Expand on this turns any idea into its own page, explained through what you already understand. Available on your own guides.',
+    'demo.nudgeQuickCreate':
+      'The sample only ships a few ready-made extras. On your own guides you can create a quiz, a deck or a podcast from any page.',
     'demo.nudgeAlreadyCreated':
       'The sample includes one quiz, one deck and one podcast. Sign up to create as many as you like, on any page.',
   },
@@ -599,7 +613,8 @@ const translations = {
     'knownTopics.emptyListHint':
       'Aún no hay nada. Escribe algo abajo o elige una sugerencia.',
     'knownTopics.progressEnough': 'Suficiente para trabajar',
-    'knownTopics.progressAddMore': 'Añade {count} más para mejores explicaciones',
+    'knownTopics.progressAddMore':
+      'Añade {count} más para mejores explicaciones',
     'knownTopics.footerNote': 'Se usa en cada guía nueva que crees.',
     'knownTopics.done': 'Hecho',
     'appearance.themeMode': 'Modo claro / oscuro',
@@ -762,6 +777,18 @@ const translations = {
     'workspace.closePages': 'Cerrar páginas',
     'workspace.closePagesPanel': 'Cerrar panel de páginas',
     'workspace.addPage': 'Añadir página',
+    'workspace.addPageMenuTitle': 'Añadir una página',
+    'workspace.addPageContinue': 'Continuar la guía',
+    'workspace.addPageContinueNext': 'Siguiente: {title}',
+    'workspace.addPageDeeper': 'Profundizar en esta página',
+    'workspace.addPagePrompt': 'Pedir una página',
+    'workspace.addPagePromptPlaceholder':
+      '¿De qué debería tratar la página nueva?',
+    'workspace.addPagePromptSubmit': 'Crear página',
+    'workspace.addPageBlank': 'Página en blanco',
+    'workspace.growingPage': 'Escribiendo la página nueva...',
+    'workspace.growPageFailed': 'No se pudo crear la página nueva.',
+    'workspace.pageParentReturn': 'Volver a {title}',
     'workspace.resizePagesPanel': 'Redimensionar panel de páginas',
     'workspace.dragPageToReorder': 'Arrastrar página para reordenar',
     'workspace.movePageUp': 'Subir página',
@@ -780,6 +807,7 @@ const translations = {
     'selection.askAi': 'Enviar al chat de IA',
     'selection.copy': 'Copiar',
     'selection.copied': 'Copiado',
+    'selection.growPage': 'Profundizar en esto',
     'pageEditor.pageTitle': 'Título de la página',
     'pageEditor.pageBody': 'Cuerpo de la página',
     'pageEditor.startWritingNotes': 'Empieza a escribir notas...',
@@ -812,6 +840,13 @@ const translations = {
     'chat.generateExamQuestions': 'Generar preguntas tipo examen',
     'chat.closeAiChat': 'Cerrar chat IA',
     'chat.addToStudyGuide': 'Añadir a la guía rápida',
+    'chat.growPageGroup': 'Guía',
+    'chat.growPage': 'Añadir como página',
+    'chat.growPageDescription':
+      'Escribir una página nueva a partir del borrador del cuadro de texto.',
+    'chat.growPageNeedsDraft':
+      'Escribe primero de qué debería tratar la página.',
+    'chat.growPageFromAnswer': 'Convertir esta pregunta en una página',
     'chat.addAnswerToStudyGuide': 'Añadir respuesta a la guía rápida',
     'chat.studyGuideSource': 'Fuente de la guía rápida',
     'chat.currentPageSource': 'Página actual',
@@ -855,7 +890,6 @@ const translations = {
     'chat.resizeInput': 'Redimensionar entrada del chat IA',
     'chat.thinking': 'Pensando...',
     'chat.quickCreateGroupPractice': 'Práctica',
-    'chat.quickCreateGroupNotes': 'Notas',
     'chat.quickCreateQuiz': 'Cuestionario',
     'chat.quickCreateQuizDescription':
       'Crea preguntas de práctica desde este material.',
@@ -865,9 +899,6 @@ const translations = {
     'chat.quickCreatePodcast': 'Podcast',
     'chat.quickCreatePodcastDescription':
       'Crea un breve repaso en audio desde este material.',
-    'chat.quickCreateExpand': 'Ampliar esto',
-    'chat.quickCreateExpandDescription':
-      'Convierte este material en apuntes de estudio más claros.',
     'chat.smalltalkGotIt': 'Entendido. ¿Qué quieres mirar ahora?',
     'chat.smalltalkCapabilities':
       'Puedo explicar esta guía rápida, resumir páginas, comparar conceptos, crear preguntas de práctica y ayudarte a conectar el material con fuentes web fiables cuando falte información.',
@@ -1054,8 +1085,8 @@ const translations = {
       'En tus propias guías puedes seleccionar cualquier parte de una página y preguntar sobre ella. Regístrate para probarlo con algo que estés estudiando de verdad.',
     'demo.nudgeAddPage':
       'La muestra tiene un conjunto fijo de páginas. Tus guías siguen creciendo: añade una página cuando quieras profundizar.',
-    'demo.nudgeExpandOnThis':
-      'Ampliar convierte cualquier idea en su propia página, explicada a partir de lo que ya entiendes. Disponible en tus propias guías.',
+    'demo.nudgeQuickCreate':
+      'El ejemplo solo trae unos pocos extras ya hechos. En tus propias guías puedes crear un cuestionario, un mazo de tarjetas o un podcast desde cualquier página.',
     'demo.nudgeAlreadyCreated':
       'La muestra incluye un quiz, un mazo y un pódcast. Regístrate para crear todos los que quieras, en cualquier página.',
   },
@@ -1125,7 +1156,8 @@ const translationOverrides: Record<
     'knowledgeContext.inputHelper':
       'Séparez avec des virgules ou appuyez sur Entrée. Exemples : maths, biologie, football, cuisine, musique.',
     'knowledgeContext.add': 'Ajouter',
-    'knowledgeContext.rolePickerTitle': "Besoin d'idées ? Choisissez votre domaine",
+    'knowledgeContext.rolePickerTitle':
+      "Besoin d'idées ? Choisissez votre domaine",
     'knowledgeContext.limitReached':
       'Vous avez atteint la limite de {limit} sujets. Supprimez-en un pour en ajouter un autre.',
     'knownTopics.buttonLabel': 'Ce que vous savez déjà',
@@ -1138,7 +1170,8 @@ const translationOverrides: Record<
     'knownTopics.progressEnough': 'Suffisant pour travailler',
     'knownTopics.progressAddMore':
       'Ajoutez {count} de plus pour de meilleures explications',
-    'knownTopics.footerNote': 'Utilisé dans chaque nouveau guide que vous créez.',
+    'knownTopics.footerNote':
+      'Utilisé dans chaque nouveau guide que vous créez.',
     'knownTopics.done': 'Terminé',
     'appearance.themeMode': 'Mode clair / sombre',
     'appearance.accentColor': "Couleur d'accent",
@@ -1303,6 +1336,18 @@ const translationOverrides: Record<
     'workspace.closePages': 'Fermer les pages',
     'workspace.closePagesPanel': 'Fermer le panneau des pages',
     'workspace.addPage': 'Ajouter une page',
+    'workspace.addPageMenuTitle': 'Ajouter une page',
+    'workspace.addPageContinue': 'Continuer le guide',
+    'workspace.addPageContinueNext': 'Ensuite : {title}',
+    'workspace.addPageDeeper': 'Creuser cette page',
+    'workspace.addPagePrompt': 'Demander une page',
+    'workspace.addPagePromptPlaceholder':
+      'Sur quoi doit porter la nouvelle page ?',
+    'workspace.addPagePromptSubmit': 'Créer la page',
+    'workspace.addPageBlank': 'Page vierge',
+    'workspace.growingPage': 'Rédaction de la nouvelle page...',
+    'workspace.growPageFailed': 'La nouvelle page n’a pas pu être créée.',
+    'workspace.pageParentReturn': 'Retour à {title}',
     'workspace.resizePagesPanel': 'Redimensionner le panneau des pages',
     'workspace.dragPageToReorder': 'Glisser la page pour réordonner',
     'workspace.movePageUp': 'Monter la page',
@@ -1321,6 +1366,7 @@ const translationOverrides: Record<
     'selection.askAi': 'Envoyer au chat IA',
     'selection.copy': 'Copier',
     'selection.copied': 'Copié',
+    'selection.growPage': 'Approfondir ceci',
     'pageEditor.pageTitle': 'Titre de la page',
     'pageEditor.pageBody': 'Corps de la page',
     'pageEditor.startWritingNotes': 'Commencez à écrire des notes...',
@@ -1353,6 +1399,12 @@ const translationOverrides: Record<
     'chat.generateExamQuestions': 'Générer des questions type examen',
     'chat.closeAiChat': 'Fermer le chat IA',
     'chat.addToStudyGuide': 'Ajouter au guide rapide',
+    'chat.growPageGroup': 'Guide',
+    'chat.growPage': 'Ajouter comme page',
+    'chat.growPageDescription':
+      'Écrire une nouvelle page à partir du brouillon du champ de saisie.',
+    'chat.growPageNeedsDraft': 'Écrivez d’abord le sujet de la page.',
+    'chat.growPageFromAnswer': 'Transformer cette question en page',
     'chat.addAnswerToStudyGuide': 'Ajouter la réponse au guide',
     'chat.studyGuideSource': 'Source du guide rapide',
     'chat.currentPageSource': 'Page actuelle',
@@ -1395,7 +1447,6 @@ const translationOverrides: Record<
     'chat.resizeInput': 'Redimensionner la saisie du chat IA',
     'chat.thinking': 'Réflexion...',
     'chat.quickCreateGroupPractice': 'Pratique',
-    'chat.quickCreateGroupNotes': 'Notes',
     'chat.quickCreateQuiz': 'Quiz',
     'chat.quickCreateQuizDescription':
       'Créer des questions d’entraînement à partir de ce matériel.',
@@ -1405,9 +1456,6 @@ const translationOverrides: Record<
     'chat.quickCreatePodcast': 'Podcast',
     'chat.quickCreatePodcastDescription':
       'Créer un court récapitulatif audio à partir de ce matériel.',
-    'chat.quickCreateExpand': 'Développer ceci',
-    'chat.quickCreateExpandDescription':
-      'Transformer ce matériel en notes d’étude plus claires.',
     'chat.smalltalkGotIt': 'Compris. Que voulez-vous regarder ensuite ?',
     'chat.smalltalkCapabilities':
       'Je peux expliquer ce guide rapide, résumer des pages, comparer des concepts, créer des questions de pratique et relier le contenu à des sources web fiables quand il manque des informations.',
@@ -1595,8 +1643,8 @@ const translationOverrides: Record<
       'Dans vos propres guides, vous pouvez sélectionner n’importe quelle partie d’une page et poser une question dessus. Créez un compte pour l’essayer sur ce que vous étudiez vraiment.',
     'demo.nudgeAddPage':
       'L’exemple a un nombre de pages fixe. Vos propres guides continuent de grandir : ajoutez une page dès que vous voulez aller plus loin.',
-    'demo.nudgeExpandOnThis':
-      'Développer transforme n’importe quelle idée en sa propre page, expliquée à partir de ce que vous comprenez déjà. Disponible sur vos propres guides.',
+    'demo.nudgeQuickCreate':
+      'L’exemple ne contient que quelques extras prêts à l’emploi. Dans vos propres guides, vous pouvez créer un quiz, un jeu de cartes ou un podcast depuis n’importe quelle page.',
     'demo.nudgeAlreadyCreated':
       'L’exemple contient un quiz, un jeu de cartes et un podcast. Créez un compte pour en générer autant que vous voulez, sur n’importe quelle page.',
   },
@@ -1657,7 +1705,8 @@ const translationOverrides: Record<
     'knowledgeContext.inputHelper':
       'Mit Kommas trennen oder Enter drücken. Beispiele: Mathe, Biologie, Fußball, Kochen, Musik.',
     'knowledgeContext.add': 'Hinzufügen',
-    'knowledgeContext.rolePickerTitle': 'Brauchst du Ideen? Wähle deinen Bereich',
+    'knowledgeContext.rolePickerTitle':
+      'Brauchst du Ideen? Wähle deinen Bereich',
     'knowledgeContext.limitReached':
       'Du hast das Limit von {limit} Themen erreicht. Entferne eins, um ein weiteres hinzuzufügen.',
     'knownTopics.buttonLabel': 'Was du schon weißt',
@@ -1836,6 +1885,17 @@ const translationOverrides: Record<
     'workspace.closePages': 'Seiten schließen',
     'workspace.closePagesPanel': 'Seitenpanel schließen',
     'workspace.addPage': 'Seite hinzufügen',
+    'workspace.addPageMenuTitle': 'Seite hinzufügen',
+    'workspace.addPageContinue': 'Leitfaden fortsetzen',
+    'workspace.addPageContinueNext': 'Als Nächstes: {title}',
+    'workspace.addPageDeeper': 'In diese Seite eintauchen',
+    'workspace.addPagePrompt': 'Um eine Seite bitten',
+    'workspace.addPagePromptPlaceholder': 'Worum soll die neue Seite gehen?',
+    'workspace.addPagePromptSubmit': 'Seite erstellen',
+    'workspace.addPageBlank': 'Leere Seite',
+    'workspace.growingPage': 'Neue Seite wird geschrieben...',
+    'workspace.growPageFailed': 'Die neue Seite konnte nicht erstellt werden.',
+    'workspace.pageParentReturn': 'Zurück zu {title}',
     'workspace.resizePagesPanel': 'Seitenpanel skalieren',
     'workspace.dragPageToReorder': 'Seite ziehen, um neu zu ordnen',
     'workspace.movePageUp': 'Seite nach oben',
@@ -1854,6 +1914,7 @@ const translationOverrides: Record<
     'selection.askAi': 'An KI-Chat senden',
     'selection.copy': 'Kopieren',
     'selection.copied': 'Kopiert',
+    'selection.growPage': 'Hier tiefer gehen',
     'pageEditor.pageTitle': 'Seitentitel',
     'pageEditor.pageBody': 'Seiteninhalt',
     'pageEditor.startWritingNotes': 'Beginne mit deinen Notizen...',
@@ -1886,6 +1947,13 @@ const translationOverrides: Record<
     'chat.generateExamQuestions': 'Prüfungsfragen generieren',
     'chat.closeAiChat': 'KI-Chat schließen',
     'chat.addToStudyGuide': 'Zum Quick Guide hinzufügen',
+    'chat.growPageGroup': 'Leitfaden',
+    'chat.growPage': 'Als Seite hinzufügen',
+    'chat.growPageDescription':
+      'Aus dem Entwurf im Eingabefeld eine neue Seite schreiben.',
+    'chat.growPageNeedsDraft':
+      'Schreibe zuerst, worum es auf der Seite gehen soll.',
+    'chat.growPageFromAnswer': 'Diese Frage zu einer Seite machen',
     'chat.addAnswerToStudyGuide': 'Antwort zum Quick Guide hinzufügen',
     'chat.studyGuideSource': 'Quelle des Quick Guides',
     'chat.currentPageSource': 'Aktuelle Seite',
@@ -1929,7 +1997,6 @@ const translationOverrides: Record<
     'chat.resizeInput': 'KI-Chat-Eingabe skalieren',
     'chat.thinking': 'Denkt nach...',
     'chat.quickCreateGroupPractice': 'Übung',
-    'chat.quickCreateGroupNotes': 'Notizen',
     'chat.quickCreateQuiz': 'Quiz',
     'chat.quickCreateQuizDescription':
       'Übungsfragen aus diesem Material erstellen.',
@@ -1939,9 +2006,6 @@ const translationOverrides: Record<
     'chat.quickCreatePodcast': 'Podcast',
     'chat.quickCreatePodcastDescription':
       'Eine kurze Audio-Zusammenfassung aus diesem Material erstellen.',
-    'chat.quickCreateExpand': 'Dies erweitern',
-    'chat.quickCreateExpandDescription':
-      'Dieses Material in klarere Lernnotizen umwandeln.',
     'chat.smalltalkGotIt': 'Verstanden. Was möchtest du als Nächstes ansehen?',
     'chat.smalltalkCapabilities':
       'Ich kann diesen Quick Guide erklären, Seiten zusammenfassen, Konzepte vergleichen, Übungsfragen erstellen und das Material mit zuverlässigen Webquellen verbinden, wenn Informationen fehlen.',
@@ -2067,7 +2131,8 @@ const translationOverrides: Record<
     'practice.createGuidesAddsSkill':
       'Diese Leitfäden zu erstellen fügt {skill} zu deinem Wissen hinzu.',
     'practice.skillAlreadyKnown': 'Du hast diese Fähigkeit bereits',
-    'practice.nextGuideAlreadyCreated': 'Diesen Leitfaden hast du schon erstellt',
+    'practice.nextGuideAlreadyCreated':
+      'Diesen Leitfaden hast du schon erstellt',
     'practice.practiceAgain': 'Noch einmal üben',
     'practice.retakeQuiz': 'Quiz wiederholen',
     'practice.allCards': 'Alle Karten',
@@ -2130,8 +2195,8 @@ const translationOverrides: Record<
       'In deinen eigenen Leitfäden kannst du jede Stelle einer Seite markieren und dazu fragen. Registriere dich, um es an etwas auszuprobieren, das du wirklich lernst.',
     'demo.nudgeAddPage':
       'Das Beispiel hat eine feste Seitenzahl. Deine eigenen Leitfäden wachsen weiter: füge eine Seite hinzu, wann immer du tiefer gehen willst.',
-    'demo.nudgeExpandOnThis':
-      'Vertiefen macht aus jeder Idee eine eigene Seite, erklärt über das, was du schon verstehst. In deinen eigenen Leitfäden verfügbar.',
+    'demo.nudgeQuickCreate':
+      'Das Beispiel bringt nur wenige fertige Extras mit. In deinen eigenen Leitfäden kannst du aus jeder Seite ein Quiz, ein Kartendeck oder einen Podcast erstellen.',
     'demo.nudgeAlreadyCreated':
       'Das Beispiel enthält ein Quiz, ein Kartenset und einen Podcast. Registriere dich, um beliebig viele davon zu erstellen, auf jeder Seite.',
   },

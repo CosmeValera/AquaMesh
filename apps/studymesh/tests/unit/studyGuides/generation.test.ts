@@ -95,9 +95,9 @@ describe('appendAiQuickCreatePage', () => {
     await appendAiQuickCreatePage({
       studyPath,
       resourceType: {
-        actionId: 'improvedNotes',
-        resourceType: 'improvedNotes',
-        label: 'Expand on this',
+        actionId: 'flashcards',
+        resourceType: 'flashcards',
+        label: 'Flashcards',
       },
       sourceTitle: 'Photosynthesis',
       sourceText: 'Source notes',
@@ -105,9 +105,9 @@ describe('appendAiQuickCreatePage', () => {
 
     expect(generateQuickCreateWithAi).toHaveBeenCalledWith(
       expect.objectContaining({
-        resourceType: 'improvedNotes',
+        resourceType: 'flashcards',
         detailLevel: 'medium',
-        generationTargets: ['summaries', 'definitions', 'lists'],
+        generationTargets: ['flashcards'],
       }),
     )
   })
@@ -208,7 +208,9 @@ describe('study guide language selection', () => {
 
     const call = vi.mocked(generateStudyPathWithAi).mock.calls.at(-1)?.[0]
     expect(call?.outputLanguage).toBe('es')
-    expect(call?.prompt).toContain('Explícamelo a través de revisar contribuciones')
+    expect(call?.prompt).toContain(
+      'Explícamelo a través de revisar contribuciones',
+    )
   })
 
   it('flags a guide that came back in another language', async () => {

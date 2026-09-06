@@ -102,7 +102,8 @@ describe('hosted Study Guide preview state', () => {
     })
 
     expect(afterReset).toEqual(makeHostedPreview(1000))
-    expect(buildHostedPreviewRows(afterReset, t)).toHaveLength(3)
+    // Blank still shows the full shape: title, key idea, 3 pages, final quiz.
+    expect(buildHostedPreviewRows(afterReset, t)).toHaveLength(6)
   })
 
   it('keeps a page title when only the finished page carries no title', () => {
@@ -170,7 +171,9 @@ describe('rebuilding a checklist from a gateway snapshot', () => {
     ).toBe(true)
   })
 
-  it('survives a partial snapshot without inventing rows', () => {
+  it('shows the pages still to come as placeholders', () => {
+    // The checklist declares its whole shape up front, so rows never appear
+    // out of nowhere between 'Key idea' and 'Final quiz'.
     const resumed = makeHostedPreviewFromSnapshot(
       { title: 'Half a guide', pages: [{ title: 'One', done: true }] },
       0,
@@ -183,8 +186,13 @@ describe('rebuilding a checklist from a gateway snapshot', () => {
       'Half a guide',
       'studyGuides.preview.keyIdea',
       'One',
+      'studyGuides.preview.page 2',
+      'studyGuides.preview.page 3',
       'studyGuides.preview.finalQuiz',
     ])
+    expect(
+      buildHostedPreviewRows(resumed, t).filter((row) => row.done),
+    ).toHaveLength(2)
   })
 
   it('keeps advancing from a snapshot when live events resume', () => {
@@ -203,5 +211,64 @@ describe('rebuilding a checklist from a gateway snapshot', () => {
       { title: 'Two', done: false },
     ])
     expect(advanced.startedAt).toBe(0)
+  })
+})
+
+describe('the checklist declares its whole shape up front', () => {
+  it('lists every page before any of them has arrived', () => {
+    const rows = buildHostedPreviewRows(makeHostedPreview(0), t)
+
+    expect(rows.map((row) => row.label)).toEqual([
+      'studyGuides.preview.naming',
+      'studyGuides.preview.keyIdea',
+      'studyGuides.preview.page 1',
+      'studyGuides.preview.page 2',
+      'studyGuides.preview.page 3',
+      'studyGuides.preview.finalQuiz',
+    ])
+    expect(rows.every((row) => !row.done)).toBe(true)
+  })
+
+  it('reserves a bridge row only when a bridge is possible', () => {
+    const withBridge = makeHostedPreview(0, { expectsBridge: true })
+    const withoutBridge = makeHostedPreview(0, { expectsBridge: false })
+
+    expect(buildHostedPreviewRows(withBridge, t).map((row) => row.id)).toContain(
+      'bridge',
+    )
+    expect(
+      buildHostedPreviewRows(withoutBridge, t).map((row) => row.id),
+    ).not.toContain('bridge')
+  })
+
+  it('stops reserving the bridge once a page landed without one', () => {
+    // The bridge always precedes page 1, so no bridge by then means none exists
+    // and the row should not sit pending forever.
+    const afterPage = applyHostedPreviewEvent(
+      makeHostedPreview(0, { expectsBridge: true }),
+      { type: 'page', index: 0, title: 'One', summary: 'x' },
+    )
+
+    expect(buildHostedPreviewRows(afterPage, t).map((row) => row.id)).not.toContain(
+      'bridge',
+    )
+  })
+
+  it('never changes the number of rows as the real pages arrive', () => {
+    const initial = buildHostedPreviewRows(
+      makeHostedPreview(1000, { expectsBridge: true }),
+      t,
+    ).length
+
+    TIMELINE.forEach((_event, index) => {
+      const rows = buildHostedPreviewRows(
+        TIMELINE.slice(0, index + 1).reduce(
+          applyHostedPreviewEvent,
+          makeHostedPreview(1000, { expectsBridge: true }),
+        ),
+        t,
+      )
+      expect(rows).toHaveLength(initial)
+    })
   })
 })

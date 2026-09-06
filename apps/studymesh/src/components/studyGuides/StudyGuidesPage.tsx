@@ -52,10 +52,12 @@ import {
   createStudyGuideRecord,
 } from '../../studyGuides/storage'
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
+import { getAllUserKnownTopics } from '../../profileContext'
 import {
   applyHostedPreviewEvent,
   hasHostedPreviewSignal,
   hostedPreviewPercent,
+  HOSTED_STUDY_GUIDE_PAGE_COUNT,
   HostedPreviewState,
   makeHostedPreviewFromSnapshot,
 } from '../../studyGuides/hostedPreview'
@@ -173,6 +175,17 @@ const isVisiblePendingStatus = (status: StudyGuideCreationStatus): boolean =>
 /** Statuses the runner should pick up, visible or not. */
 const isRunnablePendingStatus = (status: StudyGuideCreationStatus): boolean =>
   status === 'queued' || status === 'collecting'
+
+/**
+ * The shape of the checklist before anything has arrived.
+ *
+ * A bridge row is only reserved when the learner claimed a skill, since a guide
+ * with nothing to bridge from can never produce one.
+ */
+const previewShape = (job: { knownSkill?: string | null }) => ({
+  expectedPages: HOSTED_STUDY_GUIDE_PAGE_COUNT,
+  expectsBridge: Boolean(job.knownSkill?.trim()) || getAllUserKnownTopics().length > 0,
+})
 
 /**
  * When this generation was first asked for.
@@ -782,6 +795,7 @@ const StudyGuidesPage = () => {
         [job.id]: makeHostedPreviewFromSnapshot(
           known?.progress,
           resolveJobStartedAt(known?.createdAt, job),
+          previewShape(job),
         ),
       }))
     }
@@ -820,6 +834,7 @@ const StudyGuidesPage = () => {
             state.createdAt || jobServerState[job.id]?.createdAt,
             job,
           ),
+          previewShape(job),
         ),
       }))
     }

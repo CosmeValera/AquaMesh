@@ -1447,18 +1447,26 @@ const createQuizPractice = (questions: EnhancedStudyGuideQuizQuestion[]) => ({
 // plannedLessons and pageIdeas ride inside this JSON rather than over a
 // transport callback: the client already parses this text, so the growth
 // offers arrive with the guide and cost no extra call.
-const buildEnhancedStudyGuideText = ({
+//
+// `isComplete: false` builds the same guide from the pages written so far, so a
+// learner can start reading page 1 while the rest is still being written. Only
+// the genuinely last page ever carries the quiz and the final-review treatment,
+// so a guide that is one page long must NOT hand them to page 1 just because it
+// happens to sit at the end of the array.
+export const buildEnhancedStudyGuideText = ({
   blueprint,
   pages,
   questions,
   quickStart,
   plannedLessons,
+  isComplete = true,
 }: {
   blueprint: EnhancedStudyGuideBlueprint;
   pages: EnhancedStudyGuidePage[];
   questions: EnhancedStudyGuideQuizQuestion[];
   quickStart: NonNullable<HostedAiGatewayResponse["quickStart"]>;
   plannedLessons?: StudyGuidePlannedLesson[];
+  isComplete?: boolean;
 }): string =>
   JSON.stringify({
     title: blueprint.title,
@@ -1466,33 +1474,34 @@ const buildEnhancedStudyGuideText = ({
     emoji: blueprint.emoji,
     quickStart,
     plannedLessons: plannedLessons?.length ? plannedLessons : undefined,
-    dashboards: pages.map((page, index) => ({
-      title: page.title,
-      summary: page.summary,
-      rawNotes: page.rawNotes,
-      pageIdeas: page.pageIdeas,
-      dashboardPurpose: index === pages.length - 1 ? "finalReview" : "lesson",
-      practiceType: index === pages.length - 1 ? "quiz" : "none",
-      layoutReason:
-        index === pages.length - 1
+    dashboards: pages.map((page, index) => {
+      const isFinalPage = isComplete && index === pages.length - 1;
+
+      return {
+        title: page.title,
+        summary: page.summary,
+        rawNotes: page.rawNotes,
+        pageIdeas: page.pageIdeas,
+        dashboardPurpose: isFinalPage ? "finalReview" : "lesson",
+        practiceType: isFinalPage ? "quiz" : "none",
+        layoutReason: isFinalPage
           ? "Final Study Guide page includes one source-grounded quiz."
           : "Lean Study Guide lesson page.",
-      contentMode:
-        index === pages.length - 1 ? "synthesisReview" : "conceptLesson",
-      sourceSummary: createMinimalSourceSummary(
-        page,
-        blueprint.pages[index] || blueprint.pages[0],
-      ),
-      conceptRecap: createMinimalConceptRecap(
-        page,
-        blueprint.pages[index] || blueprint.pages[0],
-      ),
-      practice:
-        index === pages.length - 1
+        contentMode: isFinalPage ? "synthesisReview" : "conceptLesson",
+        sourceSummary: createMinimalSourceSummary(
+          page,
+          blueprint.pages[index] || blueprint.pages[0],
+        ),
+        conceptRecap: createMinimalConceptRecap(
+          page,
+          blueprint.pages[index] || blueprint.pages[0],
+        ),
+        practice: isFinalPage
           ? createQuizPractice(questions)
           : { multipleChoice: [] },
-      flashcards: [],
-    })),
+        flashcards: [],
+      };
+    }),
   });
 
 const convertSchemaType = (type: unknown): string | undefined => {
@@ -3468,6 +3477,7 @@ export const createMonolithPreviewEmitter = (
   let reader = createPartialJsonReader();
   let sentMeta = false;
   let sentQuickStart = false;
+  let sentReadable = false;
   let sentBridge = false;
   const sentPageTitles = new Set<number>();
   const sentPages = new Set<number>();
@@ -3545,7 +3555,55 @@ export const createMonolithPreviewEmitter = (
           index,
           title: pageTitle,
           summary: readTrimmedString(page, "summary"),
+          rawNotes: readTrimmedString(page, "rawNotes"),
+          pageIdeas: sanitizeStudyGuidePageIdeas(page.pageIdeas),
         });
+
+        // Page 1 closing is the moment the guide becomes worth reading: title,
+        // Quick Start and a full first page all exist. Hand the client a real
+        // guide built from them so the learner can start now instead of at the
+        // end. `isComplete: false` keeps page 1 a lesson page rather than
+        // letting it inherit the final page's quiz.
+        if (index === 0 && !sentReadable) {
+          const readableQuickStart = parseStudyGuideQuickStart(
+            JSON.stringify(guide.quickStart || {}),
+          );
+          const readableTitle = readTrimmedString(guide, "title");
+          if (readableQuickStart && readableTitle) {
+            sentReadable = true;
+            const readablePages = [
+              {
+                title: pageTitle,
+                summary: readTrimmedString(page, "summary"),
+                rawNotes: readTrimmedString(page, "rawNotes"),
+                pageIdeas: sanitizeStudyGuidePageIdeas(page.pageIdeas),
+              },
+            ];
+            onPreview({
+              type: "readableGuide",
+              text: buildEnhancedStudyGuideText({
+                blueprint: {
+                  title: readableTitle,
+                  folderName:
+                    readTrimmedString(guide, "folderName") || readableTitle,
+                  emoji: readTrimmedString(guide, "emoji"),
+                  quickStart: readableQuickStart,
+                  pages: readablePages.map((readablePage) => ({
+                    title: readablePage.title,
+                    keyFacts: [],
+                    conciseNotes: "",
+                    examplesNeeded: [],
+                    quizSkills: [],
+                  })),
+                },
+                pages: readablePages,
+                questions: [],
+                quickStart: readableQuickStart,
+                isComplete: false,
+              }),
+            });
+          }
+        }
       }
     });
   };
@@ -3562,6 +3620,7 @@ export const createMonolithPreviewEmitter = (
       reader = createPartialJsonReader();
       sentMeta = false;
       sentQuickStart = false;
+      sentReadable = false;
       sentBridge = false;
       sentPageTitles.clear();
       sentPages.clear();

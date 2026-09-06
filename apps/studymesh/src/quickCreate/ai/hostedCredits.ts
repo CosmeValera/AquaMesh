@@ -286,7 +286,20 @@ export type HostedAiPreviewEvent =
   | { type: 'quickStart'; keyIdea: string; quickSummary: string }
   | { type: 'bridge'; title: string; body: string; topics: string[] }
   | { type: 'pageTitle'; index: number; title: string }
-  | { type: 'page'; index: number; title: string; summary: string }
+  | {
+      type: 'page'
+      index: number
+      title: string
+      summary: string
+      rawNotes?: string
+      pageIdeas?: unknown[]
+    }
+  /**
+   * A real, openable guide holding the title, Quick Start and page 1, sent as
+   * soon as page 1 is written so the learner can start reading at ~18s instead
+   * of waiting for the whole guide. Same wire shape as the finished guide.
+   */
+  | { type: 'readableGuide'; text: string }
   | { type: 'stage'; stage: 'monolith' | 'quiz' }
   /** The model's first attempt was unusable, so previewed content is dropped. */
   | { type: 'reset' }

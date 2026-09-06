@@ -10,6 +10,9 @@ export interface HostedPreviewPage {
   done: boolean
 }
 
+/** The hosted monolith prompt asks for exactly 3 pages (api/hosted-ai.ts). */
+export const HOSTED_STUDY_GUIDE_PAGE_COUNT = 3
+
 /**
  * What the hosted gateway has streamed back so far.
  *
@@ -25,22 +28,29 @@ export interface HostedPreviewState {
   bridgeTopics: string[]
   pages: HostedPreviewPage[]
   stage: 'monolith' | 'quiz'
+  /**
+   * How many pages the guide will have. Known up front, so the checklist can
+   * show its whole shape immediately instead of growing rows as they land.
+   */
+  expectedPages: number
+  /**
+   * Whether a known-topic bridge is possible at all. Only true when the learner
+   * listed something they already know, so the row is never reserved for a
+   * guide that could not have one.
+   */
+  expectsBridge: boolean
 }
 
-export const makeHostedPreview = (startedAt: number): HostedPreviewState => ({
-  startedAt,
-  title: '',
-  emoji: '',
-  keyIdea: '',
-  bridgeTopics: [],
-  pages: [],
-  stage: 'monolith',
-})
+export interface HostedPreviewShape {
+  expectedPages?: number
+  expectsBridge?: boolean
+}
 
 /** Rebuilds the checklist from a snapshot the gateway recorded for this job. */
 export const makeHostedPreviewFromSnapshot = (
   snapshot: HostedAiStudyGuideProgress | undefined,
   startedAt: number,
+  shape: HostedPreviewShape = {},
 ): HostedPreviewState => ({
   startedAt,
   title: snapshot?.title || '',
@@ -52,7 +62,15 @@ export const makeHostedPreviewFromSnapshot = (
     done: Boolean(page.done),
   })),
   stage: snapshot?.stage === 'quiz' ? 'quiz' : 'monolith',
+  expectedPages: shape.expectedPages ?? HOSTED_STUDY_GUIDE_PAGE_COUNT,
+  expectsBridge: shape.expectsBridge ?? false,
 })
+
+export const makeHostedPreview = (
+  startedAt: number,
+  shape: HostedPreviewShape = {},
+): HostedPreviewState =>
+  makeHostedPreviewFromSnapshot(undefined, startedAt, shape)
 
 /** True once the snapshot says anything at all, so a blank one is detectable. */
 export const hasHostedPreviewSignal = (preview: HostedPreviewState): boolean =>
@@ -77,6 +95,7 @@ export const applyHostedPreviewEvent = (
       event,
     ),
     current.startedAt,
+    { expectedPages: current.expectedPages, expectsBridge: current.expectsBridge },
   )
 
 export interface HostedPreviewRow {
@@ -104,21 +123,29 @@ export const buildHostedPreviewRows = (
     },
   ]
 
-  if (preview.bridgeTopics.length) {
+  // The bridge always arrives before page 1, so once a page is done and no
+  // bridge came, this guide has none and the row is not reserved for it.
+  const bridgeStillPossible =
+    preview.expectsBridge && !preview.pages.some((page) => page.done)
+  if (preview.bridgeTopics.length || bridgeStillPossible) {
+    const bridgeLabel = t('studyGuides.preview.bridge')
+    const topics = preview.bridgeTopics.join(', ')
     rows.push({
       id: 'bridge',
-      label: `${t('studyGuides.preview.bridge')}: ${preview.bridgeTopics.join(
-        ', ',
-      )}`,
-      done: true,
+      label: topics ? `${bridgeLabel}: ${topics}` : bridgeLabel,
+      done: preview.bridgeTopics.length > 0,
     })
   }
 
-  preview.pages.forEach((page, index) => {
+  // Every page gets a row from the start, so the learner sees the whole shape
+  // of the work rather than watching steps appear out of nowhere.
+  const pageRowCount = Math.max(preview.expectedPages, preview.pages.length)
+  Array.from({ length: pageRowCount }).forEach((_row, index) => {
+    const page = preview.pages[index]
     rows.push({
       id: `page-${index}`,
-      label: page.title || `${t('studyGuides.preview.page')} ${index + 1}`,
-      done: page.done,
+      label: page?.title || `${t('studyGuides.preview.page')} ${index + 1}`,
+      done: Boolean(page?.done),
     })
   })
 
@@ -142,11 +169,10 @@ export const describeHostedPreviewStep = (
  * Share of the guide already written.
  *
  * Unlike an elapsed-time estimate this reflects real work, so it never sits at
- * 95% waiting. The page count is unknown until the pages start arriving, so
- * before then it is assumed to be the usual three.
+ * 95% waiting.
  */
 export const hostedPreviewPercent = (preview: HostedPreviewState): number => {
-  const expectedPages = Math.max(3, preview.pages.length)
+  const expectedPages = Math.max(preview.expectedPages, preview.pages.length)
   const total = 2 + expectedPages + 1
   const done =
     (preview.title ? 1 : 0) +

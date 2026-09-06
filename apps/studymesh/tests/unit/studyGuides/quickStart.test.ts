@@ -150,7 +150,6 @@ describe('bridge strength derivation', () => {
         sanitizeStudyGuideBridgeCorrespondences([
           pair('lock', 'receptor'),
           pair('key', 'adenosine'),
-          pair('decoy key', 'caffeine'),
           pair('keys queuing at the door', 'sleep pressure', 'process'),
         ]),
       ),
@@ -173,18 +172,21 @@ describe('bridge strength derivation', () => {
     ).toBe('strong')
   })
 
-  it('returns weak when nothing transfers over time at all', () => {
+  // Breadth alone leads, with no process pair required. A taxonomy or a
+  // coordinate system maps entirely through fixed roles, and requiring one
+  // process pair was measured to cost true strongs (periodic table, lat/long,
+  // EM spectrum) while catching no false ones.
+  it('returns strong for a purely structural mapping with no process pair', () => {
     expect(
       deriveStudyGuideBridgeStrength(
         sanitizeStudyGuideBridgeCorrespondences([
-          pair('a', 'one'),
-          pair('b', 'two'),
-          pair('c', 'three'),
-          pair('d', 'four'),
-          pair('e', 'five'),
+          pair('a row of seats', 'a period'),
+          pair('a table column', 'a group'),
+          pair('a seat number', 'an atomic number'),
+          pair('neighbouring guests', 'adjacent elements'),
         ]),
       ),
-    ).toBe('weak')
+    ).toBe('strong')
   })
 
   it('returns weak when repeated pairs collapse below the threshold', () => {

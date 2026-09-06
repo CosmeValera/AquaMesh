@@ -68,7 +68,7 @@ const results: Array<{
 }> = []
 
 for (const basis of ['all', 'concrete', 'swap', 'both'] as Basis[]) {
-  for (const minPairs of [2, 3, 4, 5, 6]) {
+  for (const minPairs of [2, 3, 4, 5, 6, 7, 8]) {
     for (const minProcess of [0, 1, 2]) {
       const strong = rows.filter(
         (row) => strengthOf(row, basis, minPairs, minProcess) === 'strong',

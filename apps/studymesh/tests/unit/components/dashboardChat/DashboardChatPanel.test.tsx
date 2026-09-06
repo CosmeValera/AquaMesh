@@ -480,15 +480,28 @@ describe('DashboardChatPanel quick create menu', () => {
     )
   })
 
-  it('defaults Study Guide Create to Study Guide source', async () => {
+  it('offers only the three practice actions and always uses the whole guide', async () => {
     const onQuickCreatePage = vi.fn().mockResolvedValue(undefined)
     renderPanel({ onQuickCreatePage, supportsStudyGuideCreateScope: true })
 
     fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
 
+    expect(screen.getByRole('button', { name: /^Quiz$/i })).toBeInTheDocument()
     expect(
-      screen.getByText(/Excludes previous Quick Create results/i),
+      screen.getByRole('button', { name: /^Flashcards$/i }),
     ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /^Podcast$/i }),
+    ).toBeInTheDocument()
+    // The source-scope switch and its explanation are gone: the whole guide is
+    // always the source.
+    expect(
+      screen.queryByRole('button', { name: /^Current page$/i }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/Excludes previous Quick Create results/i),
+    ).not.toBeInTheDocument()
+
     fireEvent.click(screen.getByRole('button', { name: /^Quiz$/i }))
 
     await waitFor(() =>
@@ -620,27 +633,6 @@ describe('DashboardChatPanel quick create menu', () => {
         'Daily podcast generation limit reached. Try again tomorrow.',
       ),
     ).not.toBeInTheDocument()
-  })
-
-  it('can create from only the current Study Guide page', async () => {
-    const onQuickCreatePage = vi.fn().mockResolvedValue(undefined)
-    renderPanel({ onQuickCreatePage, supportsStudyGuideCreateScope: true })
-
-    fireEvent.click(screen.getByRole('button', { name: /^Create$/i }))
-    fireEvent.click(screen.getByRole('button', { name: /^Current page$/i }))
-    fireEvent.click(screen.getByRole('button', { name: /^Flashcards$/i }))
-
-    await waitFor(() =>
-      expect(onQuickCreatePage).toHaveBeenCalledWith(
-        {
-          actionId: 'flashcards',
-          resourceType: 'flashcards',
-          label: 'Flashcards',
-          sourceScope: 'currentPage',
-        },
-        expect.objectContaining({ signal: expect.any(AbortSignal) }),
-      ),
-    )
   })
 
   it('adds pasted source without AI and uses it in later chat answers', async () => {

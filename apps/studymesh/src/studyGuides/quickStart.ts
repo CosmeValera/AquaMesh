@@ -74,7 +74,7 @@ export interface StudyGuideBridgeCorrespondence {
 }
 
 export const STUDY_GUIDE_BRIDGE_STRONG_MIN_CORRESPONDENCES = 3
-export const STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES = 6
+export const STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES = 8
 const STUDY_GUIDE_BRIDGE_SIDE_MAX_CHARS = 80
 const STUDY_GUIDE_BRIDGE_CARRIES_MAX_CHARS = 120
 const STUDY_GUIDE_BRIDGE_CARRIES_MIN_CHARS = 8
@@ -256,10 +256,20 @@ export interface StudyGuideBridgeStrengthRule {
  * roles, and a good structural analogy should not be punished for that. Raising
  * only the pair count without any process requirement let purely static lists
  * through.
+ *
+ * Retuned 2026-08-23 against a 27-case held-out set built to be adversarial
+ * (15 deliberate false analogies) plus the 8-case userset. The old 5/1 rule
+ * passed 7 of 15 false analogies, including "Berlin Wall x a paperclip", because
+ * the prompt asked for maximum pairs and the rule then read pair count as
+ * quality. With the bar-led prompt the honest counts drop, so the threshold
+ * drops with them: 4/0 halves false strongs (7 -> 3) and holds 63% strong on a
+ * natural mix. minProcessPairs is now 0 because at these counts requiring one
+ * cost two true strongs and saved no false ones -- the same structural-analogy
+ * false weak described above, one pair lower down.
  */
 export const STUDY_GUIDE_BRIDGE_STRENGTH_RULE: StudyGuideBridgeStrengthRule = {
-  minPairs: 5,
-  minProcessPairs: 1,
+  minPairs: 4,
+  minProcessPairs: 0,
 }
 
 /**
@@ -1082,7 +1092,8 @@ Return strict JSON only with this shape:
 
 Step 1 - targetParts:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
-- List 3-5 moving parts of the Study Guide topic: the things that act, the things acted on, and what changes over time.
+- List 3-5 working parts of the Study Guide topic: the things that act, the things acted on, and what changes over time.
+- When the topic's content is its structure rather than a sequence, list its organizing axes, levels, and positions instead. A taxonomy or a coordinate system has working parts even though nothing moves.
 - Take them from the content excerpt below, not from general impressions of the subject.
 - Write each part as a short concrete noun phrase. No full sentences.
 
@@ -1093,7 +1104,8 @@ Step 2 - pick one known topic:
 - Judge candidates only on whether their parts map. Do not judge them on being broad, narrow, technical, everyday, or unrelated-sounding.
 
 Step 3 - correspondences (this is the real output):
-- Once you have chosen, map that candidate as completely as you can. List every pair that holds, not only the first one or two, and work through each targetPart in turn before stopping. Extra candidates must not cost the chosen one depth.
+- Once you have chosen, map that candidate as completely as you can. Work through every targetPart in turn before stopping, not only the first one or two. Extra candidates must not cost the chosen one depth.
+- Then apply one bar to everything you found: a pair belongs only when knowing the known side lets the learner predict how the target side behaves. Keep every pair that clears the bar; drop the ones that do not. Search wide, then keep strictly.
 - One entry per matched pair, up to ${STUDY_GUIDE_BRIDGE_MAX_CORRESPONDENCES}.
 - knownSide: the specific part inside the known topic. targetSide: the part inside the Study Guide topic it maps to.
 - carries: what the pair transfers, in a few words. State the role or the causal job, not the resemblance.
@@ -1101,7 +1113,8 @@ Step 3 - correspondences (this is the real output):
 - Label kind honestly. "process" only when something changes, accumulates, decays, or feeds back over time. A fixed role or component is "part". Never label a static role as a process to make the mapping look richer.
 - alsoWorksFor: does the knownSide depend on something that exists only in this known topic? If yes, answer "none". If the knownSide is a general idea that any subject could supply, name one other everyday domain that supplies it just as well.
 - Worked example. "budget categories -> grammar categories" leans on the general idea of having categories, which filing cabinets and wardrobes supply too, so alsoWorksFor is "filing cabinets". "a key's cut -> a verb ending" leans on a cut, which exists only in locks and keys, so alsoWorksFor is "none".
-- A pair only counts when knowing the known side lets the learner predict how the target side behaves. Naming a shared property is not predicting behaviour.
+- Worked example for the bar. "a conductor's cue -> a fault rupture" fails: knowing that a conductor cues an entrance predicts nothing about when a fault ruptures, because nothing cues one. "the runner who just handed off needs recovery before running again -> a neuron's refractory period" passes: the known side predicts that the target side cannot fire again immediately.
+- Naming a shared property is not predicting behaviour. Two things being organised, coordinated, triggered, sustained, or driven by inputs is a shared property, not a mapping.
 - Do not write a pair whose two sides are the same word, or that only shares a label, a mood, or a general theme.
 - Prefer concrete nouns on the known side. Pairs built from abstract words like "categories", "choices", "resources", "structure", or "standards" are almost always swap-test failures.
 - Return [] when nothing genuinely maps. An empty list is a correct and useful answer.

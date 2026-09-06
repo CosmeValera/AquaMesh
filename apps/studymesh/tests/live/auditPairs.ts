@@ -10,8 +10,8 @@ const rows = JSON.parse(readFileSync(process.argv[2], 'utf8')).filter(
 )
 const only = process.argv[3]
 
-const MIN_PAIRS = 5
-const MIN_PROCESS = 1
+const MIN_PAIRS = 4
+const MIN_PROCESS = 0
 
 for (const row of rows) {
   const pairs = row.correspondences

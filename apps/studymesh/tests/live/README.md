@@ -94,6 +94,21 @@ Total calls = cases × arms × repeats. Check that number before running:
   pair as diagnostics so `sweepRules.ts` can re-test them; neither gates.
 - **Cost** is about **$0.004 per finished guide** (monolith + quiz) at effort
   `low`. Budget accordingly.
+- **Raising bridge reasoning effort was measured and rejected** (2026-08-23, 27
+  cases at `LIVE_EFFORT=medium`). It did not improve discrimination and added
+  variance in both directions: vaccine x fire drills fell 6 pairs to 2 while the
+  false earthquake x conducting an orchestra rose 0 to 4. Error count was no
+  better than `low`. Production stays at `low`; do not spend calls re-testing
+  this without a new hypothesis about *why* more thinking would help.
+- **Pair count is a productivity signal, not a quality one.** Before the
+  2026-08-23 prompt change, `pairs >= 5` alone reproduced the shipped verdict on
+  27/27 cases, so the rule was really "did the model emit 5 of a possible 6"
+  while the prompt simultaneously asked it to map "as completely as you can".
+  Any future threshold work should check that the prompt is not being rewarded
+  for hitting the threshold. The held-out `probe`/`static`/`dynamic` groups in
+  `bridgeAb.ts` exist to catch that: 15 of their 27 cases are deliberate false
+  analogies, so their strong rate is *not* comparable to the 60-80% production
+  band. Read the `userset` group for that.
 - **Borderline pairs are genuinely flaky, and that is expected.** The same topic
   and skill can land `strong` on one run and `weak` on the next when the pair
   count sits on the threshold. Do not draw conclusions from single runs: use

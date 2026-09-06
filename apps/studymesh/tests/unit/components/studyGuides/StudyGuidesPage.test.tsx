@@ -648,6 +648,24 @@ describe('StudyGuidesPage create flow', () => {
     expect(await screen.findByText('Resumed Guide')).toBeInTheDocument()
   })
 
+  it('shows the whole checklist from the first frame, unfilled', async () => {
+    // Before this, the card showed only a bar for the first seconds and the
+    // rows appeared later, so the learner could not tell what the wait was for.
+    vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
+      () => new Promise(() => undefined),
+    )
+    renderStudyGuidesPage('/study-guides')
+
+    await createGuideFromPrompt('First frame prompt')
+    await screen.findByText('Creating')
+
+    expect(screen.getByText('Page 1')).toBeInTheDocument()
+    expect(screen.getByText('Page 2')).toBeInTheDocument()
+    expect(screen.getByText('Page 3')).toBeInTheDocument()
+    expect(screen.getByText('Final quiz')).toBeInTheDocument()
+    expect(screen.getByText('Key idea')).toBeInTheDocument()
+  })
+
   it('offers Start reading as soon as page 1 is written', async () => {
     // The point of the whole early-read path: a guide worth opening exists
     // long before the generation finishes.

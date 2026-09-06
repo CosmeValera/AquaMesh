@@ -47,6 +47,7 @@ import {
   type AiGeneratedStudyGuidePage,
 } from '../../studyGuides/generation'
 import {
+  STUDY_GUIDES_CHANGED_EVENT,
   STUDY_GUIDES_STORAGE_FULL_MESSAGE,
   StudyGuideStorage,
   createStudyGuideRecord,
@@ -353,6 +354,49 @@ const GuideWorkspacePage = () => {
       throw error
     }
   }
+
+  /**
+   * Adopts pages that finished after the learner started reading.
+   *
+   * The creation runner keeps generating once page 1 is openable, and saves the
+   * finished guide when it is done - which dispatches this event. No timer is
+   * needed. Pages the learner already has are kept exactly as they are, along
+   * with their place in the guide, so nothing moves under them.
+   */
+  useEffect(() => {
+    const adoptFinishedPages = () => {
+      const current = recordRef.current
+      if (!current) {
+        return
+      }
+
+      const stored = StudyGuideStorage.getById(studyGuideId)
+      if (!stored) {
+        return
+      }
+
+      const readPageCount = current.studyPath.dashboards.length
+      const extraPages = stored.studyPath.dashboards.slice(readPageCount)
+      // Only ever grows, which is also what stops this reacting to its own save.
+      if (!extraPages.length) {
+        return
+      }
+
+      persistStudyPath(
+        {
+          ...stored.studyPath,
+          dashboards: [...current.studyPath.dashboards, ...extraPages],
+          selectedIndex: current.studyPath.selectedIndex,
+        },
+        current,
+      )
+    }
+
+    window.addEventListener(STUDY_GUIDES_CHANGED_EVENT, adoptFinishedPages)
+    return () => {
+      window.removeEventListener(STUDY_GUIDES_CHANGED_EVENT, adoptFinishedPages)
+    }
+  }, [studyGuideId])
 
   const appendMarkdownPage = (
     title: string,

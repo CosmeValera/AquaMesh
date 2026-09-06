@@ -1701,7 +1701,10 @@ const StudyGuidesPage = () => {
                               },
                             })}
                           />
-                          {preview && hasHostedPreviewSignal(preview) ? (
+                          {/* Shown from the first frame. Every row is a
+                              placeholder until it fills, so the learner knows
+                              the shape of the wait immediately. */}
+                          {preview ? (
                             <Box sx={{ mt: 1.25 }}>
                               <HostedPreviewChecklist
                                 preview={preview}

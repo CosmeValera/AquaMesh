@@ -106,6 +106,11 @@ interface StudyPathWorkspaceViewProps {
   onGrowPage?: (seed: StudyGuideGrowthSeed) => void
   growPageCreditCost?: number
   growingPages?: StudyGuideGrowthTask[]
+  /**
+   * Opens the full guide creation modal on a grown page's subject. Without it
+   * the offer falls back to the shared start-a-guide event.
+   */
+  onCreateGuideFromPage?: (prompt: string) => void
   onAskAi?: (question: string) => void
   /** Overrides the default "My guides" crumb, e.g. for the public /try demo. */
   breadcrumb?: { label: string; onClick: () => void }
@@ -439,6 +444,7 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   onGrowPage,
   growPageCreditCost,
   growingPages,
+  onCreateGuideFromPage,
   onAskAi,
   breadcrumb,
   createdNextIdeaPrompts,
@@ -475,6 +481,68 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
           studyPath.title,
         )
       : ''
+  // Rendered as the page's last card so it inherits the page width, centring
+  // and card gap instead of floating below with margins of its own.
+  const pageToGuideCard = pageGuidePrompt ? (
+    <Paper
+      variant="outlined"
+      data-testid="study-guide-page-to-guide"
+      sx={{ width: '100%', maxWidth: 960, borderRadius: 2, p: 2 }}
+    >
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1.5}
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        justifyContent="space-between"
+      >
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle2" fontWeight={700}>
+            {t('workspace.pageToGuideTitle')}
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mt: 0.25, lineHeight: 1.5 }}
+          >
+            {t('workspace.pageToGuideBody')}
+          </Typography>
+          {/* The exact words the guide will be created from, so nothing is
+              generated that the reader has not read first. */}
+          <Typography
+            variant="body2"
+            sx={(theme) => ({
+              mt: 1,
+              px: 1,
+              py: 0.75,
+              borderRadius: 1,
+              borderLeft: 3,
+              borderColor: alpha(theme.palette.primary.main, 0.5),
+              bgcolor: alpha(theme.palette.primary.main, 0.06),
+              fontStyle: 'italic',
+              lineHeight: 1.45,
+            })}
+          >
+            {pageGuidePrompt}
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          onClick={() =>
+            onCreateGuideFromPage
+              ? onCreateGuideFromPage(pageGuidePrompt)
+              : window.dispatchEvent(
+                  new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, {
+                    detail: { prompts: [{ prompt: pageGuidePrompt }] },
+                  }),
+                )
+          }
+          sx={{ flexShrink: 0, textTransform: 'none', fontWeight: 700 }}
+        >
+          {t('workspace.pageToGuideAction')}
+        </Button>
+      </Stack>
+    </Paper>
+  ) : null
   const currentPageNumberLabel = currentPageKey
     ? getStudyGuidePageNumberLabels(studyPath).get(currentPageKey)
     : undefined
@@ -967,51 +1035,8 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                 layout={studentLayout}
                 studyPathContext={studyPathContext}
                 onAskAi={onAskAi}
+                footer={pageToGuideCard}
               />
-              {pageGuidePrompt ? (
-                <Paper
-                  variant="outlined"
-                  data-testid="study-guide-page-to-guide"
-                  sx={{ mx: 2, mb: 2, p: 2, borderRadius: 2 }}
-                >
-                  <Stack
-                    direction={{ xs: 'column', sm: 'row' }}
-                    spacing={1.5}
-                    alignItems={{ xs: 'stretch', sm: 'center' }}
-                    justifyContent="space-between"
-                  >
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="subtitle2" fontWeight={700}>
-                        {t('workspace.pageToGuideTitle')}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        sx={{ display: 'block', mt: 0.25, lineHeight: 1.5 }}
-                      >
-                        {t('workspace.pageToGuideBody')}
-                      </Typography>
-                    </Box>
-                    <Button
-                      variant="contained"
-                      onClick={() =>
-                        window.dispatchEvent(
-                          new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, {
-                            detail: { prompts: [{ prompt: pageGuidePrompt }] },
-                          }),
-                        )
-                      }
-                      sx={{
-                        flexShrink: 0,
-                        textTransform: 'none',
-                        fontWeight: 700,
-                      }}
-                    >
-                      {t('workspace.pageToGuideAction')}
-                    </Button>
-                  </Stack>
-                </Paper>
-              ) : null}
             </>
           )}
         </Box>

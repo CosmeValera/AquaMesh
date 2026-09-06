@@ -152,8 +152,15 @@ const StudyGuideLinearLayout = ({
   layout,
   studyPathContext,
   onAskAi,
+  footer,
 }: {
   layout?: DashboardLayout
+  /**
+   * Rendered as the last card of the page. Kept inside this container so it
+   * picks up the page's own width, centring and card gap instead of guessing
+   * at them from outside.
+   */
+  footer?: React.ReactNode
   /**
    * Which guide and page these blocks belong to. Supplied by the view rather
    * than read out of the layout: blocks are only given this context at
@@ -204,7 +211,11 @@ const StudyGuideLinearLayout = ({
   }, [components])
 
   if (components.length === 0) {
-    return <div className="studymesh-mobile-dashboard-empty" />
+    return footer ? (
+      <div className="studymesh-mobile-dashboard-layout">{footer}</div>
+    ) : (
+      <div className="studymesh-mobile-dashboard-empty" />
+    )
   }
 
   return (
@@ -293,6 +304,7 @@ const StudyGuideLinearLayout = ({
           </section>
         )
       })}
+      {footer}
     </div>
   )
 }

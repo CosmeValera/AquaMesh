@@ -420,13 +420,28 @@ const StudyGuidesPage = () => {
     }
   }, [])
 
-  // Follow-up guides picked at the end of a quiz arrive as router state. The
-  // state is cleared right away so a reload does not reopen the dialog.
+  // Follow-up guides picked at the end of a quiz arrive as router state, and a
+  // single guide asked for from a grown page arrives the same way. The state is
+  // cleared right away so a reload does not reopen the dialog.
   useEffect(() => {
-    const handedOver = (
-      location.state as { createGuidePrompts?: unknown } | null
-    )?.createGuidePrompts
-    const prompts = normalizeStartNextStudyGuideRequests(handedOver)
+    const handedOver = location.state as {
+      createGuidePrompts?: unknown
+      createGuidePrompt?: unknown
+    } | null
+    const singlePrompt =
+      typeof handedOver?.createGuidePrompt === 'string'
+        ? handedOver.createGuidePrompt.trim()
+        : ''
+    if (singlePrompt) {
+      setCreateGuidePrompt(singlePrompt)
+      setCreateOpen(true)
+      navigate(location.pathname, { replace: true, state: null })
+      return
+    }
+
+    const prompts = normalizeStartNextStudyGuideRequests(
+      handedOver?.createGuidePrompts,
+    )
     if (!prompts.length) {
       return
     }
@@ -1175,11 +1190,7 @@ const StudyGuidesPage = () => {
                 })}
               >
                 <Stack spacing={1.75} sx={{ height: '100%' }}>
-                  <Stack
-                    direction="row"
-                    spacing={1.25}
-                    alignItems="center"
-                  >
+                  <Stack direction="row" spacing={1.25} alignItems="center">
                     <Box
                       sx={(theme) => ({
                         width: 36,
@@ -1237,7 +1248,10 @@ const StudyGuidesPage = () => {
                             '&:hover': {
                               color: 'error.main',
                               bgcolor: alpha(theme.palette.error.main, 0.08),
-                              borderColor: alpha(theme.palette.error.main, 0.18),
+                              borderColor: alpha(
+                                theme.palette.error.main,
+                                0.18,
+                              ),
                             },
                             '&.Mui-disabled': {
                               color: 'action.disabled',

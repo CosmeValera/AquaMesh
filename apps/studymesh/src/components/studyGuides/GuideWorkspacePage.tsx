@@ -783,6 +783,11 @@ const GuideWorkspacePage = () => {
         onGrowPage={(seed) => void growPage(seed)}
         growPageCreditCost={studyPageCreditCost}
         growingPages={growingPages}
+        // One page, one guide: the New Quick Guide dialog on the guide list,
+        // prefilled, rather than the multi-create confirm the quiz slate uses.
+        onCreateGuideFromPage={(prompt) =>
+          navigate('/study-guides', { state: { createGuidePrompt: prompt } })
+        }
         onAskAi={askAiFromStudyBlock}
         createdNextIdeaPrompts={createdNextIdeaPrompts}
         pendingCitationHighlight={pendingCitationHighlight}

@@ -43,17 +43,13 @@ vi.mock('../../../../src/components/hostedAi/useHostedAiStatus', () => ({
 
 // The page asks the gateway which hosted jobs it still owns before it will run
 // anything. Default: it owns them, which is the ordinary resume case.
-const getHostedStudyGuideJobsMock = vi.hoisted(() =>
-  vi.fn(async (ids: readonly string[]) => ({
-    jobs: Object.fromEntries(
-      ids.map((clientJobId) => [
-        clientJobId,
-        { clientJobId, status: 'running' },
-      ]),
-    ),
-    unresolvedIds: [] as string[],
-  })),
-)
+const gatewayOwnsEveryJob = async (ids: readonly string[]) => ({
+  jobs: Object.fromEntries(
+    ids.map((clientJobId) => [clientJobId, { clientJobId, status: 'running' }]),
+  ),
+  unresolvedIds: [] as string[],
+})
+const getHostedStudyGuideJobsMock = vi.hoisted(() => vi.fn())
 
 type HostedClientModule =
   typeof import('../../../../src/quickCreate/ai/hostedClient')
@@ -228,6 +224,9 @@ const createGuideFromPrompt = async (prompt: string) => {
 describe('StudyGuidesPage create flow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // clearAllMocks leaves implementations in place, so a test that gives the
+    // gateway a different answer would otherwise change every test after it.
+    getHostedStudyGuideJobsMock.mockImplementation(gatewayOwnsEveryJob)
     deleteHostedAiPodcastAudioMock.mockResolvedValue(undefined)
     useHostedAiStatusMock.mockReturnValue({
       status: null,
@@ -532,6 +531,12 @@ describe('StudyGuidesPage create flow', () => {
         'Not enough Carrots. This action needs 3 and you have 2.',
       resultStudyGuideId: null,
     })
+    // The generation never started, so the gateway has no such job and there is
+    // nothing to collect. Only a click may spend Carrots on it.
+    getHostedStudyGuideJobsMock.mockResolvedValue({
+      jobs: {},
+      unresolvedIds: [],
+    })
     const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
 
     renderStudyGuidesPage('/study-guides')
@@ -573,6 +578,10 @@ describe('StudyGuidesPage create flow', () => {
       errorMessage:
         'Not enough Carrots. This action needs 3 and you have 2.',
       resultStudyGuideId: null,
+    })
+    getHostedStudyGuideJobsMock.mockResolvedValue({
+      jobs: {},
+      unresolvedIds: [],
     })
 
     renderStudyGuidesPage('/study-guides')

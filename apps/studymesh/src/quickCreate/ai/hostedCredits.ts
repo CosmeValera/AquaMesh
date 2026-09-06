@@ -219,6 +219,15 @@ export interface HostedAiStudyGuideProgress {
   bridgeTopics?: string[]
   pages?: Array<{ title: string; done: boolean }>
   stage?: 'monolith' | 'quiz'
+  /**
+   * The openable page-1 guide, once it exists.
+   *
+   * The only part of a snapshot that is not display state. It rides here
+   * because the `readableGuide` stream event reaches whichever tab started the
+   * generation and nobody else: without it a refreshed card watches page 1 tick
+   * complete and still has nothing to open.
+   */
+  readableGuideText?: string
 }
 
 export interface HostedAiStudyGuideJob {
@@ -353,6 +362,10 @@ export const foldHostedStudyGuideProgress = (
     return { ...current, pages }
   }
 
+  if (event.type === 'readableGuide') {
+    return { ...current, readableGuideText: event.text }
+  }
+
   if (event.type === 'stage') {
     return { ...current, stage: event.stage }
   }
@@ -368,7 +381,12 @@ export const foldHostedStudyGuideProgress = (
 export const isHostedStudyGuideProgressMilestone = (
   event: HostedAiPreviewEvent,
 ): boolean =>
-  event.type === 'stage' || event.type === 'page' || event.type === 'reset'
+  event.type === 'stage' ||
+  event.type === 'page' ||
+  event.type === 'reset' ||
+  // The whole point of this one is that the learner can stop waiting, so it is
+  // never held back for the coalescing window.
+  event.type === 'readableGuide'
 
 export const getHostedAiCreditCost = (surface: HostedAiSurface): number =>
   HOSTED_AI_CREDIT_COSTS[surface]

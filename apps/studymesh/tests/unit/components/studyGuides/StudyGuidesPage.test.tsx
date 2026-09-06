@@ -44,14 +44,15 @@ vi.mock('../../../../src/components/hostedAi/useHostedAiStatus', () => ({
 // The page asks the gateway which hosted jobs it still owns before it will run
 // anything. Default: it owns them, which is the ordinary resume case.
 const getHostedStudyGuideJobsMock = vi.hoisted(() =>
-  vi.fn(async (ids: readonly string[]) =>
-    Object.fromEntries(
+  vi.fn(async (ids: readonly string[]) => ({
+    jobs: Object.fromEntries(
       ids.map((clientJobId) => [
         clientJobId,
         { clientJobId, status: 'running' },
       ]),
     ),
-  ),
+    unresolvedIds: [] as string[],
+  })),
 )
 
 type HostedClientModule =

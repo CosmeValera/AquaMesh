@@ -98,6 +98,25 @@ export const applyHostedPreviewEvent = (
     { expectedPages: current.expectedPages, expectsBridge: current.expectsBridge },
   )
 
+/**
+ * A snapshot with the page-1 guide taken back out.
+ *
+ * Fine to send over the wire, far too big to keep in localStorage next to the
+ * queue: a tab that saw the guide has already saved it, so its copy in the
+ * snapshot is pure weight against the storage quota.
+ */
+export const withoutReadableGuideText = (
+  progress: HostedAiStudyGuideProgress,
+): HostedAiStudyGuideProgress => {
+  if (!progress.readableGuideText) {
+    return progress
+  }
+
+  const rest = { ...progress }
+  delete rest.readableGuideText
+  return rest
+}
+
 /** What a snapshot claims to have finished, so two of them can be compared. */
 export const hostedPreviewProgressCount = (
   progress: HostedAiStudyGuideProgress | undefined,

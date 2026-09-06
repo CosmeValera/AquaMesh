@@ -63,6 +63,7 @@ import {
   HostedPreviewState,
   makeHostedPreviewFromSnapshot,
   mergeHostedPreviewSnapshot,
+  withoutReadableGuideText,
 } from '../../studyGuides/hostedPreview'
 import type {
   HostedAiPreviewEvent,
@@ -443,6 +444,9 @@ const StudyGuidesPage = () => {
   // Jobs the gateway has answered for and said are not coming back, so they
   // stop being asked about. Only a gateway answer ever puts a job in here.
   const confirmedGoneJobIdsRef = useRef<Set<string>>(new Set())
+  // Jobs whose page 1 has already been turned into a guide, so a snapshot that
+  // keeps carrying it does not rebuild the same partial guide every poll.
+  const readableSavedJobIdsRef = useRef<Set<string>>(new Set())
   // The checklist as folded in this page life, so it can be written to the
   // queue and survive the refresh that throws this component's state away.
   const previewSnapshotsRef = useRef<Record<string, HostedAiStudyGuideProgress>>(
@@ -577,6 +581,12 @@ const StudyGuidesPage = () => {
             ]),
           ),
         )
+
+        // Page 1 may already be written, in which case the guide is openable
+        // right now and this card should stand down rather than keep counting.
+        hostedJobs.forEach((job) => {
+          saveReadableGuideFromProgress(job, jobs[job.id]?.progress)
+        })
 
         // Paint every card from what this browser last saw, refined by whatever
         // the gateway recorded. Without the local half a refresh showed an
@@ -894,7 +904,33 @@ const StudyGuidesPage = () => {
    * being written. `resultStudyGuideId` is what the card reads to offer the
    * button, and the finished guide later overwrites this same record.
    */
+  /**
+   * Saves page 1 from a progress snapshot, for a tab that did not stream it.
+   *
+   * The `readableGuide` event only ever reaches the tab that started the
+   * generation. A refreshed one has to pick page 1 up from the job row, or it
+   * watches the checklist complete with nothing to open.
+   */
+  const saveReadableGuideFromProgress = (
+    job: PendingGuide,
+    progress: HostedAiStudyGuideProgress | undefined,
+  ) => {
+    const guideText = progress?.readableGuideText
+    if (
+      !guideText ||
+      job.resultStudyGuideId ||
+      readableSavedJobIdsRef.current.has(job.id)
+    ) {
+      return
+    }
+
+    readableSavedJobIdsRef.current.add(job.id)
+    void saveReadableGuide(job, guideText)
+  }
+
   const saveReadableGuide = async (job: PendingGuide, guideText: string) => {
+    readableSavedJobIdsRef.current.add(job.id)
+
     try {
       const studyPath = await buildReadableStudyPathState({
         id: job.id,
@@ -939,7 +975,15 @@ const StudyGuidesPage = () => {
       provider: job.provider,
     })
     jobsRunningInThisTab.add(job.id)
-    const isCollecting = job.status === 'collecting'
+    // Re-read, because page 1 can be saved between this job being queued and the
+    // runner reaching it. Using the captured copy put the card back on screen
+    // moments after it had correctly stood down.
+    const stored =
+      StudyGuideCreationQueueStorage.getAll().find(
+        (item) => item.id === job.id,
+      ) || job
+    const isCollecting =
+      stored.status === 'collecting' || Boolean(stored.resultStudyGuideId)
     StudyGuideCreationQueueStorage.update(job.id, {
       // A collecting job stays hidden: it is being fetched, not created.
       status: isCollecting ? 'collecting' : 'running',
@@ -982,7 +1026,7 @@ const StudyGuidesPage = () => {
       if (snapshot !== previousSnapshot) {
         previewSnapshotsRef.current[job.id] = snapshot
         StudyGuideCreationQueueStorage.update(job.id, {
-          previewSnapshot: snapshot,
+          previewSnapshot: withoutReadableGuideText(snapshot),
         })
       }
 
@@ -1015,6 +1059,9 @@ const StudyGuidesPage = () => {
         ...current,
         [job.id]: { ...current[job.id], ...state },
       }))
+      // Page 1 may have been written before this tab existed. Saving it here is
+      // what lets a refreshed card stand down at ~18s like a watched one.
+      saveReadableGuideFromProgress(job, state.progress)
       const startedAt = resolveJobStartedAt(
         state.createdAt || jobServerState[job.id]?.createdAt,
         job,

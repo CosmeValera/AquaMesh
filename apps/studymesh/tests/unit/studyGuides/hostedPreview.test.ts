@@ -12,7 +12,12 @@ import {
   makeHostedPreview,
   mergeHostedPreviewSnapshot,
   toHostedProgressSnapshot,
+  withoutReadableGuideText,
 } from '../../../src/studyGuides/hostedPreview'
+import {
+  foldHostedStudyGuideProgress,
+  isHostedStudyGuideProgressMilestone,
+} from '../../../src/quickCreate/ai/hostedCredits'
 import type { HostedAiPreviewEvent } from '../../../src/quickCreate/ai/hostedCredits'
 
 // Real order, taken from a live hosted generation.
@@ -438,5 +443,59 @@ describe('reconciling a snapshot with what is already on screen', () => {
     expect(buildHostedPreviewRows(restored, t)).toEqual(
       buildHostedPreviewRows(watched, t),
     )
+  })
+})
+
+describe('handing page 1 to a tab that did not stream it', () => {
+  const readable: HostedAiPreviewEvent = {
+    type: 'readableGuide',
+    text: '# How a Sourdough Starter Works',
+  }
+
+  it('records the openable guide on the snapshot', () => {
+    const snapshot = [...TIMELINE.slice(0, 5), readable].reduce(
+      foldHostedStudyGuideProgress,
+      {},
+    )
+
+    expect(snapshot.readableGuideText).toBe(
+      '# How a Sourdough Starter Works',
+    )
+    // Everything the checklist needs is still there beside it.
+    expect(snapshot.title).toBe('How a Sourdough Starter Works')
+  })
+
+  it('writes it through immediately rather than waiting to coalesce', () => {
+    // The learner is waiting on exactly this, so it is not held for the window.
+    expect(isHostedStudyGuideProgressMilestone(readable)).toBe(true)
+  })
+
+  it('drops it again when a retry throws the generation away', () => {
+    const snapshot = [readable, { type: 'reset' } as HostedAiPreviewEvent].reduce(
+      foldHostedStudyGuideProgress,
+      {},
+    )
+
+    expect(snapshot.readableGuideText).toBeUndefined()
+  })
+
+  it('keeps it out of what the browser stores next to the queue', () => {
+    // A tab that saw the guide has already saved it, so its copy here is pure
+    // weight against the storage quota.
+    const snapshot = foldHostedStudyGuideProgress(
+      { title: 'How a Sourdough Starter Works' },
+      readable,
+    )
+    const stored = withoutReadableGuideText(snapshot)
+
+    expect(stored.readableGuideText).toBeUndefined()
+    expect(stored.title).toBe('How a Sourdough Starter Works')
+    // The snapshot on the wire is untouched.
+    expect(snapshot.readableGuideText).toBe('# How a Sourdough Starter Works')
+  })
+
+  it('leaves a snapshot without one alone', () => {
+    const snapshot = { title: 'No guide yet' }
+    expect(withoutReadableGuideText(snapshot)).toBe(snapshot)
   })
 })

@@ -11,6 +11,7 @@ import {
 import type {
   HostedAiGatewayRequest,
   HostedAiGatewayResponse,
+  HostedAiPreviewEvent,
   HostedAiPodcast,
   HostedAiStatus,
   HostedAiSurface,
@@ -185,6 +186,101 @@ const callHostedAiGateway = async (
   }
 
   return payload
+}
+
+const NDJSON_CONTENT_TYPE = 'application/x-ndjson'
+
+/**
+ * Same call as `callHostedAiGateway`, read line by line.
+ *
+ * Each line is a preview event so the creation panel can show the guide being
+ * written. Only the terminal `done` line is used to build anything: it carries
+ * the exact body the non-streaming call returns.
+ *
+ * A gateway that answers with plain JSON - an older deployment, or any failure
+ * raised before the model produced output - is handled by the normal path, so
+ * every existing error code keeps its message and its side effects.
+ */
+const callHostedAiGatewayStreaming = async (
+  request: HostedAiGatewayRequest,
+  onPreview?: (event: HostedAiPreviewEvent) => void,
+  signal?: AbortSignal,
+): Promise<HostedAiGatewayResponse> => {
+  const accessToken = await getHostedAiAccessToken()
+  const response = await fetch(HOSTED_AI_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    signal,
+    body: JSON.stringify({ ...request, stream: true }),
+  })
+
+  const isNdjson = (response.headers.get('content-type') || '').includes(
+    NDJSON_CONTENT_TYPE,
+  )
+
+  if (!isNdjson || !response.body) {
+    const payload = await parseGatewayResponse(response)
+    if (!response.ok || !payload.ok) {
+      throw formatHostedAiError(payload, response)
+    }
+
+    return payload
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let pending = ''
+  let result: HostedAiGatewayResponse | undefined
+
+  const handleLine = (line: string) => {
+    const trimmed = line.trim()
+    if (!trimmed) {
+      return
+    }
+
+    let event: HostedAiPreviewEvent
+    try {
+      event = JSON.parse(trimmed) as HostedAiPreviewEvent
+    } catch {
+      // A torn line cannot happen mid-stream, and a preview is never worth
+      // failing a paid generation over.
+      return
+    }
+
+    if (event.type === 'done' || event.type === 'error') {
+      result = event.response
+      return
+    }
+
+    onPreview?.(event)
+  }
+
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) {
+      break
+    }
+
+    pending += decoder.decode(value, { stream: true })
+    const lines = pending.split('\n')
+    pending = lines.pop() || ''
+    lines.forEach(handleLine)
+  }
+
+  handleLine(pending + decoder.decode())
+
+  if (!result) {
+    throw new Error('Hosted AI ended the response before finishing the guide.')
+  }
+
+  if (!result.ok) {
+    throw formatHostedAiError(result)
+  }
+
+  return result
 }
 
 export const getHostedAiStatus = async (): Promise<HostedAiStatus> => {
@@ -365,6 +461,7 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
   onBridgeBlocks,
   onLearnedSkillOptions,
   onNextGuideIdeas,
+  onPreview,
 }: {
   userKnownTopics?: string[]
   outputLanguage?: StrongAiCallOptions['outputLanguage']
@@ -376,6 +473,8 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
   ) => void
   onLearnedSkillOptions?: (options: string[]) => void
   onNextGuideIdeas?: (ideas: StudyGuideNextIdea[]) => void
+  /** Supplied only when the caller has somewhere to show the guide forming. */
+  onPreview?: (event: HostedAiPreviewEvent) => void
 }): HostedAiTransport => {
   return async ({
     model,
@@ -389,21 +488,21 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
     dispatchHostedAiVisualSpend(surface)
 
     try {
-      const payload = await callHostedAiGateway(
-        {
-          action: 'generateWithQuickStart',
-          surface,
-          model,
-          outputLanguage,
-          parts,
-          responseSchema,
-          timeoutMs,
-          quickStartOptions: {
-            ...(userKnownTopics?.length ? { userKnownTopics } : {}),
-          },
+      const gatewayRequest: HostedAiGatewayRequest = {
+        action: 'generateWithQuickStart',
+        surface,
+        model,
+        outputLanguage,
+        parts,
+        responseSchema,
+        timeoutMs,
+        quickStartOptions: {
+          ...(userKnownTopics?.length ? { userKnownTopics } : {}),
         },
-        signal,
-      )
+      }
+      const payload = onPreview
+        ? await callHostedAiGatewayStreaming(gatewayRequest, onPreview, signal)
+        : await callHostedAiGateway(gatewayRequest, signal)
       const text = payload.text?.trim()
 
       if (!text) {

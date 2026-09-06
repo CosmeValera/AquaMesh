@@ -143,6 +143,11 @@ export interface HostedAiGatewayRequest {
   parts?: HostedAiGatewayPart[]
   responseSchema?: Record<string, unknown>
   timeoutMs?: number
+  /**
+   * Asks the gateway to answer as an NDJSON preview stream instead of one JSON
+   * body. Opt-in, so a client build that predates streaming keeps working.
+   */
+  stream?: boolean
   quickStartOptions?: {
     userKnownTopics?: string[]
   }
@@ -214,6 +219,26 @@ export interface HostedAiGatewayResponse {
     message: string
   }
 }
+
+/**
+ * Lines of the hosted Study Guide preview stream.
+ *
+ * These exist only so the learner sees real content while the guide is still
+ * being written. They are never the source of truth: the finished guide is
+ * always built from the `done` payload, which is the same body the
+ * non-streaming call returns.
+ */
+export type HostedAiPreviewEvent =
+  | { type: 'meta'; title: string; folderName?: string; emoji?: string }
+  | { type: 'quickStart'; keyIdea: string; quickSummary: string }
+  | { type: 'bridge'; title: string; body: string; topics: string[] }
+  | { type: 'pageTitle'; index: number; title: string }
+  | { type: 'page'; index: number; title: string; summary: string }
+  | { type: 'stage'; stage: 'monolith' | 'quiz' }
+  /** The model's first attempt was unusable, so previewed content is dropped. */
+  | { type: 'reset' }
+  | { type: 'done'; response: HostedAiGatewayResponse }
+  | { type: 'error'; response: HostedAiGatewayResponse }
 
 export const getHostedAiCreditCost = (surface: HostedAiSurface): number =>
   HOSTED_AI_CREDIT_COSTS[surface]

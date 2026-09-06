@@ -2,10 +2,12 @@ import { randomUUID } from "node:crypto";
 
 import { applyCors, getHeader } from "./cors";
 import { loadLocalApiEnv } from "./local-env";
+import { createPartialJsonReader } from "./streamingJson";
 import type {
   HostedAiGatewayPart,
   HostedAiGatewayRequest,
   HostedAiGatewayResponse,
+  HostedAiPreviewEvent,
   HostedAiPodcast,
   HostedAiPodcastChapter,
   HostedAiPodcastTranscriptTurn,
@@ -66,6 +68,7 @@ interface VercelResponse {
   setHeader(name: string, value: string): void;
   status(code: number): VercelResponse;
   json(body: HostedAiGatewayResponse): void;
+  write?(chunk: string): unknown;
   end(): void;
 }
 
@@ -347,6 +350,68 @@ const errorResponse = (
   ok: false,
   error: { code, message },
 });
+
+interface PreviewStream {
+  emit(event: HostedAiPreviewEvent): void;
+  /** True once a line went out, so headers are committed and status is 200. */
+  started(): boolean;
+  finish(body: HostedAiGatewayResponse): void;
+}
+
+/**
+ * Writes the Study Guide preview as NDJSON, one event per line.
+ *
+ * Headers are held back until the first event so that anything failing before
+ * the model produces output - no Carrots, bad token, provider refused - still
+ * answers with its real HTTP status and today's error body.
+ */
+const createPreviewStream = (res: VercelResponse): PreviewStream => {
+  let started = false;
+  let closed = false;
+
+  const write = (line: JsonObject) => {
+    if (closed || typeof res.write !== "function") {
+      return;
+    }
+
+    try {
+      if (!started) {
+        started = true;
+        res.setHeader("content-type", "application/x-ndjson; charset=utf-8");
+        res.setHeader("cache-control", "no-store");
+        // Stops any proxy in front of the function from buffering the body.
+        res.setHeader("x-accel-buffering", "no");
+        res.status(200);
+      }
+
+      res.write(`${JSON.stringify(line)}\n`);
+    } catch {
+      // The learner navigated away. Generation carries on regardless; there is
+      // simply nobody left to show it to.
+      closed = true;
+    }
+  };
+
+  return {
+    emit(event: HostedAiPreviewEvent): void {
+      write(event as unknown as JsonObject);
+    },
+
+    started(): boolean {
+      return started;
+    },
+
+    finish(body: HostedAiGatewayResponse): void {
+      write({ type: body.ok ? "done" : "error", response: body });
+      closed = true;
+      try {
+        res.end();
+      } catch {
+        // Already gone.
+      }
+    },
+  };
+};
 const INSUFFICIENT_STUDY_CREDITS_MESSAGE =
   "You don't have enough Carrots for this action. Add more Carrots or switch AI provider, then try again.";
 
@@ -1261,12 +1326,26 @@ interface HostedTextModelResult {
   stageCost: HostedAiStageCost;
 }
 
-export const callHostedTextModel = async (
+interface HostedModelCall {
+  url: string;
+  body: JsonObject;
+  prompt: string;
+  useResponsesApi: boolean;
+  config: ReturnType<typeof getChatCompletionConfig>;
+  controller: AbortController;
+  timeout: ReturnType<typeof setTimeout>;
+}
+
+/**
+ * Shared setup for both the buffered and the streamed call, so the two can
+ * never drift on model, schema, reasoning effort or timeout.
+ */
+const buildHostedModelCall = (
   request: HostedAiGatewayRequest,
   provider: HostedTextProvider,
   model: string,
   stage: HostedAiStage,
-): Promise<HostedTextModelResult> => {
+): HostedModelCall => {
   const config = getChatCompletionConfig(provider);
   const controller = new AbortController();
   const timeout = setTimeout(
@@ -1311,46 +1390,80 @@ export const callHostedTextModel = async (
     }
   }
 
+  return {
+    url: useResponsesApi ? OPENAI_RESPONSES_URL : config.url,
+    body,
+    prompt,
+    useResponsesApi,
+    config,
+    controller,
+    timeout,
+  };
+};
+
+const sendHostedModelRequest = (
+  call: HostedModelCall,
+  extraBody?: JsonObject,
+): Promise<Response> =>
+  fetch(call.url, {
+    method: "POST",
+    signal: call.controller.signal,
+    headers: {
+      authorization: `Bearer ${call.config.apiKey}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ ...call.body, ...(extraBody || {}) }),
+  });
+
+const throwProviderFailure = (
+  payload: ChatCompletionResponse,
+  status: number,
+  label: string,
+): never => {
+  const message =
+    payload?.error?.message ||
+    (isObject(payload) && typeof payload.message === "string"
+      ? payload.message
+      : `${label} hosted AI request failed.`);
+  const error = new Error(message);
+  error.name =
+    status === 429 || /rate limit|quota|limit/i.test(message)
+      ? "rate_limited"
+      : "provider_error";
+  throw error;
+};
+
+const assertNonEmptyModelText = (text: string, label: string): void => {
+  if (!text.trim()) {
+    const error = new Error(`${label} returned an empty response.`);
+    error.name = "provider_error";
+    throw error;
+  }
+};
+
+export const callHostedTextModel = async (
+  request: HostedAiGatewayRequest,
+  provider: HostedTextProvider,
+  model: string,
+  stage: HostedAiStage,
+): Promise<HostedTextModelResult> => {
+  const call = buildHostedModelCall(request, provider, model, stage);
+
   try {
-    const response = await fetch(
-      useResponsesApi ? OPENAI_RESPONSES_URL : config.url,
-      {
-        method: "POST",
-        signal: controller.signal,
-        headers: {
-          authorization: `Bearer ${config.apiKey}`,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(body),
-      },
-    );
+    const response = await sendHostedModelRequest(call);
     const payload = (await readResponseJson(
       response,
     )) as ChatCompletionResponse;
 
     if (!response.ok) {
-      const message =
-        payload?.error?.message ||
-        (isObject(payload) && typeof payload.message === "string"
-          ? payload.message
-          : `${config.label} hosted AI request failed.`);
-      const error = new Error(message);
-      error.name =
-        response.status === 429 || /rate limit|quota|limit/i.test(message)
-          ? "rate_limited"
-          : "provider_error";
-      throw error;
+      throwProviderFailure(payload, response.status, call.config.label);
     }
 
-    const text = useResponsesApi
+    const text = call.useResponsesApi
       ? extractResponsesApiText(payload)
       : extractChatCompletionText(payload);
 
-    if (!text.trim()) {
-      const error = new Error(`${config.label} returned an empty response.`);
-      error.name = "provider_error";
-      throw error;
-    }
+    assertNonEmptyModelText(text, call.config.label);
 
     return {
       text,
@@ -1359,12 +1472,139 @@ export const callHostedTextModel = async (
         provider,
         model,
         payload,
-        prompt,
+        prompt: call.prompt,
         text,
       }),
     };
   } finally {
-    clearTimeout(timeout);
+    clearTimeout(call.timeout);
+  }
+};
+
+/** Server-Sent Events arrive as `data: <json>` lines separated by blank lines. */
+const readSseDataLines = function* (buffer: string): Generator<string> {
+  for (const line of buffer.split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("data:")) {
+      yield trimmed.slice(5).trim();
+    }
+  }
+};
+
+/**
+ * Same call as `callHostedTextModel`, read as it arrives.
+ *
+ * The monolith writes the guide's opening fields long before the page prose,
+ * so handing each delta to the caller is what lets the creation panel show
+ * real content seconds in rather than at the end. The returned result is
+ * identical in shape to the buffered call, and stays the source of truth:
+ * whatever the deltas were used for, the guide is built from `text`.
+ */
+export const callHostedTextModelStreaming = async (
+  request: HostedAiGatewayRequest,
+  provider: HostedTextProvider,
+  model: string,
+  stage: HostedAiStage,
+  onDelta: (delta: string) => void,
+): Promise<HostedTextModelResult> => {
+  const call = buildHostedModelCall(request, provider, model, stage);
+
+  try {
+    const response = await sendHostedModelRequest(call, { stream: true });
+
+    if (!response.ok || !response.body) {
+      const payload = (await readResponseJson(
+        response,
+      )) as ChatCompletionResponse;
+      throwProviderFailure(payload, response.status, call.config.label);
+    }
+
+    const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+    const decoder = new TextDecoder();
+    let pending = "";
+    let text = "";
+    let completed: ChatCompletionResponse | undefined;
+
+    // Frames can split mid-line, so only whole lines are ever parsed.
+    const drain = (chunk: string, flush: boolean) => {
+      pending += chunk;
+      const lastBreak = pending.lastIndexOf("\n");
+      if (lastBreak < 0 && !flush) {
+        return;
+      }
+
+      const ready = flush ? pending : pending.slice(0, lastBreak + 1);
+      pending = flush ? "" : pending.slice(lastBreak + 1);
+
+      for (const data of readSseDataLines(ready)) {
+        if (!data || data === "[DONE]") {
+          continue;
+        }
+
+        let event: JsonObject;
+        try {
+          event = JSON.parse(data) as JsonObject;
+        } catch {
+          continue;
+        }
+
+        if (
+          event.type === "response.output_text.delta" &&
+          typeof event.delta === "string"
+        ) {
+          text += event.delta;
+          onDelta(event.delta);
+          continue;
+        }
+
+        if (
+          event.type === "response.completed" ||
+          event.type === "response.incomplete"
+        ) {
+          completed = event.response as ChatCompletionResponse;
+          continue;
+        }
+
+        if (event.type === "response.failed" || event.type === "error") {
+          const failed = (event.response ||
+            event) as unknown as ChatCompletionResponse;
+          throwProviderFailure(failed, response.status, call.config.label);
+        }
+      }
+    };
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+
+      drain(decoder.decode(value, { stream: true }), false);
+    }
+
+    drain(decoder.decode(), true);
+
+    // A stream that ended without any delta still carries its text in the
+    // terminal frame, so fall back to it rather than failing a usable call.
+    if (!text && completed) {
+      text = extractResponsesApiText(completed);
+    }
+
+    assertNonEmptyModelText(text, call.config.label);
+
+    return {
+      text,
+      stageCost: createStageCost({
+        stage,
+        provider,
+        model,
+        payload: completed || ({} as ChatCompletionResponse),
+        prompt: call.prompt,
+        text,
+      }),
+    };
+  } finally {
+    clearTimeout(call.timeout);
   }
 };
 
@@ -2822,17 +3062,144 @@ export const normalizeMonolithGuide = (
   };
 };
 
+const readTrimmedString = (source: unknown, key: string): string => {
+  if (!isObject(source)) {
+    return "";
+  }
+
+  const value = source[key];
+  return typeof value === "string" ? value.trim() : "";
+};
+
+/**
+ * Turns the monolith's partial JSON into preview lines for the creation panel.
+ *
+ * Fields are announced once, in the order the model writes them, and a page is
+ * only reported finished when its last schema field has landed. Nothing here
+ * feeds the saved guide; it exists so the learner is not staring at a spinner.
+ */
+export const createMonolithPreviewEmitter = (
+  onPreview: (event: HostedAiPreviewEvent) => void,
+) => {
+  let reader = createPartialJsonReader();
+  let sentMeta = false;
+  let sentQuickStart = false;
+  let sentBridge = false;
+  const sentPageTitles = new Set<number>();
+  const sentPages = new Set<number>();
+
+  const flush = () => {
+    const snapshot = reader.snapshot();
+    if (!snapshot || !isObject(snapshot.value)) {
+      return;
+    }
+
+    const guide = snapshot.value as JsonObject;
+    const title = readTrimmedString(guide, "title");
+    const quickStart = guide.quickStart;
+    const contextPlan = guide.contextPlan;
+
+    // Held until a later field lands, so the emoji and folder ride along.
+    if (!sentMeta && title && (guide.emoji || quickStart)) {
+      sentMeta = true;
+      onPreview({
+        type: "meta",
+        title,
+        folderName: readTrimmedString(guide, "folderName") || undefined,
+        emoji: readTrimmedString(guide, "emoji") || undefined,
+      });
+    }
+
+    if (!sentQuickStart) {
+      const keyIdea = readTrimmedString(quickStart, "keyIdea");
+      const quickSummary = readTrimmedString(quickStart, "quickSummary");
+      if (keyIdea && quickSummary) {
+        sentQuickStart = true;
+        onPreview({ type: "quickStart", keyIdea, quickSummary });
+      }
+    }
+
+    if (!sentBridge && isObject(contextPlan)) {
+      const bridgeBlock = contextPlan.bridgeBlock;
+      const bridgeTitle = readTrimmedString(bridgeBlock, "title");
+      const bridgeBody = readTrimmedString(bridgeBlock, "body");
+      if (bridgeTitle && bridgeBody) {
+        sentBridge = true;
+        onPreview({
+          type: "bridge",
+          title: bridgeTitle,
+          body: bridgeBody,
+          topics: Array.isArray(contextPlan.selectedTopics)
+            ? contextPlan.selectedTopics.filter(
+                (topic): topic is string => typeof topic === "string",
+              )
+            : [],
+        });
+      }
+    }
+
+    if (!Array.isArray(guide.pages)) {
+      return;
+    }
+
+    guide.pages.forEach((page, index) => {
+      const pageTitle = readTrimmedString(page, "title");
+      if (pageTitle && !sentPageTitles.has(index)) {
+        sentPageTitles.add(index);
+        onPreview({ type: "pageTitle", index, title: pageTitle });
+      }
+
+      // pageIdeas is the last field of a page, so its arrival means done.
+      if (
+        isObject(page) &&
+        page.pageIdeas !== undefined &&
+        !sentPages.has(index)
+      ) {
+        sentPages.add(index);
+        onPreview({
+          type: "page",
+          index,
+          title: pageTitle,
+          summary: readTrimmedString(page, "summary"),
+        });
+      }
+    });
+  };
+
+  return {
+    onDelta(delta: string): void {
+      if (reader.push(delta)) {
+        flush();
+      }
+    },
+
+    /** Drops everything previewed so far, for a retry of an unusable call. */
+    reset(): void {
+      reader = createPartialJsonReader();
+      sentMeta = false;
+      sentQuickStart = false;
+      sentBridge = false;
+      sentPageTitles.clear();
+      sentPages.clear();
+      onPreview({ type: "reset" });
+    },
+  };
+};
+
 export const generateMonolithHostedStudyGuide = async ({
   usageRequest,
   callStage,
   metadataFlags,
+  onPreview,
 }: {
   usageRequest: HostedAiUsageRequest;
   callStage: (
     stage: HostedAiStage,
     stageRequest: HostedAiGatewayRequest,
+    onDelta?: (delta: string) => void,
   ) => Promise<string>;
   metadataFlags: JsonObject;
+  onPreview?: (event: HostedAiPreviewEvent) => void;
 }): Promise<{
   text: string;
   quickStart: HostedAiGatewayResponse["quickStart"];
@@ -2898,19 +3265,31 @@ export const generateMonolithHostedStudyGuide = async ({
       },
     ],
   };
+  const previewEmitter = onPreview
+    ? createMonolithPreviewEmitter(onPreview)
+    : undefined;
   const callMonolith = async (): Promise<NormalizedMonolithGuide> =>
     normalizeMonolithGuide(
-      parseJsonRecord(await callStage("study_guide_monolith", monolithRequest)),
+      parseJsonRecord(
+        await callStage(
+          "study_guide_monolith",
+          monolithRequest,
+          previewEmitter?.onDelta,
+        ),
+      ),
       titleFallback,
       folderNameFallback,
       safeKnownTopics,
     );
 
+  onPreview?.({ type: "stage", stage: "monolith" });
   let guide: NormalizedMonolithGuide;
   try {
     guide = await callMonolith();
   } catch (firstError) {
     metadataFlags.monolithRetryUsed = true;
+    // The first attempt's fields were previewed and are now void.
+    previewEmitter?.reset();
     try {
       guide = await callMonolith();
     } catch {
@@ -2976,6 +3355,7 @@ export const generateMonolithHostedStudyGuide = async ({
   });
   let questions: EnhancedStudyGuideQuizQuestion[];
   let learnedSkillOptions: string[];
+  onPreview?.({ type: "stage", stage: "quiz" });
   try {
     const quizRecord = parseJsonRecord(
       await callStage("study_guide_final_quiz", {
@@ -3023,6 +3403,7 @@ const handleGenerate = async (
   userId: string,
   request: HostedAiGatewayRequest,
   includeQuickStart = false,
+  onPreview?: (event: HostedAiPreviewEvent) => void,
 ): Promise<HostedAiGatewayResponse> => {
   const invalid = validateGenerateRequest(request);
 
@@ -3053,15 +3434,24 @@ const handleGenerate = async (
   const callStage = async (
     stage: HostedAiStage,
     stageRequest: HostedAiGatewayRequest,
+    onDelta?: (delta: string) => void,
   ): Promise<string> => {
     const stageModel = getHostedTextModelForStage(provider, stage);
+    // Only the Responses API streams; every other transport stays buffered.
+    const canStream =
+      Boolean(onDelta) &&
+      provider === "openai" &&
+      isOpenAiResponsesModel(stageModel);
     try {
-      const result = await callHostedTextModel(
-        stageRequest,
-        provider,
-        stageModel,
-        stage,
-      );
+      const result = canStream
+        ? await callHostedTextModelStreaming(
+            stageRequest,
+            provider,
+            stageModel,
+            stage,
+            onDelta as (delta: string) => void,
+          )
+        : await callHostedTextModel(stageRequest, provider, stageModel, stage);
       stageCosts.push(result.stageCost);
       return result.text;
     } finally {
@@ -3077,6 +3467,7 @@ const handleGenerate = async (
         usageRequest,
         callStage,
         metadataFlags,
+        onPreview,
       });
       metadataFlags.providerCallCount = providerCallCount;
       const status =
@@ -3383,6 +3774,14 @@ export default async function handler(
     return;
   }
 
+  // Only the streamed action creates one, and only when the client asked.
+  const preview =
+    request.action === "generateWithQuickStart" &&
+    request.stream === true &&
+    typeof res.write === "function"
+      ? createPreviewStream(res)
+      : undefined;
+
   try {
     const user = await verifyUser(accessToken);
 
@@ -3403,7 +3802,17 @@ export default async function handler(
     }
 
     if (request.action === "generateWithQuickStart") {
-      const response = await handleGenerate(user.id, request, true);
+      const response = await handleGenerate(
+        user.id,
+        request,
+        true,
+        preview ? (event) => preview.emit(event) : undefined,
+      );
+      if (preview?.started()) {
+        preview.finish(response);
+        return;
+      }
+
       json(res, 200, response);
       return;
     }
@@ -3424,6 +3833,14 @@ export default async function handler(
     if (mapped.statusCode >= 500) {
       console.error("[hosted-ai] request failed", request.action, error);
     }
+
+    // Once a preview line is out the status is already 200, so the failure has
+    // to travel as an error line carrying the same body the client parses.
+    if (preview?.started()) {
+      preview.finish(mapped.response);
+      return;
+    }
+
     json(res, mapped.statusCode, mapped.response);
   }
 }

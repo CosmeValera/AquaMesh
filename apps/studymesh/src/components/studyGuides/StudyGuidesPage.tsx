@@ -53,6 +53,31 @@ import {
 } from '../../studyGuides/storage'
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
 import {
+  applyHostedPreviewEvent,
+  hostedPreviewPercent,
+  HostedPreviewState,
+  makeHostedPreview,
+} from '../../studyGuides/hostedPreview'
+import type { HostedAiPreviewEvent } from '../../quickCreate/ai/hostedCredits'
+import HostedPreviewChecklist from './HostedPreviewChecklist'
+
+/**
+ * A streamed guide reports real work finished, so the bar stops being a
+ * stopwatch dressed up as progress. Everything else keeps the time estimate.
+ */
+const creationProgressPercent = (
+  preview: HostedPreviewState | undefined,
+  elapsedSeconds: number,
+  estimateSeconds: number,
+): number => {
+  if (preview) {
+    return hostedPreviewPercent(preview)
+  }
+
+  const ratio = elapsedSeconds / Math.max(estimateSeconds, 1)
+  return Math.min(95, Math.round(ratio * 100))
+}
+import {
   normalizeStartNextStudyGuideRequests,
   type StartNextStudyGuideRequest,
 } from '../workspace/workspaceEvents'
@@ -349,6 +374,10 @@ const StudyGuidesPage = () => {
     () => new Set(),
   )
   const [now, setNow] = useState(Date.now())
+  // Live preview per running hosted job, keyed by job id.
+  const [jobPreviews, setJobPreviews] = useState<
+    Record<string, HostedPreviewState>
+  >({})
   const activeJobsRef = useRef<
     Map<
       string,
@@ -615,6 +644,37 @@ const StudyGuidesPage = () => {
       finishedAt: null,
       errorMessage: null,
     })
+    if (job.provider === 'hosted') {
+      setJobPreviews((current) => ({
+        ...current,
+        [job.id]: makeHostedPreview(Date.now()),
+      }))
+    }
+
+    const handlePreview = (event: HostedAiPreviewEvent) => {
+      if (generationController.signal.aborted) {
+        return
+      }
+
+      setJobPreviews((current) => {
+        const preview = current[job.id]
+        return preview
+          ? { ...current, [job.id]: applyHostedPreviewEvent(preview, event) }
+          : current
+      })
+    }
+
+    const clearPreview = () =>
+      setJobPreviews((current) => {
+        if (!current[job.id]) {
+          return current
+        }
+
+        const next = { ...current }
+        delete next[job.id]
+        return next
+      })
+
     try {
       const studyPath = await generateStudyPathStateFromPrompt({
         id: job.id,
@@ -622,7 +682,9 @@ const StudyGuidesPage = () => {
         knownSkill: job.knownSkill,
         provider: job.provider,
         signal: generationController.signal,
+        onPreview: job.provider === 'hosted' ? handlePreview : undefined,
       })
+      clearPreview()
       if (generationController.signal.aborted) {
         return
       }
@@ -663,6 +725,7 @@ const StudyGuidesPage = () => {
               : null,
       })
     } finally {
+      clearPreview()
       activeJobsRef.current.delete(job.id)
       jobsRunningInThisTab.delete(job.id)
       loadPendingGuides()
@@ -1156,11 +1219,11 @@ const StudyGuidesPage = () => {
                 (now - Date.parse(guide.startedAt || guide.createdAt)) / 1000,
               ),
             )
-            const progressPercent = Math.min(
-              95,
-              Math.round(
-                (elapsedSeconds / Math.max(guide.estimateSeconds, 1)) * 100,
-              ),
+            const preview = jobPreviews[guide.id]
+            const progressPercent = creationProgressPercent(
+              preview,
+              elapsedSeconds,
+              guide.estimateSeconds,
             )
             const isProblem =
               guide.status === 'failed' || guide.status === 'interrupted'
@@ -1397,6 +1460,14 @@ const StudyGuidesPage = () => {
                               },
                             })}
                           />
+                          {preview ? (
+                            <Box sx={{ mt: 1.25 }}>
+                              <HostedPreviewChecklist
+                                preview={preview}
+                                t={t}
+                              />
+                            </Box>
+                          ) : null}
                         </Box>
                       ) : (
                         <Box

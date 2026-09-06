@@ -25,6 +25,7 @@ import {
   createHostedAiTransport,
   createHostedStudyGuideTransportWithQuickStart,
 } from './hostedClient'
+import type { HostedAiPreviewEvent } from './hostedCredits'
 import {
   buildStudyGuideKnowledgeBridgeBlocksPrompt,
   buildStudyGuideKnownTopicPrefilterPrompt,
@@ -59,6 +60,8 @@ import type { StudyObject } from '../types'
 type ProviderOptions = {
   provider?: QuickCreateAiProvider
   onProgress?: (event: LocalAiProgressEvent) => void
+  /** Hosted only. Shows the guide forming instead of a blind spinner. */
+  onPreview?: (event: HostedAiPreviewEvent) => void
   signal?: AbortSignal
 }
 
@@ -582,6 +585,7 @@ export const generateStudyPathWithAi = async (
       strongTransport: createHostedStudyGuideTransportWithQuickStart({
         userKnownTopics: knowledgeContextPlan.topics,
         outputLanguage: options.outputLanguage,
+        onPreview: options.onPreview,
         onQuickStart: (quickStart) => {
           hostedQuickStart = quickStart
         },

@@ -189,6 +189,11 @@ const translations = {
     'studyGuides.generateFailed': 'Could not generate this Quick Guide.',
     'studyGuides.estimatedTotal': 'Estimated total',
     'studyGuides.remaining': 'Remaining',
+    'studyGuides.preview.naming': 'Naming the guide',
+    'studyGuides.preview.keyIdea': 'Key idea',
+    'studyGuides.preview.bridge': 'Linking to what you know',
+    'studyGuides.preview.page': 'Page',
+    'studyGuides.preview.finalQuiz': 'Final quiz',
     'studyGuides.thread': 'Thread',
     'studyGuides.doneLower': 'done',
     'studyGuides.failedLower': 'failed',
@@ -719,6 +724,11 @@ const translations = {
     'studyGuides.generateFailed': 'No se pudo generar esta guía rápida.',
     'studyGuides.estimatedTotal': 'Total estimado',
     'studyGuides.remaining': 'Restante',
+    'studyGuides.preview.naming': 'Poniendo nombre a la guía',
+    'studyGuides.preview.keyIdea': 'Idea clave',
+    'studyGuides.preview.bridge': 'Conectando con lo que ya sabes',
+    'studyGuides.preview.page': 'Página',
+    'studyGuides.preview.finalQuiz': 'Cuestionario final',
     'studyGuides.thread': 'Hilo',
     'studyGuides.doneLower': 'terminados',
     'studyGuides.failedLower': 'fallidos',
@@ -1071,7 +1081,7 @@ const translations = {
   },
 } as const
 
-type InterfaceTextKey = keyof typeof translations.en
+export type InterfaceTextKey = keyof typeof translations.en
 
 const translationOverrides: Record<
   Exclude<InterfaceLanguageCode, 'en' | 'es'>,
@@ -1267,6 +1277,11 @@ const translationOverrides: Record<
     'studyGuides.generateFailed': 'Impossible de générer ce guide.',
     'studyGuides.estimatedTotal': 'Total estimé',
     'studyGuides.remaining': 'Restant',
+    'studyGuides.preview.naming': 'Choix du titre du guide',
+    'studyGuides.preview.keyIdea': 'Idée clé',
+    'studyGuides.preview.bridge': 'Lien avec ce que vous savez déjà',
+    'studyGuides.preview.page': 'Page',
+    'studyGuides.preview.finalQuiz': 'Quiz final',
     'studyGuides.thread': 'Fil',
     'studyGuides.doneLower': 'terminés',
     'studyGuides.failedLower': 'échoués',
@@ -1806,6 +1821,11 @@ const translationOverrides: Record<
       'Dieser Quick Guide konnte nicht generiert werden.',
     'studyGuides.estimatedTotal': 'Geschätzte Gesamtdauer',
     'studyGuides.remaining': 'Verbleibend',
+    'studyGuides.preview.naming': 'Titel des Guides',
+    'studyGuides.preview.keyIdea': 'Kernidee',
+    'studyGuides.preview.bridge': 'Verbindung zu deinem Wissen',
+    'studyGuides.preview.page': 'Seite',
+    'studyGuides.preview.finalQuiz': 'Abschlussquiz',
     'studyGuides.thread': 'Thread',
     'studyGuides.doneLower': 'erledigt',
     'studyGuides.failedLower': 'fehlgeschlagen',

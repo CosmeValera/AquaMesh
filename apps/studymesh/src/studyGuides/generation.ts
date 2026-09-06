@@ -16,6 +16,7 @@ import {
   type StudyMaterialResourceType,
 } from '../quickCreate/ai'
 import type { HostedAiPodcast } from '../quickCreate/ai'
+import type { HostedAiPreviewEvent } from '../quickCreate/ai/hostedCredits'
 import {
   normalizeQuickCreateActionInput,
   type QuickCreateActionInput,
@@ -146,12 +147,15 @@ export const generateStudyPathStateFromPrompt = async ({
   knownSkill,
   signal,
   provider: providerOverride,
+  onPreview,
 }: {
   id: string
   prompt: string
   knownSkill?: string | null
   signal?: AbortSignal
   provider?: QuickCreateAiProvider
+  /** Hosted only. Reports the guide forming so the card can show it. */
+  onPreview?: (event: HostedAiPreviewEvent) => void
 }): Promise<StudyPathContainerState> => {
   const settings = readQuickCreateAiSettings()
   const provider = providerOverride || settings.provider || 'hosted'
@@ -178,6 +182,7 @@ export const generateStudyPathStateFromPrompt = async ({
     outputLanguage: resolvedLanguage.language,
     signal,
     userKnownTopics: getAllUserKnownTopics(),
+    onPreview,
   })
   const title = draft.folderName || draft.title || 'Study Guide'
   const count = draft.dashboards.length

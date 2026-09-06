@@ -45,6 +45,15 @@ import {
   QuickCreateAiProvider,
 } from '../../quickCreate/ai'
 import { getHostedAiCreditCost } from '../../quickCreate/ai/hostedCredits'
+import type { HostedAiPreviewEvent } from '../../quickCreate/ai/hostedCredits'
+import {
+  applyHostedPreviewEvent,
+  describeHostedPreviewStep,
+  hostedPreviewPercent,
+  HostedPreviewState,
+  makeHostedPreview,
+} from '../../studyGuides/hostedPreview'
+import HostedPreviewChecklist from './HostedPreviewChecklist'
 import { WorkspaceCreationTaskState } from '../../workspaceCreationStatus'
 import StrongAiSessionKeyDialog from '../ai/StrongAiSessionKeyDialog'
 import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
@@ -476,6 +485,9 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     useState<LocalAiProgressEvent | null>(null)
   const [geminiProgress, setGeminiProgress] =
     useState<GeminiTimedProgress | null>(null)
+  const [hostedPreview, setHostedPreview] =
+    useState<HostedPreviewState | null>(null)
+  const [previewClockMs, setPreviewClockMs] = useState(() => Date.now())
   const [localAiFailureDebug, setLocalAiFailureDebug] =
     useState<LocalAiGenerationFailureDebug | null>(null)
   const [error, setError] = useState('')
@@ -499,7 +511,13 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
 
   React.useEffect(() => {
     if (isGenerating) {
-      onStatusChange?.('running', t('studyGuides.createWorking'))
+      // Collapsed creation shows only this message, so it carries the same
+      // step the expanded checklist is highlighting.
+      onStatusChange?.(
+        'running',
+        (hostedPreview && describeHostedPreviewStep(hostedPreview, t)) ||
+          t('studyGuides.createWorking'),
+      )
       return
     }
 
@@ -530,6 +548,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     autoRetrySignal,
     draft,
     error,
+    hostedPreview,
     isGenerating,
     onStatusChange,
     step,
@@ -563,6 +582,20 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
 
     return () => window.clearInterval(intervalId)
   }, [aiProvider, geminiProgress, isGenerating])
+
+  // Drives the elapsed readout next to the streamed preview.
+  React.useEffect(() => {
+    if (!isGenerating || !hostedPreview) {
+      return undefined
+    }
+
+    const intervalId = window.setInterval(
+      () => setPreviewClockMs(Date.now()),
+      500,
+    )
+
+    return () => window.clearInterval(intervalId)
+  }, [hostedPreview, isGenerating])
 
   React.useEffect(() => {
     const refreshAiProvider = () => {
@@ -598,6 +631,7 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     setOpenInWorkspace(true)
     setIsGenerating(false)
     setLocalAiProgress(null)
+    setHostedPreview(null)
     setLocalAiFailureDebug(null)
     setError('')
   }
@@ -665,8 +699,20 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
     cancelActiveGeneration()
     const generationController = new AbortController()
     activeGenerationRef.current = generationController
+    const handleHostedPreview = (event: HostedAiPreviewEvent) => {
+      if (generationController.signal.aborted) {
+        return
+      }
+
+      setHostedPreview((current) =>
+        current ? applyHostedPreviewEvent(current, event) : current,
+      )
+    }
     setIsGenerating(true)
     setLocalAiProgress(null)
+    setHostedPreview(
+      effectiveAiProvider === 'hosted' ? makeHostedPreview(Date.now()) : null,
+    )
     setGeminiProgress(
       isStrongAiProvider(effectiveAiProvider)
         ? makeGeminiTimedProgress(
@@ -704,6 +750,8 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
 
           setLocalAiProgress(event)
         },
+        onPreview:
+          effectiveAiProvider === 'hosted' ? handleHostedPreview : undefined,
       })
       if (generationController.signal.aborted) {
         return
@@ -1223,6 +1271,26 @@ const CreateStudyGuideModal: React.FC<CreateStudyGuideModalProps> = ({
                             )}
                           </Typography>
                         </Stack>
+                      </Stack>
+                    ) : hostedPreview ? (
+                      <Stack spacing={1}>
+                        <Typography variant="caption" color="text.secondary">
+                          {t('studyGuides.elapsed')}{' '}
+                          {formatGeminiDuration(
+                            Math.max(
+                              0,
+                              previewClockMs - hostedPreview.startedAt,
+                            ),
+                          )}
+                        </Typography>
+                        <LinearProgress
+                          variant="determinate"
+                          value={hostedPreviewPercent(hostedPreview)}
+                        />
+                        <HostedPreviewChecklist
+                          preview={hostedPreview}
+                          t={t}
+                        />
                       </Stack>
                     ) : (
                       <LinearProgress />

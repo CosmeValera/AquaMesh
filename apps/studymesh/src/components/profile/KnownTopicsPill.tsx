@@ -24,8 +24,11 @@ const KnownTopicsPill: React.FC<KnownTopicsPillProps> = ({
         color="primary"
         variant="dot"
         invisible={count > 0}
-        overlap="circular"
-        sx={{ flexShrink: 0 }}
+        sx={{
+          flexShrink: 0,
+          // Pin dot to the pill corner: circular overlap offset by width, so label length moved it
+          '& .MuiBadge-badge': { top: 5, right: 5 },
+        }}
       >
         <Box
           component="button"

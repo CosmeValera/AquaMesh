@@ -18,8 +18,6 @@ import {
   Stack,
   TextField,
   Tooltip,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
   useMediaQuery,
   useTheme,
@@ -169,7 +167,6 @@ interface DashboardChatPanelProps {
   onAddAssistantMessageToGuide?: (message: DashboardChatMessage) => void
   /** Absent outside a Study Guide, where there is no guide to grow. */
   onGrowPage?: (prompt: string) => void
-  growPageCreditCost?: number
   onAddExternalSourceToGuide?: (source: DashboardExternalSource) => void
   onOpenSource?: (source: DashboardAnswerSourceRef) => void
   onQuickCreatePage?: (
@@ -594,7 +591,6 @@ const DashboardChatPanel = ({
   showCloseButton = true,
   onAddAssistantMessageToGuide,
   onGrowPage,
-  growPageCreditCost,
   onAddExternalSourceToGuide,
   onOpenSource,
   onQuickCreatePage,
@@ -652,10 +648,10 @@ const DashboardChatPanel = ({
   const [addSourceError, setAddSourceError] = useState('')
   const [addSourceNotice, setAddSourceNotice] = useState('')
   const [addSourceLoading, setAddSourceLoading] = useState(false)
-  const [quickCreateSourceScope, setQuickCreateSourceScope] =
-    useState<QuickCreateSourceScope>(
-      supportsStudyGuideCreateScope ? 'studyGuide' : 'currentPage',
-    )
+  // Inside a guide the whole guide is always the source. The reader used to be
+  // able to narrow this to the open page, but the choice only made the menu
+  // longer: a quiz over one page is what the page's own Quick Create is for.
+  const quickCreateSourceScope: QuickCreateSourceScope = 'studyGuide'
   const panelRef = useRef<HTMLDivElement | null>(null)
   const chatScrollRef = useRef<HTMLDivElement | null>(null)
   const draftInputRef = useRef<HTMLTextAreaElement | null>(null)
@@ -2973,43 +2969,6 @@ const DashboardChatPanel = ({
       }}
     >
       <Stack spacing={1}>
-        <Box sx={{ px: 0.5 }}>
-          <Typography variant="subtitle2" fontWeight={600}>
-            {supportsStudyGuideCreateScope
-              ? quickCreateSourceScope === 'studyGuide'
-                ? t('chat.createFromStudyGuideSource')
-                : t('chat.createFromCurrentPage')
-              : t('chat.createFromThisPage')}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {supportsStudyGuideCreateScope
-              ? quickCreateSourceScope === 'studyGuide'
-                ? t('chat.usesStudyGuideSource')
-                : t('chat.usesCurrentPageOnly')
-              : t('chat.generateFromCurrentDashboard')}
-          </Typography>
-        </Box>
-        {supportsStudyGuideCreateScope ? (
-          <ToggleButtonGroup
-            value={quickCreateSourceScope}
-            exclusive
-            fullWidth
-            size="small"
-            onChange={(_, value: QuickCreateSourceScope | null) => {
-              if (value) {
-                setQuickCreateSourceScope(value)
-              }
-            }}
-            aria-label={t('chat.quickCreateSourceScope')}
-          >
-            <ToggleButton value="studyGuide">
-              {t('chat.studyGuideSource')}
-            </ToggleButton>
-            <ToggleButton value="currentPage">
-              {t('chat.currentPageSource')}
-            </ToggleButton>
-          </ToggleButtonGroup>
-        ) : null}
         {showQuickCreateSearch ? (
           <TextField
             value={quickCreateSearch}
@@ -3115,71 +3074,6 @@ const DashboardChatPanel = ({
             </Stack>
           )
         })}
-        {onGrowPage ? (
-          <Stack spacing={0.5}>
-            <Divider textAlign="left">
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                fontWeight={600}
-              >
-                {t('chat.growPageGroup')}
-              </Typography>
-            </Divider>
-            <Button
-              disabled={!draft.trim()}
-              data-testid="chat-quick-create-grow-page"
-              onClick={() => {
-                onGrowPage(draft.trim())
-                setDraft('')
-                setQuickCreateMenuAnchor(null)
-              }}
-              sx={{
-                justifyContent: 'flex-start',
-                alignItems: 'flex-start',
-                gap: 1,
-                minHeight: 64,
-                borderRadius: 1.5,
-                px: 1,
-                py: 1,
-                textAlign: 'left',
-                textTransform: 'none',
-                color: 'text.primary',
-                '&.Mui-disabled': { color: 'text.disabled' },
-              }}
-            >
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  justifyContent="space-between"
-                  sx={{ minWidth: 0 }}
-                >
-                  <Typography
-                    variant="body2"
-                    fontWeight={600}
-                    noWrap
-                    sx={{ minWidth: 0 }}
-                  >
-                    {t('chat.growPage')}
-                  </Typography>
-                  {showCreditCosts ? (
-                    <StudyCreditCostLabel
-                      amount={growPageCreditCost || 0}
-                      variant="badge"
-                    />
-                  ) : null}
-                </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  {draft.trim()
-                    ? t('chat.growPageDescription')
-                    : t('chat.growPageNeedsDraft')}
-                </Typography>
-              </Box>
-            </Button>
-          </Stack>
-        ) : null}
       </Stack>
     </Box>
   )

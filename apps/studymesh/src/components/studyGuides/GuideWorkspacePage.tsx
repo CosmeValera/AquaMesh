@@ -821,7 +821,6 @@ const GuideWorkspacePage = () => {
             prompt,
           })
         }}
-        growPageCreditCost={studyPageCreditCost}
         onAddExternalSourceToGuide={addExternalSourceToGuide}
         onOpenSource={openChatSource}
         onQuickCreatePage={quickCreatePage}

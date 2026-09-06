@@ -180,7 +180,15 @@ create table if not exists public.hosted_ai_usage_events (
   completed_at timestamptz,
   unique (owner_id, request_id),
   constraint hosted_ai_usage_events_surface_check
-    check (surface in ('study-guide', 'quick-create', 'chat', 'podcast')),
+    check (
+      surface in (
+        'study-guide',
+        'quick-create',
+        'study-page',
+        'chat',
+        'podcast'
+      )
+    ),
   constraint hosted_ai_usage_events_status_check
     check (status in ('reserved', 'succeeded', 'failed')),
   constraint hosted_ai_usage_events_nonnegative_credits_check
@@ -190,6 +198,23 @@ create table if not exists public.hosted_ai_usage_events (
   constraint hosted_ai_usage_events_provider_call_count_check
     check (provider_call_count >= 0)
 );
+
+-- The table above is created only once, so a new surface has to be added to an
+-- existing database here as well.
+alter table public.hosted_ai_usage_events
+  drop constraint if exists hosted_ai_usage_events_surface_check;
+
+alter table public.hosted_ai_usage_events
+  add constraint hosted_ai_usage_events_surface_check
+  check (
+    surface in (
+      'study-guide',
+      'quick-create',
+      'study-page',
+      'chat',
+      'podcast'
+    )
+  );
 
 -- One-time Stripe Checkout credit refills. The browser creates pending rows
 -- through the billing API, but credits are granted only by verified webhook RPC.
@@ -634,6 +659,8 @@ as $$
   select case p_surface
     when 'study-guide' then 3
     when 'quick-create' then 1
+    -- One more page inside a guide the reader already paid for.
+    when 'study-page' then 1
     when 'chat' then 1
     when 'podcast' then 1
     else null

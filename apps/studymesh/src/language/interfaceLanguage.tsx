@@ -298,26 +298,9 @@ const translations = {
     'chat.generateExamQuestions': 'Generate exam-style questions',
     'chat.closeAiChat': 'Close AI Chat',
     'chat.addToStudyGuide': 'Add to Quick Guide',
-    'chat.growPageGroup': 'Guide',
-    'chat.growPage': 'Add as a page',
-    'chat.growPageDescription':
-      'Write a new page from the draft in the message box.',
-    'chat.growPageNeedsDraft': 'Write what the page should cover first.',
     'chat.growPageFromAnswer': 'Turn this question into a page',
     'chat.addAnswerToStudyGuide': 'Add answer to Quick Guide',
-    'chat.studyGuideSource': 'Quick Guide source',
-    'chat.currentPageSource': 'Current page',
-    'chat.createFromStudyGuideSource': 'Create from Quick Guide source',
-    'chat.createFromCurrentPage': 'Create from current page',
-    'chat.createFromThisPage': 'Create from this page',
-    'chat.usesStudyGuideSource':
-      'Uses lesson, manual, and chat-note pages. Excludes previous Quick Create results.',
-    'chat.usesCurrentPageOnly':
-      'Uses only the page currently open in the Quick Guide.',
-    'chat.generateFromCurrentDashboard':
-      'Generate study material from current dashboard context.',
     'chat.findCreationAction': 'Find creation action',
-    'chat.quickCreateSourceScope': 'Quick Create source scope',
     'chat.chats': 'Chats',
     'chat.reply': 'reply',
     'chat.replies': 'replies',
@@ -840,27 +823,9 @@ const translations = {
     'chat.generateExamQuestions': 'Generar preguntas tipo examen',
     'chat.closeAiChat': 'Cerrar chat IA',
     'chat.addToStudyGuide': 'Añadir a la guía rápida',
-    'chat.growPageGroup': 'Guía',
-    'chat.growPage': 'Añadir como página',
-    'chat.growPageDescription':
-      'Escribir una página nueva a partir del borrador del cuadro de texto.',
-    'chat.growPageNeedsDraft':
-      'Escribe primero de qué debería tratar la página.',
     'chat.growPageFromAnswer': 'Convertir esta pregunta en una página',
     'chat.addAnswerToStudyGuide': 'Añadir respuesta a la guía rápida',
-    'chat.studyGuideSource': 'Fuente de la guía rápida',
-    'chat.currentPageSource': 'Página actual',
-    'chat.createFromStudyGuideSource': 'Crear desde la guía rápida',
-    'chat.createFromCurrentPage': 'Crear desde la página actual',
-    'chat.createFromThisPage': 'Crear desde esta página',
-    'chat.usesStudyGuideSource':
-      'Usa páginas de lecciones, manuales y notas del chat. Excluye resultados anteriores de Creación rápida.',
-    'chat.usesCurrentPageOnly':
-      'Usa solo la página abierta actualmente en la guía rápida.',
-    'chat.generateFromCurrentDashboard':
-      'Genera material de estudio desde el contexto del dashboard actual.',
     'chat.findCreationAction': 'Buscar acción de creación',
-    'chat.quickCreateSourceScope': 'Fuente de Quick Create',
     'chat.chats': 'Chats',
     'chat.reply': 'respuesta',
     'chat.replies': 'respuestas',
@@ -1399,26 +1364,9 @@ const translationOverrides: Record<
     'chat.generateExamQuestions': 'Générer des questions type examen',
     'chat.closeAiChat': 'Fermer le chat IA',
     'chat.addToStudyGuide': 'Ajouter au guide rapide',
-    'chat.growPageGroup': 'Guide',
-    'chat.growPage': 'Ajouter comme page',
-    'chat.growPageDescription':
-      'Écrire une nouvelle page à partir du brouillon du champ de saisie.',
-    'chat.growPageNeedsDraft': 'Écrivez d’abord le sujet de la page.',
     'chat.growPageFromAnswer': 'Transformer cette question en page',
     'chat.addAnswerToStudyGuide': 'Ajouter la réponse au guide',
-    'chat.studyGuideSource': 'Source du guide rapide',
-    'chat.currentPageSource': 'Page actuelle',
-    'chat.createFromStudyGuideSource': 'Créer depuis le guide rapide',
-    'chat.createFromCurrentPage': 'Créer depuis la page actuelle',
-    'chat.createFromThisPage': 'Créer depuis cette page',
-    'chat.usesStudyGuideSource':
-      'Utilise les pages de leçons, manuels et notes du chat. Exclut les résultats Quick Create précédents.',
-    'chat.usesCurrentPageOnly':
-      'Utilise uniquement la page actuellement ouverte dans le guide.',
-    'chat.generateFromCurrentDashboard':
-      'Génère du matériel d’étude depuis le contexte du dashboard actuel.',
     'chat.findCreationAction': 'Rechercher une action de création',
-    'chat.quickCreateSourceScope': 'Source Quick Create',
     'chat.chats': 'Chats',
     'chat.reply': 'réponse',
     'chat.replies': 'réponses',
@@ -1947,27 +1895,9 @@ const translationOverrides: Record<
     'chat.generateExamQuestions': 'Prüfungsfragen generieren',
     'chat.closeAiChat': 'KI-Chat schließen',
     'chat.addToStudyGuide': 'Zum Quick Guide hinzufügen',
-    'chat.growPageGroup': 'Leitfaden',
-    'chat.growPage': 'Als Seite hinzufügen',
-    'chat.growPageDescription':
-      'Aus dem Entwurf im Eingabefeld eine neue Seite schreiben.',
-    'chat.growPageNeedsDraft':
-      'Schreibe zuerst, worum es auf der Seite gehen soll.',
     'chat.growPageFromAnswer': 'Diese Frage zu einer Seite machen',
     'chat.addAnswerToStudyGuide': 'Antwort zum Quick Guide hinzufügen',
-    'chat.studyGuideSource': 'Quelle des Quick Guides',
-    'chat.currentPageSource': 'Aktuelle Seite',
-    'chat.createFromStudyGuideSource': 'Aus dem Quick Guide erstellen',
-    'chat.createFromCurrentPage': 'Aus der aktuellen Seite erstellen',
-    'chat.createFromThisPage': 'Aus dieser Seite erstellen',
-    'chat.usesStudyGuideSource':
-      'Nutzt Lektionen, Handbuchseiten und Chat-Notizen. Vorherige Quick-Create-Ergebnisse werden ausgeschlossen.',
-    'chat.usesCurrentPageOnly':
-      'Nutzt nur die aktuell geöffnete Seite im Quick Guide.',
-    'chat.generateFromCurrentDashboard':
-      'Lernmaterial aus dem aktuellen Dashboard-Kontext generieren.',
     'chat.findCreationAction': 'Erstellungsaktion suchen',
-    'chat.quickCreateSourceScope': 'Quick-Create-Quelle',
     'chat.chats': 'Chats',
     'chat.reply': 'Antwort',
     'chat.replies': 'Antworten',

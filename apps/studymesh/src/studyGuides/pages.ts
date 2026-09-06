@@ -516,6 +516,7 @@ export const appendStudyGuideMarkdownPage = (
     source,
     parentPageKey: requestedParentKey,
     pageIdeas,
+    guidePrompt,
   }: {
     title: string
     markdown: string
@@ -523,6 +524,7 @@ export const appendStudyGuideMarkdownPage = (
     /** Set to dig this page out of another one instead of appending it. */
     parentPageKey?: string
     pageIdeas?: StudyGuidePageIdea[]
+    guidePrompt?: string
   },
 ): StudyPathContainerState => {
   const pageKey = makePageKey(studyPath.pathId)
@@ -558,6 +560,7 @@ export const appendStudyGuideMarkdownPage = (
     deletable: true,
     ...(parentPageKey ? { parentPageKey } : {}),
     ...(pageIdeas?.length ? { pageIdeas } : {}),
+    ...(guidePrompt ? { guidePrompt } : {}),
   }
 
   return placeStudyGuidePage(studyPath, page, insertIndex)

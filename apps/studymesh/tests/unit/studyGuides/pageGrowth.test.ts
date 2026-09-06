@@ -9,6 +9,7 @@ import {
   readStudyGuideGrowthParentKey,
 } from '../../../src/studyGuides/pageGrowth'
 import {
+  buildStudyGuideTopicPrompt,
   sanitizeStudyGuidePageIdeas,
   sanitizeStudyGuidePlannedLessons,
   STUDY_GUIDE_PAGE_IDEA_AXES,
@@ -264,5 +265,64 @@ describe('Study Guide growth contracts', () => {
       { title: 'Dream recall', summary: 'Remember more.' },
     ])
     expect(sanitizeStudyGuidePlannedLessons(null)).toEqual([])
+  })
+})
+
+describe('Study Guide topic prompt', () => {
+  it('keeps the subject the page sits in, so the new guide is not too broad', () => {
+    expect(
+      buildStudyGuideTopicPrompt('Confirmation delays', 'en', 'Bitcoin'),
+    ).toBe('Teach me Confirmation delays, in the context of Bitcoin.')
+    expect(
+      buildStudyGuideTopicPrompt('Retrasos de confirmación', 'es', 'Bitcoin'),
+    ).toBe('Enséñame Retrasos de confirmación, en el contexto de Bitcoin.')
+  })
+
+  it('drops the context when it adds nothing', () => {
+    expect(buildStudyGuideTopicPrompt('Cell signalling', 'en')).toBe(
+      'Teach me Cell signalling.',
+    )
+    expect(buildStudyGuideTopicPrompt('Bitcoin', 'en', 'bitcoin')).toBe(
+      'Teach me Bitcoin.',
+    )
+    // An unknown locale falls back to English rather than to no prompt.
+    expect(buildStudyGuideTopicPrompt('Cell signalling', 'it')).toBe(
+      'Teach me Cell signalling.',
+    )
+    expect(buildStudyGuideTopicPrompt('   ', 'en')).toBe('')
+  })
+})
+
+describe('Study Guide page guide prompt', () => {
+  const body = Array.from({ length: 70 }, (_, index) => `word${index}`).join(
+    ' ',
+  )
+
+  it('keeps a guide prompt that names the real subject', () => {
+    const parsed = parseStudyGuideGrowthPageResponse(
+      JSON.stringify({
+        title: 'Inside confirmation delays',
+        markdown: body,
+        guidePrompt: 'Teach me how Bitcoin transaction confirmation works.',
+      }),
+      'Fallback',
+    )
+
+    expect(parsed.guidePrompt).toBe(
+      'Teach me how Bitcoin transaction confirmation works.',
+    )
+  })
+
+  it('drops a guide prompt that only echoes the page title', () => {
+    const parsed = parseStudyGuideGrowthPageResponse(
+      JSON.stringify({
+        title: 'Inside confirmation delays',
+        markdown: body,
+        guidePrompt: 'Inside confirmation delays.',
+      }),
+      'Fallback',
+    )
+
+    expect(parsed.guidePrompt).toBeUndefined()
   })
 })

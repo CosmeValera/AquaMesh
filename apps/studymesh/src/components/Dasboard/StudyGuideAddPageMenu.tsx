@@ -11,7 +11,6 @@ import {
 } from '@mui/material'
 import { alpha, type Theme } from '@mui/material/styles'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
-import NoteAddOutlinedIcon from '@mui/icons-material/NoteAddOutlined'
 
 import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
 import type { StudyPathContainerState } from '../../state/store'
@@ -31,7 +30,6 @@ interface StudyGuideAddPageMenuProps {
   creditCost?: number
   onClose: () => void
   onGrow: (seed: StudyGuideGrowthSeed) => void
-  onAddBlankPage?: () => void
 }
 
 const optionButtonSx = (theme: Theme) => ({
@@ -65,7 +63,6 @@ const StudyGuideAddPageMenu: React.FC<StudyGuideAddPageMenuProps> = ({
   creditCost,
   onClose,
   onGrow,
-  onAddBlankPage,
 }) => {
   const { t } = useInterfaceText()
   const [prompt, setPrompt] = useState('')
@@ -210,26 +207,6 @@ const StudyGuideAddPageMenu: React.FC<StudyGuideAddPageMenuProps> = ({
           {cost}
         </Stack>
       </Button>
-
-      {onAddBlankPage ? (
-        <>
-          <Divider />
-          <Button
-            onClick={() => {
-              onAddBlankPage()
-              onClose()
-            }}
-            sx={optionButtonSx}
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              <NoteAddOutlinedIcon fontSize="small" />
-              <Typography variant="body2">
-                {t('workspace.addPageBlank')}
-              </Typography>
-            </Stack>
-          </Button>
-        </>
-      ) : null}
     </Stack>
   )
 

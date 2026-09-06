@@ -8,6 +8,7 @@ import React, {
 import {
   Box,
   Chip,
+  Button,
   IconButton,
   Paper,
   Stack,
@@ -42,6 +43,8 @@ import type {
   StudyGuideGrowthSeed,
   StudyGuideGrowthTask,
 } from '../../studyGuides/pageGrowth'
+import { buildStudyGuideTopicPrompt } from '../../studyGuides/studyGuideTitles'
+import { START_NEXT_STUDY_GUIDE_EVENT } from '../workspace/workspaceEvents'
 import StudyGuideLinearLayout from './StudyGuideLinearLayout'
 import StudyGuidePageEditor from './StudyGuidePageEditor'
 import { useNavigate } from 'react-router-dom'
@@ -461,6 +464,17 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
   const currentLesson = studyPath.dashboards[selectedIndex]
   const currentPageKey = currentLesson?.dashboardKey || null
   const currentPageEditable = isEditableMarkdownStudyGuidePage(currentLesson)
+  // A grown page is a taste of a subject, so it offers the whole rabbit hole.
+  // Generated pages of the original guide do not: the guide is already that.
+  const pageGuidePrompt =
+    currentLesson?.createdBy === 'expanded'
+      ? currentLesson.guidePrompt ||
+        buildStudyGuideTopicPrompt(
+          currentLesson.name,
+          studyPath.contentLanguage,
+          studyPath.title,
+        )
+      : ''
   const currentPageNumberLabel = currentPageKey
     ? getStudyGuidePageNumberLabels(studyPath).get(currentPageKey)
     : undefined
@@ -954,6 +968,50 @@ const StudyPathWorkspaceView: React.FC<StudyPathWorkspaceViewProps> = ({
                 studyPathContext={studyPathContext}
                 onAskAi={onAskAi}
               />
+              {pageGuidePrompt ? (
+                <Paper
+                  variant="outlined"
+                  data-testid="study-guide-page-to-guide"
+                  sx={{ mx: 2, mb: 2, p: 2, borderRadius: 2 }}
+                >
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={1.5}
+                    alignItems={{ xs: 'stretch', sm: 'center' }}
+                    justifyContent="space-between"
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="subtitle2" fontWeight={700}>
+                        {t('workspace.pageToGuideTitle')}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ display: 'block', mt: 0.25, lineHeight: 1.5 }}
+                      >
+                        {t('workspace.pageToGuideBody')}
+                      </Typography>
+                    </Box>
+                    <Button
+                      variant="contained"
+                      onClick={() =>
+                        window.dispatchEvent(
+                          new CustomEvent(START_NEXT_STUDY_GUIDE_EVENT, {
+                            detail: { prompts: [{ prompt: pageGuidePrompt }] },
+                          }),
+                        )
+                      }
+                      sx={{
+                        flexShrink: 0,
+                        textTransform: 'none',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {t('workspace.pageToGuideAction')}
+                    </Button>
+                  </Stack>
+                </Paper>
+              ) : null}
             </>
           )}
         </Box>

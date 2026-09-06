@@ -395,15 +395,14 @@ describe('StudyGuidePagesPanel growth', () => {
     ).toBeInTheDocument()
   })
 
-  it('offers continuing the guide, digging into the page, and a blank page', () => {
+  it('offers continuing the guide and digging into the open page', () => {
     const onGrowPage = vi.fn()
-    const onAddPage = vi.fn()
 
     render(
       <StudyGuidePagesPanel
         studyPath={createGrowableStudyPath()}
         onStudyPathChange={vi.fn()}
-        onAddPage={onAddPage}
+        onAddPage={vi.fn()}
         onGrowPage={onGrowPage}
         growPageCreditCost={1}
         variant="desktop"
@@ -421,10 +420,6 @@ describe('StudyGuidePagesPanel growth', () => {
         summary: 'Trace one signal end to end.',
       },
     })
-
-    fireEvent.click(screen.getByRole('button', { name: 'Add Page' }))
-    fireEvent.click(screen.getByRole('button', { name: /Blank page/ }))
-    expect(onAddPage).toHaveBeenCalled()
   })
 
   it('grows a page from a written prompt and keeps the button disabled until then', () => {

@@ -671,7 +671,6 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
           creditCost={growPageCreditCost}
           onClose={() => setAddPageAnchor(null)}
           onGrow={onGrowPage}
-          onAddBlankPage={onAddPage}
         />
       ) : null}
       {!mobile ? (

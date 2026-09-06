@@ -424,6 +424,57 @@ const KNOWN_SKILL_INSTRUCTIONS: Record<string, (skill: string) => string> = {
     `Erkläre es mir über ${skill}, das ich schon kenne. Erkläre ${skill} nicht noch einmal.`,
 }
 
+/**
+ * Turns a page into a learner-shaped prompt for a whole guide on the same
+ * topic. Written in the guide's content language for the same reason the
+ * known-skill sentence is: this string is what picks the new guide's language.
+ */
+const TOPIC_PROMPTS: Record<
+  string,
+  (topic: string, subject: string) => string
+> = {
+  en: (topic, subject) =>
+    subject
+      ? `Teach me ${topic}, in the context of ${subject}.`
+      : `Teach me ${topic}.`,
+  es: (topic, subject) =>
+    subject
+      ? `Enséñame ${topic}, en el contexto de ${subject}.`
+      : `Enséñame ${topic}.`,
+  fr: (topic, subject) =>
+    subject
+      ? `Explique-moi ${topic}, dans le contexte de ${subject}.`
+      : `Explique-moi ${topic}.`,
+  de: (topic, subject) =>
+    subject
+      ? `Erkläre mir ${topic} im Zusammenhang mit ${subject}.`
+      : `Bring mir ${topic} bei.`,
+}
+
+/**
+ * `subjectName` is the guide the page belongs to. Without it a page title such
+ * as "Confirmation delays" reads as a subject of its own, and the new guide
+ * loses the thing it was actually about.
+ */
+export const buildStudyGuideTopicPrompt = (
+  topicName: string,
+  language?: string,
+  subjectName?: string,
+): string => {
+  const topic = normalizeStudyGuideTitle(topicName)
+  if (!topic) {
+    return ''
+  }
+
+  const subject = normalizeStudyGuideTitle(subjectName || '')
+  const build = TOPIC_PROMPTS[language || 'en'] || TOPIC_PROMPTS.en
+
+  return build(
+    topic,
+    subject.toLowerCase() === topic.toLowerCase() ? '' : subject,
+  )
+}
+
 export const buildStudyGuideKnownSkillInstruction = (
   skillName: string,
   language?: string,

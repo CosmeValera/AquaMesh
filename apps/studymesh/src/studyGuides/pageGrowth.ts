@@ -48,6 +48,8 @@ export type StudyGuideGrowthSeed =
 export interface StudyGuideGrowthPageDraft {
   title: string
   markdown: string
+  /** First-person ask for a whole guide on this page's subject. */
+  guidePrompt?: string
 }
 
 /** One page currently being written. Several can run at once. */
@@ -115,9 +117,14 @@ export const parseStudyGuideGrowthPageResponse = (
   const parsed = JSON.parse(extractJsonObject(value)) as {
     title?: unknown
     markdown?: unknown
+    guidePrompt?: unknown
   }
   const title = String(parsed.title || fallbackTitle).trim()
   const body = stripLeadingHeading(String(parsed.markdown || '').trim()).trim()
+  const guidePrompt = String(parsed.guidePrompt || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 240)
 
   if (!title || !body) {
     throw new Error('The new page came back empty.')
@@ -127,7 +134,17 @@ export const parseStudyGuideGrowthPageResponse = (
     throw new Error('The new page came back too short to add.')
   }
 
-  return { title, markdown: `# ${title}\n\n${body}` }
+  return {
+    title,
+    markdown: `# ${title}\n\n${body}`,
+    // A prompt that only repeats the title loses the subject the page sits in
+    // ("Confirmation delays" instead of "Bitcoin confirmation delays"), so a
+    // bare echo is dropped and the composed fallback is used instead.
+    ...(guidePrompt &&
+    guidePrompt.toLowerCase().replace(/[.!?]$/, '') !== title.toLowerCase()
+      ? { guidePrompt }
+      : {}),
+  }
 }
 
 /** The page a seed digs into, when it digs into one. */
@@ -175,7 +192,7 @@ export const buildStudyGuidePagePrompt = (
 
   return `Write one new page for a RabbitHole Study Guide the reader is already partway through.
 
-Return strict JSON only: { "title": "...", "markdown": "..." }
+Return strict JSON only: { "title": "...", "markdown": "...", "guidePrompt": "..." }
 
 Rules:
 - ${createAiOutputLanguageInstruction(outputLanguage)}
@@ -188,6 +205,9 @@ Rules:
 - Do not include quiz questions, flashcards, or images.
 - title is 3-8 words naming this page. Do not number it.
 - markdown must not start with a heading; the title is returned separately.
+- guidePrompt: one first-person sentence asking to be taught this page's subject as a whole guide, such as "Teach me how X works in Y".
+- guidePrompt must name the real subject so it still makes sense to someone who never saw this guide. "Confirmation delays" is not a subject; "how Bitcoin transaction confirmation works" is.
+- Never write guidePrompt as the page title on its own, and never mention RabbitHole, guides, or pages inside it.
 
 Study Guide: ${studyPath.title}
 

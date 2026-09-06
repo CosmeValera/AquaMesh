@@ -49,6 +49,12 @@ export interface StudyPathDashboardItem {
    * offer costs no extra model call.
    */
   pageIdeas?: StudyGuidePageIdea[]
+  /**
+   * First-person ask for a whole guide on this page's subject, written by the
+   * same call that wrote the page so it names the subject rather than echoing
+   * the page title. Only set on pages the reader grew.
+   */
+  guidePrompt?: string
 }
 
 export interface StudyGuideQuickStartVariant {

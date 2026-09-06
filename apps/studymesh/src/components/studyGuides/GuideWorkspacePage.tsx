@@ -60,6 +60,7 @@ import {
   createStudyGuideGrowthPageDraft,
   readStudyGuideGrowthLabel,
   readStudyGuideGrowthParentKey,
+  type StudyGuideGrowthPageDraft,
   type StudyGuideGrowthSeed,
   type StudyGuideGrowthTask,
 } from '../../studyGuides/pageGrowth'
@@ -396,7 +397,7 @@ const GuideWorkspacePage = () => {
   // Pages are committed through the same serialized queue as Quick Create
   // results, so two pages finishing at once cannot overwrite each other.
   const enqueueGrowthPageCommit = (
-    draft: { title: string; markdown: string },
+    draft: StudyGuideGrowthPageDraft,
     seed: StudyGuideGrowthSeed,
   ) => {
     const commit = quickCreateCommitQueueRef.current.then(() => {
@@ -413,6 +414,7 @@ const GuideWorkspacePage = () => {
         markdown: draft.markdown,
         source: 'expanded',
         parentPageKey: readStudyGuideGrowthParentKey(seed),
+        guidePrompt: draft.guidePrompt,
       })
       const nextRecord = persistStudyPath(
         seed.kind === 'continue'

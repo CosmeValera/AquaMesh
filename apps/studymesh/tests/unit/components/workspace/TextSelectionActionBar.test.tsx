@@ -98,20 +98,42 @@ describe('TextSelectionActionBar', () => {
     ).not.toBeInTheDocument()
   })
 
-  it('turns the selected text into the seed for a new page', async () => {
+  it('confirms the Carrot before turning a selection into a page', async () => {
     const onGrowPage = vi.fn()
     render(<Host onGrowPage={onGrowPage} growPageCreditCost={1} />)
     await showActionBar()
 
-    const growPage = screen.getByRole('button', {
-      name: 'Dig into this (1)',
-    })
-    fireEvent.click(growPage)
+    fireEvent.click(screen.getByRole('button', { name: 'Dig into this' }))
 
-    expect(onGrowPage).toHaveBeenCalledWith('burns tokens')
+    // The bar closes, but the captured selection is shown for confirmation so
+    // a misclick cannot spend a Carrot on its own.
+    expect(onGrowPage).not.toHaveBeenCalled()
     await waitFor(() =>
       expect(
         screen.queryByTestId('text-selection-action-bar'),
+      ).not.toBeInTheDocument(),
+    )
+    expect(
+      screen.getByTestId('text-selection-grow-page-quote'),
+    ).toHaveTextContent('burns tokens')
+
+    fireEvent.click(screen.getByTestId('text-selection-grow-page-confirm'))
+
+    expect(onGrowPage).toHaveBeenCalledWith('burns tokens')
+  })
+
+  it('spends nothing when the confirmation is cancelled', async () => {
+    const onGrowPage = vi.fn()
+    render(<Host onGrowPage={onGrowPage} growPageCreditCost={1} />)
+    await showActionBar()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dig into this' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(onGrowPage).not.toHaveBeenCalled()
+    await waitFor(() =>
+      expect(
+        screen.queryByTestId('text-selection-grow-page-quote'),
       ).not.toBeInTheDocument(),
     )
   })

@@ -270,6 +270,10 @@ const translations = {
     'selection.copy': 'Copy',
     'selection.copied': 'Copied',
     'selection.growPage': 'Dig into this',
+    'selection.growPageConfirmTitle': 'Create a page on this?',
+    'selection.growPageConfirmBody':
+      'RabbitHole will write a new page about the text you selected.',
+    'selection.growPageConfirmAction': 'Create page',
     'pageEditor.pageTitle': 'Page title',
     'pageEditor.pageBody': 'Page body',
     'pageEditor.startWritingNotes': 'Start writing notes...',
@@ -797,6 +801,10 @@ const translations = {
     'selection.copy': 'Copiar',
     'selection.copied': 'Copiado',
     'selection.growPage': 'Profundizar en esto',
+    'selection.growPageConfirmTitle': '¿Crear una página sobre esto?',
+    'selection.growPageConfirmBody':
+      'RabbitHole escribirá una página nueva sobre el texto que has seleccionado.',
+    'selection.growPageConfirmAction': 'Crear página',
     'pageEditor.pageTitle': 'Título de la página',
     'pageEditor.pageBody': 'Cuerpo de la página',
     'pageEditor.startWritingNotes': 'Empieza a escribir notas...',
@@ -1341,6 +1349,10 @@ const translationOverrides: Record<
     'selection.copy': 'Copier',
     'selection.copied': 'Copié',
     'selection.growPage': 'Approfondir ceci',
+    'selection.growPageConfirmTitle': 'Créer une page là-dessus ?',
+    'selection.growPageConfirmBody':
+      'RabbitHole va écrire une nouvelle page sur le texte sélectionné.',
+    'selection.growPageConfirmAction': 'Créer la page',
     'pageEditor.pageTitle': 'Titre de la page',
     'pageEditor.pageBody': 'Corps de la page',
     'pageEditor.startWritingNotes': 'Commencez à écrire des notes...',
@@ -1875,6 +1887,10 @@ const translationOverrides: Record<
     'selection.copy': 'Kopieren',
     'selection.copied': 'Kopiert',
     'selection.growPage': 'Hier tiefer gehen',
+    'selection.growPageConfirmTitle': 'Neue Seite dazu erstellen?',
+    'selection.growPageConfirmBody':
+      'RabbitHole schreibt eine neue Seite über den markierten Text.',
+    'selection.growPageConfirmAction': 'Seite erstellen',
     'pageEditor.pageTitle': 'Seitentitel',
     'pageEditor.pageBody': 'Seiteninhalt',
     'pageEditor.startWritingNotes': 'Beginne mit deinen Notizen...',

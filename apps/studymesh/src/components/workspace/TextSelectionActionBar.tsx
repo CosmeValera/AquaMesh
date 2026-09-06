@@ -6,12 +6,20 @@ import React, {
   useState,
 } from 'react'
 import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   GlobalStyles,
   IconButton,
   Paper,
+  Stack,
   Tooltip,
+  Typography,
 } from '@mui/material'
+import StudyCreditCostLabel from '../hostedAi/StudyCreditCostLabel'
 import { alpha, type Theme } from '@mui/material/styles'
 import BorderColorOutlinedIcon from '@mui/icons-material/BorderColorOutlined'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
@@ -154,6 +162,7 @@ const TextSelectionActionBar: React.FC<TextSelectionActionBarProps> = ({
   const [activeSelection, setActiveSelection] =
     useState<ActiveSelection | null>(null)
   const [copied, setCopied] = useState(false)
+  const [pendingGrowText, setPendingGrowText] = useState('')
 
   const highlightsRef = useRef(highlights)
   highlightsRef.current = highlights
@@ -474,19 +483,39 @@ const TextSelectionActionBar: React.FC<TextSelectionActionBarProps> = ({
     dropSelection()
   }
 
+  // The bar shows up on any selection, so this button is easy to hit by
+  // accident. The text is captured before the selection is dropped and the
+  // spend is confirmed against that copy.
   const handleGrowPage = () => {
     if (!activeSelection || !onGrowPage) {
       return
     }
 
-    onGrowPage(activeSelection.text)
+    setPendingGrowText(activeSelection.text)
     dropSelection()
   }
 
-  const growPageLabel =
-    growPageCreditCost && growPageCreditCost > 0
-      ? `${t('selection.growPage')} (${growPageCreditCost})`
-      : t('selection.growPage')
+  const confirmGrowPage = () => {
+    if (pendingGrowText) {
+      onGrowPage?.(pendingGrowText)
+    }
+
+    setPendingGrowText('')
+  }
+
+  const showGrowCost = Boolean(growPageCreditCost && growPageCreditCost > 0)
+  const growPageLabel = t('selection.growPage')
+  const growPageTooltip = showGrowCost ? (
+    <Stack direction="row" spacing={0.75} alignItems="center">
+      <span>{growPageLabel} -</span>
+      <StudyCreditCostLabel
+        amount={growPageCreditCost || 0}
+        variant="tooltip"
+      />
+    </Stack>
+  ) : (
+    growPageLabel
+  )
   const isHighlighted = Boolean(activeSelection?.overlappingIds.length)
   const highlightLabel = isHighlighted
     ? t('selection.removeHighlight')
@@ -546,7 +575,7 @@ const TextSelectionActionBar: React.FC<TextSelectionActionBarProps> = ({
             </IconButton>
           </Tooltip>
           {onGrowPage ? (
-            <Tooltip title={growPageLabel}>
+            <Tooltip title={growPageTooltip}>
               <IconButton
                 size="small"
                 aria-label={growPageLabel}
@@ -575,6 +604,66 @@ const TextSelectionActionBar: React.FC<TextSelectionActionBarProps> = ({
           </Tooltip>
         </Paper>
       ) : null}
+      <Dialog
+        open={Boolean(pendingGrowText)}
+        onClose={() => setPendingGrowText('')}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}
+      >
+        <DialogTitle sx={{ pb: 1, fontWeight: 700 }}>
+          {t('selection.growPageConfirmTitle')}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {t('selection.growPageConfirmBody')}
+          </Typography>
+          <Typography
+            variant="body2"
+            data-testid="text-selection-grow-page-quote"
+            sx={(theme) => ({
+              mt: 1.5,
+              px: 1.25,
+              py: 1,
+              borderRadius: 1,
+              borderLeft: 3,
+              borderColor: alpha(theme.palette.primary.main, 0.5),
+              bgcolor: alpha(theme.palette.primary.main, 0.06),
+              fontStyle: 'italic',
+              lineHeight: 1.45,
+              maxHeight: 160,
+              overflowY: 'auto',
+            })}
+          >
+            {pendingGrowText}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setPendingGrowText('')}>
+            {t('common.cancel')}
+          </Button>
+          <Button
+            variant="contained"
+            data-testid="text-selection-grow-page-confirm"
+            onClick={confirmGrowPage}
+          >
+            <Stack
+              component="span"
+              direction="row"
+              spacing={1}
+              alignItems="center"
+            >
+              <span>{t('selection.growPageConfirmAction')}</span>
+              {showGrowCost ? (
+                <StudyCreditCostLabel
+                  amount={growPageCreditCost || 0}
+                  variant="contained"
+                />
+              ) : null}
+            </Stack>
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }

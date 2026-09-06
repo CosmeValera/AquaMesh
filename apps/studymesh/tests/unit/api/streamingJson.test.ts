@@ -12,36 +12,9 @@ const GUIDE = {
     quickSummary:
       'A guide RNA carries the address, and a nuclease does the cutting.',
   },
-  nextGuideIdeas: [
-    {
-      title: 'Base editing',
-      summary: 'Change one letter, no double-strand break.',
-    },
-    {
-      title: 'Off-target effects',
-      summary: 'Why "close enough" matches are a problem.',
-    },
-  ],
   plannedLessons: [
     { title: 'Delivery methods', summary: 'Getting it into a cell.' },
   ],
-  contextPlan: {
-    targetParts: ['guide RNA', 'nuclease', 'repair'],
-    selectedTopics: ['find-and-replace in a text editor'],
-    correspondences: [
-      { carries: 'the search box', from: 'find-and-replace', to: 'guide RNA' },
-    ],
-    reason: 'Both locate an exact string, then act on it.',
-    breaksAt: 'A text editor never mis-cuts a similar-looking line.',
-    personalizedQuickStart: {
-      keyIdea: 'Think of it as find-and-replace running inside a living cell.',
-      quickSummary: 'The guide RNA is the search box. The nuclease is the replace.',
-    },
-    bridgeBlock: {
-      title: 'Like find-and-replace',
-      body: 'You type a string, the editor locates it, then it swaps it out.',
-    },
-  },
   pages: [
     {
       title: 'What a nuclease is',
@@ -60,6 +33,35 @@ const GUIDE = {
       summary: 'Similar sequences get cut too.',
       rawNotes: 'A "quoted" phrase and a backslash \\ both have to survive.',
       pageIdeas: ['specificity'],
+    },
+  ],
+  // Last two, mirroring createMonolithGuideSchema: neither is needed for page 1
+  // to be readable, so both are written after the pages.
+  contextPlan: {
+    targetParts: ['guide RNA', 'nuclease', 'repair'],
+    selectedTopics: ['find-and-replace in a text editor'],
+    correspondences: [
+      { carries: 'the search box', from: 'find-and-replace', to: 'guide RNA' },
+    ],
+    reason: 'Both locate an exact string, then act on it.',
+    breaksAt: 'A text editor never mis-cuts a similar-looking line.',
+    personalizedQuickStart: {
+      keyIdea: 'Think of it as find-and-replace running inside a living cell.',
+      quickSummary: 'The guide RNA is the search box. The nuclease is the replace.',
+    },
+    bridgeBlock: {
+      title: 'Like find-and-replace',
+      body: 'You type a string, the editor locates it, then it swaps it out.',
+    },
+  },
+  nextGuideIdeas: [
+    {
+      title: 'Base editing',
+      summary: 'Change one letter, no double-strand break.',
+    },
+    {
+      title: 'Off-target effects',
+      summary: 'Why "close enough" matches are a problem.',
     },
   ],
 }
@@ -137,7 +139,7 @@ describe('createPartialJsonReader', () => {
     },
   )
 
-  it('exposes the early fields long before the pages arrive', () => {
+  it('exposes the title and Quick Start long before the pages arrive', () => {
     const reader = createPartialJsonReader()
     const pagesAt = SOURCE.indexOf('"pages"')
     reader.push(SOURCE.slice(0, pagesAt))
@@ -145,9 +147,20 @@ describe('createPartialJsonReader', () => {
 
     expect(value.title).toBe(GUIDE.title)
     expect(value.quickStart).toEqual(GUIDE.quickStart)
-    expect(value.contextPlan).toEqual(GUIDE.contextPlan)
     expect(value.pages).toBeUndefined()
     expect(reader.snapshot()?.complete).toBe(false)
+  })
+
+  it('exposes page 1 long before the bridge arrives', () => {
+    // This is the whole point of the field order: the guide is readable at
+    // page 1, and the bridge is still being written well after that.
+    const reader = createPartialJsonReader()
+    reader.push(SOURCE.slice(0, SOURCE.indexOf('"contextPlan"')))
+    const value = reader.snapshot()?.value as Record<string, unknown>
+
+    expect((value.pages as unknown[])[0]).toEqual(GUIDE.pages[0])
+    expect(value.contextPlan).toBeUndefined()
+    expect(value.nextGuideIdeas).toBeUndefined()
   })
 
   it('grows the page array one finished page at a time', () => {

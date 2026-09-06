@@ -153,8 +153,9 @@ const quickPromptOptions = [
  * How long the learner actually waits.
  *
  * For hosted guides that is until page 1 is readable, not until the whole guide
- * is written: the card offers "Start reading" at that point and the rest fills
- * in behind them. Measured at ~17-20s against the real model.
+ * is written: the card stands down at that point and the rest fills in behind
+ * them. Measured live at a 10.8s mean (7.8-15.7s over 6 cases) once the bridge
+ * and the next-guide ideas moved after the pages in the monolith schema.
  */
 /** How often to re-ask about a job the gateway could not answer for. */
 const UNRESOLVED_JOB_RECHECK_MS = 8000
@@ -166,7 +167,7 @@ const getGenerationEstimateSeconds = (): number => {
     return 90
   }
 
-  return provider === 'hosted' ? 20 : 45
+  return provider === 'hosted' ? 13 : 45
 }
 
 const getActiveAiProvider = () =>

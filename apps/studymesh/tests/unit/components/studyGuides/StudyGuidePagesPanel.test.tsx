@@ -558,7 +558,7 @@ describe('StudyGuidePagesPanel growth', () => {
     // is short rather than open-ended.
     expect(
       screen.getByTestId('study-guide-unwritten-pages-eta'),
-    ).toHaveTextContent(/10 seconds/i)
+    ).toHaveTextContent(/20 seconds/i)
   })
 
   it('shows no placeholders once every page is written', () => {

@@ -37,6 +37,8 @@ rtk npx tsx apps/studymesh/tests/live/bridgeLive.ts
 | `sweepRules.ts` | **no** | Scores every strength-threshold combination against saved pair data. Free. This is how thresholds get tuned. |
 | `auditPairs.ts` | **no** | Prints each case with its pairs so both error directions can be judged by eye: strongs resting on weak pairs, and weaks that were a pair short. Free. |
 | `oldMonolithPrompt.ts` | n/a | Verbatim copy of the pre-change prompt so the A/B stays reproducible. Do not edit. |
+| `firstPageTiming.ts` | yes | 6 cases x 2 field orders. Streams the monolith and stamps first token, Quick Start, **page 1 closing**, bridge and done, then prints bridge strength and pairs per arm. Use when changing what the guide emits before page 1. |
+| `checkArms.ts` | **no** | Prints both field orders and the reconstructed old prompt so the A/B arms can be checked before spending anything. Free. Run it first. |
 
 ## The workflow that matters
 
@@ -64,7 +66,8 @@ call instead would have cost thousands.
 
 | variable | default | meaning |
 | --- | --- | --- |
-| `LIVE_ARMS` | `old,new` | Which prompt arms to run, comma separated. `new` alone is usual. |
+| `LIVE_ARMS` | `old,new` | Which arms to run, comma separated. `new` alone is usual. In `bridgeAb.ts` an arm is a prompt version; in `firstPageTiming.ts` it is a monolith field order. |
+| `LIVE_DRY_RUN` | off | `1` stops `firstPageTiming.ts` running itself on import, so `checkArms.ts` can read its arms for free. |
 | `LIVE_GROUPS` | all | Only run cases whose `group` matches, comma separated (`null`, `calibration`, `human-safety`, `userset`, …). |
 | `LIVE_REPEATS` | `1` | Repeats per case. Use 3 to check stability on borderline pairs. |
 | `LIVE_EFFORT` | `low` | Reasoning effort. Production uses `low` for bridge stages. |

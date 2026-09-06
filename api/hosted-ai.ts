@@ -3204,6 +3204,17 @@ interface NormalizedMonolithGuide {
   };
 }
 
+/**
+ * Property order is load-bearing, not cosmetic.
+ *
+ * Structured output is generated in this order, and `toJsonSchema` preserves it
+ * (regenerating `required` from it for OpenAI), so whatever sits above `pages`
+ * is time the learner waits before page 1 exists. `contextPlan` and
+ * `nextGuideIdeas` are last because page 1 needs neither: the bridge renders on
+ * page 2 and the next-guide ideas are offered after the final quiz. That also
+ * matches what the prompt already claims - it asks for `targetParts` taken from
+ * "the guide you just wrote" and a bridge about "a concept from page 2".
+ */
 export const createMonolithGuideSchema = (includeContext: boolean) => ({
   type: "OBJECT",
   properties: {
@@ -3218,8 +3229,22 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
       },
       required: ["keyIdea", "quickSummary"],
     },
-    nextGuideIdeas: STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
+    // Stays ahead of the pages: it is the model's own outline of the three
+    // lessons, and it costs about a second.
     plannedLessons: STUDY_GUIDE_PLANNED_LESSONS_SCHEMA,
+    pages: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          title: { type: "STRING" },
+          summary: { type: "STRING" },
+          rawNotes: { type: "STRING" },
+          pageIdeas: STUDY_GUIDE_PAGE_IDEAS_SCHEMA,
+        },
+        required: ["title", "summary", "rawNotes", "pageIdeas"],
+      },
+    },
     ...(includeContext
       ? {
           contextPlan: {
@@ -3259,29 +3284,19 @@ export const createMonolithGuideSchema = (includeContext: boolean) => ({
           },
         }
       : {}),
-    pages: {
-      type: "ARRAY",
-      items: {
-        type: "OBJECT",
-        properties: {
-          title: { type: "STRING" },
-          summary: { type: "STRING" },
-          rawNotes: { type: "STRING" },
-          pageIdeas: STUDY_GUIDE_PAGE_IDEAS_SCHEMA,
-        },
-        required: ["title", "summary", "rawNotes", "pageIdeas"],
-      },
-    },
+    nextGuideIdeas: STUDY_GUIDE_NEXT_IDEAS_SCHEMA,
   },
+  // OpenAI regenerates this from `properties`; Gemini reads it, so keep both in
+  // the same order.
   required: [
     "title",
     "folderName",
     "emoji",
     "quickStart",
-    "nextGuideIdeas",
     "plannedLessons",
-    ...(includeContext ? ["contextPlan"] : []),
     "pages",
+    ...(includeContext ? ["contextPlan"] : []),
+    "nextGuideIdeas",
   ],
 });
 
@@ -3305,8 +3320,10 @@ Return strict JSON only:
   "folderName": "...",
   "emoji": "one emoji",
   "quickStart": { "keyIdea": "one sentence, max 35 words", "quickSummary": "two short paragraphs" },
-  "nextGuideIdeas": [{ "axis": "curiosity | utility | connection", "label": "...", "prompt": "..." }],
-  "plannedLessons": [{ "title": "...", "summary": "..." }],${
+  "plannedLessons": [{ "title": "...", "summary": "..." }],
+  "pages": [
+    { "title": "01 - ...", "summary": "one preview sentence", "rawNotes": "Markdown lesson notes", "pageIdeas": [{ "axis": "mechanism | example | limit", "label": "...", "prompt": "..." }] }
+  ],${
     userKnownTopics.length
       ? `
   "contextPlan": {
@@ -3320,9 +3337,7 @@ Return strict JSON only:
   },`
       : ""
   }
-  "pages": [
-    { "title": "01 - ...", "summary": "one preview sentence", "rawNotes": "Markdown lesson notes", "pageIdeas": [{ "axis": "mechanism | example | limit", "label": "...", "prompt": "..." }] }
-  ]
+  "nextGuideIdeas": [{ "axis": "curiosity | utility | connection", "label": "...", "prompt": "..." }]
 }
 
 Rules:

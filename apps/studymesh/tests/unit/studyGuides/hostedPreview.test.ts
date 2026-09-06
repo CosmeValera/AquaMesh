@@ -29,18 +29,20 @@ const TIMELINE: HostedAiPreviewEvent[] = [
     keyIdea: 'A starter is a living culture of wild yeast and bacteria.',
     quickSummary: 'Feed it flour and water, and it raises bread for you.',
   },
-  {
-    type: 'bridge',
-    title: 'From Proofing to Starter Activity',
-    body: 'You already judge dough by how it rises.',
-    topics: ['cooking'],
-  },
   { type: 'pageTitle', index: 0, title: 'The Living Mixture' },
   { type: 'page', index: 0, title: 'The Living Mixture', summary: 'Wild yeast.' },
   { type: 'pageTitle', index: 1, title: 'Feeding and Rising' },
   { type: 'page', index: 1, title: 'Feeding and Rising', summary: 'Schedules.' },
   { type: 'pageTitle', index: 2, title: 'Acidity and Judgment' },
   { type: 'page', index: 2, title: 'Acidity and Judgment', summary: 'Taste.' },
+  // Last: the model is asked to map the guide it has just written, so the
+  // bridge cannot exist before the pages do.
+  {
+    type: 'bridge',
+    title: 'From Proofing to Starter Activity',
+    body: 'You already judge dough by how it rises.',
+    topics: ['cooking'],
+  },
   { type: 'stage', stage: 'quiz' },
 ]
 
@@ -56,17 +58,17 @@ describe('hosted Study Guide preview state', () => {
     expect(rows.map((row) => row.label)).toEqual([
       '🍞 How a Sourdough Starter Works',
       'studyGuides.preview.keyIdea',
-      'studyGuides.preview.bridge: cooking',
       'The Living Mixture',
       'Feeding and Rising',
       'Acidity and Judgment',
+      'studyGuides.preview.bridge: cooking',
       'studyGuides.preview.finalQuiz',
     ])
     expect(rows.filter((row) => row.done)).toHaveLength(6)
   })
 
   it('shows a page as pending between its title and its body', () => {
-    const upToSecondTitle = replay(TIMELINE.slice(0, 7))
+    const upToSecondTitle = replay(TIMELINE.slice(0, 6))
     const rows = buildHostedPreviewRows(upToSecondTitle, t)
 
     expect(rows.find((row) => row.label === 'The Living Mixture')?.done).toBe(
@@ -252,17 +254,30 @@ describe('the checklist declares its whole shape up front', () => {
     ).not.toContain('bridge')
   })
 
-  it('stops reserving the bridge once a page landed without one', () => {
-    // The bridge always precedes page 1, so no bridge by then means none exists
-    // and the row should not sit pending forever.
+  it('keeps reserving the bridge while the pages are still landing', () => {
+    // The bridge is written after every page now, so a finished page 1 says
+    // nothing about whether this guide has one.
     const afterPage = applyHostedPreviewEvent(
       makeHostedPreview(0, { expectsBridge: true }),
       { type: 'page', index: 0, title: 'One', summary: 'x' },
     )
 
-    expect(buildHostedPreviewRows(afterPage, t).map((row) => row.id)).not.toContain(
+    expect(buildHostedPreviewRows(afterPage, t).map((row) => row.id)).toContain(
       'bridge',
     )
+  })
+
+  it('stops reserving the bridge once the quiz stage starts', () => {
+    // The quiz call means the guide call is over, so a bridge that has not
+    // arrived is not coming and the row must not sit pending forever.
+    const atQuiz = applyHostedPreviewEvent(
+      makeHostedPreview(0, { expectsBridge: true }),
+      { type: 'stage', stage: 'quiz' },
+    )
+
+    expect(
+      buildHostedPreviewRows(atQuiz, t).map((row) => row.id),
+    ).not.toContain('bridge')
   })
 
   it('never changes the number of rows as the real pages arrive', () => {
@@ -351,12 +366,14 @@ describe('the checklist is shown in two groups', () => {
     expect(rows.upToFirstPage.map((row) => row.id)).toEqual([
       'title',
       'keyIdea',
-      'bridge',
       'page-0',
     ])
+    // The bridge sits where it finishes, after the later pages, so it is never
+    // left spinning above rows that tick before it.
     expect(rows.remainder.map((row) => row.id)).toEqual([
       'page-1',
       'page-2',
+      'bridge',
       'quiz',
     ])
   })
@@ -437,7 +454,12 @@ describe('reconciling a snapshot with what is already on screen', () => {
     const restored = makeHostedPreviewFromSnapshot(
       toHostedProgressSnapshot(watched),
       watched.startedAt,
-      shape,
+      // The shape the checklist was built with, or the restored copy would
+      // reserve rows the original never had.
+      {
+        expectedPages: watched.expectedPages,
+        expectsBridge: watched.expectsBridge,
+      },
     )
 
     expect(buildHostedPreviewRows(restored, t)).toEqual(

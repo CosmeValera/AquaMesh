@@ -189,20 +189,6 @@ export const buildHostedPreviewRows = (
     },
   ]
 
-  // The bridge always arrives before page 1, so once a page is done and no
-  // bridge came, this guide has none and the row is not reserved for it.
-  const bridgeStillPossible =
-    preview.expectsBridge && !preview.pages.some((page) => page.done)
-  if (preview.bridgeTopics.length || bridgeStillPossible) {
-    const bridgeLabel = t('studyGuides.preview.bridge')
-    const topics = preview.bridgeTopics.join(', ')
-    rows.push({
-      id: 'bridge',
-      label: topics ? `${bridgeLabel}: ${topics}` : bridgeLabel,
-      done: preview.bridgeTopics.length > 0,
-    })
-  }
-
   // Every page gets a row from the start, so the learner sees the whole shape
   // of the work rather than watching steps appear out of nowhere.
   const pageRowCount = Math.max(preview.expectedPages, preview.pages.length)
@@ -216,6 +202,21 @@ export const buildHostedPreviewRows = (
       done: Boolean(page?.done),
     })
   })
+
+  // After the pages, because that is when it is written: the model maps the
+  // guide it has just finished. The quiz stage starting means the guide call is
+  // over, so a bridge that has not arrived by then is not coming and the row
+  // stops being reserved for it.
+  const bridgeStillPossible = preview.expectsBridge && preview.stage !== 'quiz'
+  if (preview.bridgeTopics.length || bridgeStillPossible) {
+    const bridgeLabel = t('studyGuides.preview.bridge')
+    const topics = preview.bridgeTopics.join(', ')
+    rows.push({
+      id: 'bridge',
+      label: topics ? `${bridgeLabel}: ${topics}` : bridgeLabel,
+      done: preview.bridgeTopics.length > 0,
+    })
+  }
 
   rows.push({
     id: 'quiz',
@@ -272,18 +273,21 @@ export const hostedPreviewStages = (
   const isFirstPageReady = Boolean(firstPage?.done)
   const expectsBridge = preview.expectsBridge || preview.bridgeTopics.length > 0
 
-  // Title, key idea, page 1, and the bridge when this guide can have one.
-  const firstSteps = expectsBridge ? 4 : 3
+  // Title, key idea, page 1. The bridge is deliberately not here: it is written
+  // after every page, so counting it would hold this bar short of full while the
+  // learner can already read.
+  const firstSteps = 3
   const firstDone =
     (preview.title ? 1 : 0) +
     (preview.keyIdea ? 1 : 0) +
-    (preview.bridgeTopics.length ? 1 : 0) +
     (isFirstPageReady ? 1 : 0)
 
-  // The remaining pages, plus the final quiz.
-  const remainderSteps = Math.max(preview.expectedPages - 1, 0) + 1
+  // The remaining pages, the bridge when this guide can have one, and the quiz.
+  const remainderSteps =
+    Math.max(preview.expectedPages - 1, 0) + (expectsBridge ? 1 : 0) + 1
   const remainderDone =
     preview.pages.slice(1).filter((page) => page.done).length +
+    (preview.bridgeTopics.length ? 1 : 0) +
     (preview.stage === 'quiz' ? 0.5 : 0)
 
   return {

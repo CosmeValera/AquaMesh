@@ -529,4 +529,44 @@ describe('StudyGuidePagesPanel growth', () => {
       screen.queryByTestId('study-guide-add-page-menu'),
     ).not.toBeInTheDocument()
   })
+
+  it('shows a placeholder for each page still being written', () => {
+    // A guide opened while it is still generating has one page but knows it
+    // will have three, so the two to come are visible and inert.
+    const studyPath = createStudyPath()
+    render(
+      <StudyGuidePagesPanel
+        studyPath={{
+          ...studyPath,
+          selectedIndex: 0,
+          dashboards: studyPath.dashboards.slice(0, 1),
+        }}
+        onStudyPathChange={vi.fn()}
+        variant="desktop"
+      />,
+    )
+
+    const placeholders = screen.getAllByTestId('study-guide-unwritten-page-row')
+    expect(placeholders).toHaveLength(2)
+    placeholders.forEach((row) => {
+      expect(row).toHaveAttribute('aria-disabled', 'true')
+      expect(row.querySelector('button')).toBeNull()
+    })
+    // Nothing pretends to be a title.
+    expect(screen.queryByText('02 - Manual note')).not.toBeInTheDocument()
+  })
+
+  it('shows no placeholders once every page is written', () => {
+    render(
+      <StudyGuidePagesPanel
+        studyPath={createStudyPath()}
+        onStudyPathChange={vi.fn()}
+        variant="desktop"
+      />,
+    )
+
+    expect(
+      screen.queryByTestId('study-guide-unwritten-page-row'),
+    ).not.toBeInTheDocument()
+  })
 })

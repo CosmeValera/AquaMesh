@@ -114,6 +114,13 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
   )
 
   const pendingPages = growingPages || []
+  // A guide saved while it is still being generated already knows how many
+  // pages it will end up with, so the gap is what is still being written.
+  const unwrittenPageCount = Math.max(
+    (studyPath.dashboards[0]?.dashboardCount || 0) -
+      studyPath.dashboards.length,
+    0,
+  )
   // A page takes long enough that a still spinner reads as a hang, so a clock
   // ticks while any page is being written.
   useEffect(() => {
@@ -544,6 +551,31 @@ const StudyGuidePagesPanel: React.FC<StudyGuidePagesPanelProps> = ({
               </Box>
             )
           })}
+          {/* Pages the guide will have but has not been written yet. Shown so
+              the reader knows more is coming, and never clickable because there
+              is nothing behind them. */}
+          {Array.from({ length: unwrittenPageCount }).map((_page, offset) => (
+            <Box
+              key={`unwritten-${offset}`}
+              data-testid="study-guide-unwritten-page-row"
+              aria-disabled="true"
+              sx={(theme) => ({
+                px: 1.25,
+                py: 1,
+                borderRadius: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                color: 'text.disabled',
+                bgcolor: alpha(theme.palette.text.primary, 0.03),
+              })}
+            >
+              <CircularProgress size={14} thickness={6} />
+              <Typography variant="body2" color="text.disabled" noWrap>
+                {t('workspace.pageBeingWritten')}
+              </Typography>
+            </Box>
+          ))}
           {!mobile ? (
             <Box
               data-testid="study-guide-page-end-slot"

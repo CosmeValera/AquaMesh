@@ -5,6 +5,7 @@ import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked'
 
 import {
   buildHostedPreviewRows,
+  HostedPreviewRow,
   HostedPreviewState,
 } from '../../studyGuides/hostedPreview'
 import type { InterfaceTextKey } from '../../language/interfaceLanguage'
@@ -18,8 +19,10 @@ import type { InterfaceTextKey } from '../../language/interfaceLanguage'
 const HostedPreviewChecklist: React.FC<{
   preview: HostedPreviewState
   t: (key: InterfaceTextKey) => string
-}> = ({ preview, t }) => {
-  const rows = buildHostedPreviewRows(preview, t)
+  /** A slice of the checklist, when the card shows it in more than one group. */
+  rows?: HostedPreviewRow[]
+}> = ({ preview, t, rows: providedRows }) => {
+  const rows = providedRows || buildHostedPreviewRows(preview, t)
   const activeIndex = rows.findIndex((row) => !row.done)
 
   return (

@@ -25,7 +25,8 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
+import { alpha, lighten } from '@mui/material/styles'
+import type { Theme } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
@@ -61,6 +62,8 @@ import {
   applyHostedPreviewEvent,
   hasHostedPreviewSignal,
   hostedPreviewPercent,
+  hostedPreviewStages,
+  splitHostedPreviewRows,
   HOSTED_STUDY_GUIDE_PAGE_COUNT,
   HostedPreviewState,
   makeHostedPreviewFromSnapshot,
@@ -153,6 +156,31 @@ const quickPromptOptions = [
   },
 ] as const
 
+/**
+ * How long the learner actually waits.
+ *
+ * For hosted guides that is until page 1 is readable, not until the whole guide
+ * is written: the card offers "Start reading" at that point and the rest fills
+ * in behind them. Measured at ~17-20s against the real model.
+ */
+/**
+ * Slow drift for the stretch after page 1 is readable.
+ *
+ * From there the guide is already openable and the remaining pages arrive in
+ * the background, so the bar should look alive rather than stalled.
+ */
+const guideProgressWave = (theme: Theme) => {
+  const base = theme.palette.primary.main
+  const crest = lighten(base, 0.5)
+
+  return {
+    backgroundImage: `linear-gradient(90deg, ${base}, ${crest}, ${base})`,
+    backgroundSize: '200% 100%',
+    animation: 'rabbitholeGuideWave 2.6s ease-in-out infinite',
+    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+  }
+}
+
 const getGenerationEstimateSeconds = (): number => {
   const provider = readQuickCreateAiSettings().provider || 'hosted'
 
@@ -160,7 +188,7 @@ const getGenerationEstimateSeconds = (): number => {
     return 90
   }
 
-  return 45
+  return provider === 'hosted' ? 20 : 45
 }
 
 const getActiveAiProvider = () =>
@@ -725,6 +753,23 @@ const StudyGuidesPage = () => {
 
   const retryPendingGuide = (guide: PendingGuide) => {
     let updatedGuide: PendingGuide | null = null
+
+    // A retry is a new generation, not a resume of the old one, so the card
+    // starts over. Keeping the original clock and progress would show a bar
+    // near the end and a minute already elapsed for work just beginning.
+    setJobPreviews((current) => {
+      if (!current[guide.id]) {
+        return current
+      }
+
+      const next = { ...current }
+      delete next[guide.id]
+      return next
+    })
+    setJobServerState((current) => ({
+      ...current,
+      [guide.id]: { createdAt: new Date().toISOString() },
+    }))
 
     try {
       updatedGuide = StudyGuideCreationQueueStorage.update(guide.id, {
@@ -1461,11 +1506,24 @@ const StudyGuidesPage = () => {
               ),
             )
             const preview = jobPreviews[guide.id]
-            const progressPercent = creationProgressPercent(
+            const isReadable = Boolean(guide.resultStudyGuideId)
+            const stages = preview ? hostedPreviewStages(preview) : null
+            const singleBarPercent = creationProgressPercent(
               preview,
               elapsedSeconds,
               guide.estimateSeconds,
             )
+            // Reaching page 1 fills its own bar; the rest gets a second one.
+            const firstBarPercent = stages
+              ? Math.max(stages.firstPagePercent, singleBarPercent)
+              : singleBarPercent
+            const secondBarPercent = stages ? stages.remainderPercent : 0
+            const previewRows = preview
+              ? splitHostedPreviewRows(preview, t)
+              : null
+            const estimateSuffix = ` · ${t(
+              'studyGuides.estimatedTotal',
+            )} ${formatDuration(guide.estimateSeconds)}`
             const isProblem =
               guide.status === 'failed' || guide.status === 'interrupted'
             const isRunning = guide.status === 'running'
@@ -1675,7 +1733,7 @@ const StudyGuidesPage = () => {
                               color="primary.main"
                               fontWeight={700}
                             >
-                              {progressPercent}%
+                              {firstBarPercent}%
                             </Typography>
                             <Typography
                               variant="caption"
@@ -1683,31 +1741,30 @@ const StudyGuidesPage = () => {
                               sx={{ whiteSpace: 'nowrap' }}
                             >
                               {t('studyGuides.elapsed')}{' '}
-                              {formatDuration(elapsedSeconds)} ·{' '}
-                              {t('studyGuides.estimatedTotal')}{' '}
-                              {formatDuration(guide.estimateSeconds)}
+                              {formatDuration(elapsedSeconds)}
+                              {isReadable ? null : estimateSuffix}
                             </Typography>
                           </Stack>
                           <LinearProgress
                             variant="determinate"
-                            value={progressPercent}
-                            aria-label={`${progressPercent}%`}
+                            value={firstBarPercent}
+                            aria-label={`${firstBarPercent}%`}
                             sx={(theme) => ({
                               height: 9,
                               borderRadius: 1,
                               bgcolor: alpha(theme.palette.primary.main, 0.14),
-                              '& .MuiLinearProgress-bar': {
-                                borderRadius: 1,
-                              },
+                              '& .MuiLinearProgress-bar': { borderRadius: 1 },
                             })}
                           />
+
                           {/* Shown from the first frame. Every row is a
                               placeholder until it fills, so the learner knows
                               the shape of the wait immediately. */}
-                          {preview ? (
+                          {preview && previewRows ? (
                             <Box sx={{ mt: 1.25 }}>
                               <HostedPreviewChecklist
                                 preview={preview}
+                                rows={previewRows.upToFirstPage}
                                 t={t}
                               />
                             </Box>
@@ -1746,6 +1803,43 @@ const StudyGuidesPage = () => {
                         >
                           {t('studyGuides.startReading')}
                         </Button>
+                      ) : null}
+                      {/* What is still being written, kept separate from the
+                          part the learner already has. */}
+                      {isReadable && preview && previewRows ? (
+                        <Box
+                          sx={(theme) => ({
+                            p: 1.5,
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.primary.main, 0.055),
+                          })}
+                        >
+                          <LinearProgress
+                            variant="determinate"
+                            value={secondBarPercent}
+                            aria-label={`${secondBarPercent}%`}
+                            sx={(theme) => ({
+                              height: 9,
+                              borderRadius: 1,
+                              bgcolor: alpha(theme.palette.primary.main, 0.14),
+                              '@keyframes rabbitholeGuideWave': {
+                                '0%': { backgroundPosition: '200% 50%' },
+                                '100%': { backgroundPosition: '0% 50%' },
+                              },
+                              '& .MuiLinearProgress-bar': {
+                                borderRadius: 1,
+                                ...guideProgressWave(theme),
+                              },
+                            })}
+                          />
+                          <Box sx={{ mt: 1.25 }}>
+                            <HostedPreviewChecklist
+                              preview={preview}
+                              rows={previewRows.remainder}
+                              t={t}
+                            />
+                          </Box>
+                        </Box>
                       ) : null}
                       {/* Hosted generation runs on the server, so closing the
                           tab is safe. Local and bring-your-own providers still

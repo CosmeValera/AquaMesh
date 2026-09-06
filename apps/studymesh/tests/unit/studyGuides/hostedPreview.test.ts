@@ -6,6 +6,8 @@ import {
   describeHostedPreviewStep,
   hasHostedPreviewSignal,
   hostedPreviewPercent,
+  hostedPreviewStages,
+  splitHostedPreviewRows,
   makeHostedPreviewFromSnapshot,
   makeHostedPreview,
 } from '../../../src/studyGuides/hostedPreview'
@@ -270,5 +272,102 @@ describe('the checklist declares its whole shape up front', () => {
       )
       expect(rows).toHaveLength(initial)
     })
+  })
+})
+
+describe('the wait is split into two bars', () => {
+  it('fills the first bar only when page 1 is actually done', () => {
+    const upToBridge = replay(TIMELINE.slice(0, 4))
+    const upToFirstPage = replay(TIMELINE.slice(0, 6))
+
+    expect(hostedPreviewStages(upToBridge).firstPagePercent).toBeLessThan(100)
+    expect(hostedPreviewStages(upToBridge).isFirstPageReady).toBe(false)
+    expect(hostedPreviewStages(upToFirstPage).firstPagePercent).toBe(100)
+    expect(hostedPreviewStages(upToFirstPage).isFirstPageReady).toBe(true)
+  })
+
+  it('keeps the second bar empty until the first one is full', () => {
+    const upToFirstPage = replay(TIMELINE.slice(0, 6))
+
+    expect(hostedPreviewStages(upToFirstPage).remainderPercent).toBe(0)
+  })
+
+  it('advances the second bar as the later pages land', () => {
+    const afterPageTwo = hostedPreviewStages(replay(TIMELINE.slice(0, 8)))
+    const afterPageThree = hostedPreviewStages(replay(TIMELINE.slice(0, 10)))
+    const atQuiz = hostedPreviewStages(replay(TIMELINE))
+
+    expect(afterPageTwo.remainderPercent).toBeGreaterThan(0)
+    expect(afterPageThree.remainderPercent).toBeGreaterThan(
+      afterPageTwo.remainderPercent,
+    )
+    expect(atQuiz.remainderPercent).toBeGreaterThan(
+      afterPageThree.remainderPercent,
+    )
+    // Both bars only ever move forward.
+    expect(atQuiz.firstPagePercent).toBe(100)
+  })
+
+  it('starts both bars at zero for a fresh guide', () => {
+    const stages = hostedPreviewStages(makeHostedPreview(0))
+
+    expect(stages.firstPagePercent).toBe(0)
+    expect(stages.remainderPercent).toBe(0)
+    expect(stages.isFirstPageReady).toBe(false)
+  })
+
+  it('does not reserve a bridge step for a guide that cannot have one', () => {
+    // Without a bridge the first bar has three steps, so the key idea alone is
+    // a third of the way rather than a quarter.
+    const noBridge = applyHostedPreviewEvent(
+      applyHostedPreviewEvent(makeHostedPreview(0), {
+        type: 'meta',
+        title: 'T',
+        emoji: '',
+      }),
+      { type: 'quickStart', keyIdea: 'k', quickSummary: 's' },
+    )
+
+    expect(hostedPreviewStages(noBridge).firstPagePercent).toBe(67)
+  })
+})
+
+describe('the checklist is shown in two groups', () => {
+  it('puts everything up to page 1 in the first group', () => {
+    const rows = splitHostedPreviewRows(
+      makeHostedPreview(0, { expectsBridge: true }),
+      t,
+    )
+
+    expect(rows.upToFirstPage.map((row) => row.id)).toEqual([
+      'title',
+      'keyIdea',
+      'bridge',
+      'page-0',
+    ])
+    expect(rows.remainder.map((row) => row.id)).toEqual([
+      'page-1',
+      'page-2',
+      'quiz',
+    ])
+  })
+
+  it('omits the bridge from the first group when none is possible', () => {
+    const rows = splitHostedPreviewRows(makeHostedPreview(0), t)
+
+    expect(rows.upToFirstPage.map((row) => row.id)).toEqual([
+      'title',
+      'keyIdea',
+      'page-0',
+    ])
+  })
+
+  it('together the groups are exactly the whole checklist', () => {
+    const preview = replay(TIMELINE)
+    const rows = splitHostedPreviewRows(preview, t)
+
+    expect([...rows.upToFirstPage, ...rows.remainder]).toEqual(
+      buildHostedPreviewRows(preview, t),
+    )
   })
 })

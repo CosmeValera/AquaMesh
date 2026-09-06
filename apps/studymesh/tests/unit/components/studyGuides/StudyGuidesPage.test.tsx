@@ -648,9 +648,11 @@ describe('StudyGuidesPage create flow', () => {
     expect(await screen.findByText('Resumed Guide')).toBeInTheDocument()
   })
 
-  it('shows the whole checklist from the first frame, unfilled', async () => {
-    // Before this, the card showed only a bar for the first seconds and the
-    // rows appeared later, so the learner could not tell what the wait was for.
+  it('shows only the wait up to page 1 from the first frame', async () => {
+    // The card used to show just a bar for the first seconds. It now names the
+    // steps immediately - but only as far as the guide becoming readable. What
+    // comes after that appears later, under the button, so the learner is not
+    // shown work they do not have to wait for.
     vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
       () => new Promise(() => undefined),
     )
@@ -659,11 +661,30 @@ describe('StudyGuidesPage create flow', () => {
     await createGuideFromPrompt('First frame prompt')
     await screen.findByText('Creating')
 
-    expect(screen.getByText('Page 1')).toBeInTheDocument()
-    expect(screen.getByText('Page 2')).toBeInTheDocument()
-    expect(screen.getByText('Page 3')).toBeInTheDocument()
-    expect(screen.getByText('Final quiz')).toBeInTheDocument()
     expect(screen.getByText('Key idea')).toBeInTheDocument()
+    expect(screen.getByText('Page 1')).toBeInTheDocument()
+    expect(screen.queryByText('Page 2')).not.toBeInTheDocument()
+    expect(screen.queryByText('Page 3')).not.toBeInTheDocument()
+    expect(screen.queryByText('Final quiz')).not.toBeInTheDocument()
+  })
+
+  it('restarts the clock and the bar when a guide is retried', async () => {
+    // A retry buys a new generation. Carrying the old elapsed time and a bar
+    // near the end would describe work that is not happening.
+    vi.mocked(generateStudyPathStateFromPrompt)
+      .mockRejectedValueOnce(new Error('Hosted AI is unavailable.'))
+      .mockImplementationOnce(() => new Promise(() => undefined))
+    renderStudyGuidesPage('/study-guides')
+
+    await createGuideFromPrompt('Retry clock prompt')
+    const retryButton = await screen.findByRole('button', { name: /retry/i })
+
+    fireEvent.click(retryButton)
+
+    await screen.findByText('Creating')
+    await waitFor(() => {
+      expect(screen.getByText(/Elapsed 0s/)).toBeInTheDocument()
+    })
   })
 
   it('offers Start reading as soon as page 1 is written', async () => {

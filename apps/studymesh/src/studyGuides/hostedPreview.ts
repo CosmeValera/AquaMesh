@@ -182,3 +182,68 @@ export const hostedPreviewPercent = (preview: HostedPreviewState): number => {
 
   return Math.min(95, Math.round((done / total) * 100))
 }
+
+export interface HostedPreviewStages {
+  /** 0-100. Filling this bar is the wait that matters: it ends when the guide
+   *  becomes readable and the learner can open page 1. */
+  firstPagePercent: number
+  /** 0-100 for everything after page 1, shown only once the first bar is full. */
+  remainderPercent: number
+  isFirstPageReady: boolean
+}
+
+/**
+ * Splits the wait into the part the learner waits for and the part that happens
+ * behind them. Page 1 arriving is a finish line, not a halfway point, so it
+ * fills its own bar rather than sitting at 50% of one.
+ */
+export const hostedPreviewStages = (
+  preview: HostedPreviewState,
+): HostedPreviewStages => {
+  const firstPage = preview.pages[0]
+  const isFirstPageReady = Boolean(firstPage?.done)
+  const expectsBridge = preview.expectsBridge || preview.bridgeTopics.length > 0
+
+  // Title, key idea, page 1, and the bridge when this guide can have one.
+  const firstSteps = expectsBridge ? 4 : 3
+  const firstDone =
+    (preview.title ? 1 : 0) +
+    (preview.keyIdea ? 1 : 0) +
+    (preview.bridgeTopics.length ? 1 : 0) +
+    (isFirstPageReady ? 1 : 0)
+
+  // The remaining pages, plus the final quiz.
+  const remainderSteps = Math.max(preview.expectedPages - 1, 0) + 1
+  const remainderDone =
+    preview.pages.slice(1).filter((page) => page.done).length +
+    (preview.stage === 'quiz' ? 0.5 : 0)
+
+  return {
+    firstPagePercent: isFirstPageReady
+      ? 100
+      : Math.min(95, Math.round((firstDone / firstSteps) * 100)),
+    remainderPercent: Math.min(
+      95,
+      Math.round((remainderDone / remainderSteps) * 100),
+    ),
+    isFirstPageReady,
+  }
+}
+
+/**
+ * Splits the checklist where the guide becomes readable.
+ *
+ * Everything up to page 1 is the wait the learner is actually in; the rest is
+ * what keeps arriving after they can already start, so the card shows it as a
+ * separate group below the button instead of one long list.
+ */
+export const splitHostedPreviewRows = (
+  preview: HostedPreviewState,
+  t: (key: InterfaceTextKey) => string,
+): { upToFirstPage: HostedPreviewRow[]; remainder: HostedPreviewRow[] } => {
+  const rows = buildHostedPreviewRows(preview, t)
+  const firstPageIndex = rows.findIndex((row) => row.id === 'page-0')
+  const cut = firstPageIndex >= 0 ? firstPageIndex + 1 : rows.length
+
+  return { upToFirstPage: rows.slice(0, cut), remainder: rows.slice(cut) }
+}

@@ -167,7 +167,7 @@ const getGenerationEstimateSeconds = (): number => {
     return 90
   }
 
-  return provider === 'hosted' ? 13 : 45
+  return provider === 'hosted' ? 18 : 45
 }
 
 const getActiveAiProvider = () =>

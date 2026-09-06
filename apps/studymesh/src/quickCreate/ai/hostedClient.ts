@@ -462,9 +462,19 @@ export const createHostedAiTransport = ({
  * unreachable or job-less gateway simply reports none, which leaves the
  * queue's own retry rules in charge.
  */
+export interface HostedStudyGuideJobLookup {
+  jobs: Record<string, HostedAiStudyGuideJob>
+  /**
+   * Jobs the gateway could not answer for. Nothing may be concluded about
+   * these: an unreachable gateway is not proof that a generation is gone, and
+   * treating it as such is what made a refresh look like a failure.
+   */
+  unresolvedIds: string[]
+}
+
 export const getHostedStudyGuideJobs = async (
   clientJobIds: readonly string[],
-): Promise<Record<string, HostedAiStudyGuideJob>> => {
+): Promise<HostedStudyGuideJobLookup> => {
   const found = await Promise.all(
     clientJobIds.map(async (clientJobId) => {
       try {
@@ -472,23 +482,32 @@ export const getHostedStudyGuideJobs = async (
           action: 'studyGuideJob',
           clientJobId,
         })
-        return payload.job
+        // The gateway says it could not look, so neither can we.
+        if (payload.lookupFailed) {
+          return { clientJobId, unresolved: true as const }
+        }
+
+        return { clientJobId, job: payload.job }
       } catch {
-        // Unreachable gateway is not the same as "no such job": the caller
-        // treats a missing entry as unknown, never as proof of absence.
-        return undefined
+        return { clientJobId, unresolved: true as const }
       }
     }),
   )
 
   const jobs: Record<string, HostedAiStudyGuideJob> = {}
-  found.forEach((job) => {
-    if (job) {
-      jobs[job.clientJobId] = job
+  const unresolvedIds: string[] = []
+  found.forEach((entry) => {
+    if ('unresolved' in entry) {
+      unresolvedIds.push(entry.clientJobId)
+      return
+    }
+
+    if (entry.job) {
+      jobs[entry.job.clientJobId] = entry.job
     }
   })
 
-  return jobs
+  return { jobs, unresolvedIds }
 }
 
 /** A job the gateway is still working on, or has already finished for us. */

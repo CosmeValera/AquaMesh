@@ -298,6 +298,7 @@ export const StudyGuideCreationQueueStorage = {
     tabId = '',
     activeJobIds = [],
     resumableJobIds = [],
+    unresolvedJobIds = [],
   }: {
     tabId?: string
     activeJobIds?: readonly string[]
@@ -307,6 +308,12 @@ export const StudyGuideCreationQueueStorage = {
      * spends the retry budget and is never given up on.
      */
     resumableJobIds?: readonly string[]
+    /**
+     * Jobs the gateway could not be asked about. Nothing is concluded for
+     * these: they are left untouched until an answer arrives, because an
+     * unreachable gateway is not evidence that a generation is gone.
+     */
+    unresolvedJobIds?: readonly string[]
   } = {}): StudyGuideCreationJob[] {
     const current = readQueue()
     let changed = false
@@ -316,10 +323,17 @@ export const StudyGuideCreationQueueStorage = {
       const shouldRequeue =
         !activeJobIds.includes(job.id) &&
         (job.status === 'interrupted' ||
-          (job.status === 'running' && isOwn) ||
+          // Hosted work is owned by the gateway, so any tab may pick it back
+          // up; for the others the owning tab is the only one that may.
+          (job.status === 'running' && (isOwn || job.provider === 'hosted')) ||
+          job.status === 'collecting' ||
           (job.status === 'failed' &&
             isRetryableStudyGuideCreationError(job.errorMessage)))
       if (!shouldRequeue) {
+        return job
+      }
+
+      if (job.provider === 'hosted' && unresolvedJobIds.includes(job.id)) {
         return job
       }
 
@@ -389,7 +403,14 @@ export const StudyGuideCreationQueueStorage = {
     const current = readQueue()
     let changed = false
     const next = current.map((job) => {
-      if (!jobIds.includes(job.id) || job.status !== 'running') {
+      // Hosted generation runs on the gateway and outlives any tab, so
+      // closing one is not an interruption. Local and BYO providers really do
+      // die with the page, which is what this status is for.
+      if (
+        !jobIds.includes(job.id) ||
+        job.status !== 'running' ||
+        job.provider === 'hosted'
+      ) {
         return job
       }
 

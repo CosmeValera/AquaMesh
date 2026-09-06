@@ -692,16 +692,40 @@ const isStudyGuideJobStale = (row: HostedStudyGuideJobRow): boolean => {
 const jobFilter = (userId: string, clientJobId: string): string =>
   `?user_id=eq.${encodeURIComponent(userId)}&client_job_id=eq.${encodeURIComponent(clientJobId)}`;
 
+let degradedJobSelect = false;
+
 export const readStudyGuideJob = async (
   userId: string,
   clientJobId: string,
 ): Promise<HostedStudyGuideJobRow | undefined> => {
-  const response = await studyGuideJobsFetch(
-    `${jobFilter(userId, clientJobId)}&select=client_job_id,status,result,error_message,progress,created_at,updated_at&limit=1`,
-    { method: "GET" },
-  );
+  const select = degradedJobSelect
+    ? "client_job_id,status,result,error_message,created_at,updated_at"
+    : "client_job_id,status,result,error_message,progress,created_at,updated_at";
 
-  return (await readJobRows(response))[0];
+  try {
+    return (
+      await readJobRows(
+        await studyGuideJobsFetch(
+          `${jobFilter(userId, clientJobId)}&select=${select}&limit=1`,
+          { method: "GET" },
+        ),
+      )
+    )[0];
+  } catch (error) {
+    if (degradedJobSelect) {
+      throw error;
+    }
+
+    // `progress` is display-only, so a deployment without its migration must
+    // still be able to answer whether the job exists. Losing the checklist is
+    // survivable; losing the answer makes every refresh look like a failure.
+    degradedJobSelect = true;
+    console.error(
+      "[hosted-ai] job progress column unavailable; is supabase-hosted-study-guide-jobs-progress.sql applied?",
+      error,
+    );
+    return readStudyGuideJob(userId, clientJobId);
+  }
 };
 
 export type StudyGuideJobClaim =
@@ -4254,7 +4278,18 @@ export default async function handler(
         return;
       }
 
-      const job = await readStudyGuideJob(user.id, request.clientJobId);
+      let job: HostedStudyGuideJobRow | undefined;
+      try {
+        job = await readStudyGuideJob(user.id, request.clientJobId);
+      } catch (error) {
+        // "I could not look" is a different answer from "there is no such job",
+        // and only the second one means a generation is lost. Collapsing them
+        // made every failed lookup read as a failed guide.
+        console.error("[hosted-ai] could not look up a study guide job", error);
+        json(res, 200, { ok: true, lookupFailed: true });
+        return;
+      }
+
       json(res, 200, {
         ok: true,
         job: job

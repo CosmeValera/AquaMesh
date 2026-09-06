@@ -249,6 +249,11 @@ export interface HostedAiGatewayResponse {
   createdAt?: string
   /** The generation stopped without finishing. Only a click may retry it. */
   dead?: boolean
+  /**
+   * The gateway could not read the job. Distinct from there being no job:
+   * nothing may be concluded about the generation from this.
+   */
+  lookupFailed?: boolean
   job?: HostedAiStudyGuideJob
   quickStart?: StudyGuideQuickStart
   bridgeBlocks?: StudyGuideKnowledgeBridgeBlock[]

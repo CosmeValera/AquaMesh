@@ -65,9 +65,9 @@ import {
 } from '../../studyGuides/hostedPreview'
 import type {
   HostedAiPreviewEvent,
-  HostedAiStudyGuideJob,
   HostedAiStudyGuideProgress,
 } from '../../quickCreate/ai/hostedCredits'
+import type { HostedStudyGuideJobLookup } from '../../quickCreate/ai/hostedClient'
 import {
   getHostedStudyGuideJobs,
   HostedStudyGuideDeadJobError,
@@ -152,6 +152,9 @@ const quickPromptOptions = [
  * is written: the card offers "Start reading" at that point and the rest fills
  * in behind them. Measured at ~17-20s against the real model.
  */
+/** How often to re-ask about a job the gateway could not answer for. */
+const UNRESOLVED_JOB_RECHECK_MS = 8000
+
 const getGenerationEstimateSeconds = (): number => {
   const provider = readQuickCreateAiSettings().provider || 'hosted'
 
@@ -430,6 +433,14 @@ const StudyGuidesPage = () => {
   const [now, setNow] = useState(Date.now())
   // Whether pending jobs have been checked against the gateway yet.
   const [jobsReconciled, setJobsReconciled] = useState(false)
+  // Hosted jobs the gateway could not answer for. They are still generating as
+  // far as anyone knows, so they keep their card and get asked about again.
+  const [unresolvedJobIds, setUnresolvedJobIds] = useState<string[]>([])
+  const unresolvedJobIdsRef = useRef<string[]>([])
+  // Only a click puts a job in here, and only that authorises the gateway to
+  // start a fresh paid generation for it.
+  const userRetryJobIdsRef = useRef<Set<string>>(new Set())
+  const userRetryJobIds = userRetryJobIdsRef.current
   // Live preview per running hosted job, keyed by job id.
   const [jobPreviews, setJobPreviews] = useState<
     Record<string, HostedPreviewState>
@@ -473,9 +484,7 @@ const StudyGuidesPage = () => {
   useEffect(() => {
     let cancelled = false
 
-    const askGateway = async (): Promise<
-      Record<string, HostedAiStudyGuideJob>
-    > => {
+    const askGateway = async (): Promise<HostedStudyGuideJobLookup> => {
       const hostedJobIds = StudyGuideCreationQueueStorage.getAll()
         .filter(
           (job) =>
@@ -487,17 +496,28 @@ const StudyGuidesPage = () => {
         )
         .map((job) => job.id)
 
-      return hostedJobIds.length ? getHostedStudyGuideJobs(hostedJobIds) : {}
+      return hostedJobIds.length
+        ? getHostedStudyGuideJobs(hostedJobIds)
+        : { jobs: {}, unresolvedIds: [] }
     }
 
     const reconcile = async () => {
-      let jobs: Record<string, HostedAiStudyGuideJob> = {}
+      let lookup: HostedStudyGuideJobLookup = { jobs: {}, unresolvedIds: [] }
       try {
-        jobs = await askGateway()
+        lookup = await askGateway()
       } catch {
-        // Unreachable gateway, blocked storage. Nothing is known to be
-        // resumable, which just leaves the queue's own retry rules in charge.
+        // Blocked storage, or the gateway could not be reached at all. Nothing
+        // is concluded: the jobs stay exactly as they are until an answer
+        // arrives, and the retry below asks again.
+        lookup = {
+          jobs: {},
+          unresolvedIds: StudyGuideCreationQueueStorage.getAll()
+            .filter((job) => job.provider === 'hosted')
+            .map((job) => job.id),
+        }
       }
+
+      const jobs = lookup.jobs
 
       if (cancelled) {
         return
@@ -531,8 +551,11 @@ const StudyGuidesPage = () => {
           tabId: getCreationTabId(),
           activeJobIds: Array.from(jobsRunningInThisTab),
           resumableJobIds,
+          unresolvedJobIds: lookup.unresolvedIds,
         })
         loadPendingGuides()
+        unresolvedJobIdsRef.current = lookup.unresolvedIds
+        setUnresolvedJobIds(lookup.unresolvedIds)
       } finally {
         // Generation is gated on this, so it has to be set even on failure or
         // nothing would ever run again.
@@ -542,8 +565,18 @@ const StudyGuidesPage = () => {
 
     void reconcile()
 
+    // Re-ask while anything is unresolved. This costs no Carrots and calls no
+    // model, so a gateway that comes back recovers the card on its own instead
+    // of leaving the learner with a job frozen mid-generation.
+    const retryTimer = window.setInterval(() => {
+      if (!cancelled && unresolvedJobIdsRef.current.length) {
+        void reconcile()
+      }
+    }, UNRESOLVED_JOB_RECHECK_MS)
+
     return () => {
       cancelled = true
+      window.clearInterval(retryTimer)
     }
   }, [])
 
@@ -741,6 +774,7 @@ const StudyGuidesPage = () => {
       ...current,
       [guide.id]: { createdAt: new Date().toISOString() },
     }))
+    userRetryJobIdsRef.current.add(guide.id)
 
     try {
       updatedGuide = StudyGuideCreationQueueStorage.update(guide.id, {
@@ -925,7 +959,10 @@ const StudyGuidesPage = () => {
         signal: generationController.signal,
         onPreview: job.provider === 'hosted' ? handlePreview : undefined,
         onResumed: job.provider === 'hosted' ? handleResumed : undefined,
-        retry: job.provider === 'hosted' ? job.autoRetryCount > 0 : undefined,
+        // Only ever set by the retry button. Deriving it from autoRetryCount
+        // let an automatic requeue authorise the gateway to abandon a stale job
+        // and start a fresh paid generation that nobody asked for.
+        retry: job.provider === 'hosted' ? userRetryJobIds.has(job.id) : undefined,
       })
       clearPreview()
       if (generationController.signal.aborted) {
@@ -1752,6 +1789,15 @@ const StudyGuidesPage = () => {
                           </Typography>
                         </Box>
                       )}
+                      {isRunning && unresolvedJobIds.includes(guide.id) ? (
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ px: 0.5 }}
+                        >
+                          {t('studyGuides.reconnecting')}
+                        </Typography>
+                      ) : null}
                       {/* Hosted generation runs on the server, so closing the
                           tab is safe. Local and bring-your-own providers still
                           generate in this tab and genuinely do need it open. */}

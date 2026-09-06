@@ -438,3 +438,96 @@ describe('resuming a job the gateway still owns', () => {
     expect(job.errorMessage).toBe(HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE)
   })
 })
+
+describe('a reload must not end a hosted generation', () => {
+  beforeEach(() => {
+    const storage = new Map<string, string>()
+    vi.mocked(window.localStorage.getItem).mockImplementation(
+      (key: string) => storage.get(key) ?? null,
+    )
+    vi.mocked(window.localStorage.setItem).mockImplementation(
+      (key: string, value: string) => {
+        storage.set(key, value)
+      },
+    )
+    vi.mocked(window.localStorage.removeItem).mockImplementation(
+      (key: string) => {
+        storage.delete(key)
+      },
+    )
+    vi.mocked(window.localStorage.clear).mockImplementation(() => {
+      storage.clear()
+    })
+    window.localStorage.clear()
+  })
+
+  const hostedJob = {
+    id: 'hosted-job',
+    prompt: 'Study the sea',
+    provider: 'hosted' as const,
+    status: 'running' as const,
+    estimateSeconds: 20,
+  }
+
+  it('never marks a hosted job interrupted when the tab unloads', () => {
+    // The gateway is generating it. Closing a tab tells us nothing.
+    StudyGuideCreationQueueStorage.upsert(hostedJob)
+
+    StudyGuideCreationQueueStorage.markJobsInterrupted(['hosted-job'])
+
+    expect(StudyGuideCreationQueueStorage.getAll()[0].status).toBe('running')
+  })
+
+  it('still marks a BYO job interrupted, because it really did stop', () => {
+    StudyGuideCreationQueueStorage.upsert({
+      ...hostedJob,
+      id: 'gemini-job',
+      provider: 'gemini',
+    })
+
+    StudyGuideCreationQueueStorage.markJobsInterrupted(['gemini-job'])
+
+    expect(StudyGuideCreationQueueStorage.getAll()[0].status).toBe('interrupted')
+  })
+
+  it('leaves a hosted job alone when the gateway could not be asked', () => {
+    // This is the "refresh twice and it dies" bug: an unreachable gateway used
+    // to be read as proof the generation was gone.
+    StudyGuideCreationQueueStorage.upsert(hostedJob)
+
+    const [job] = StudyGuideCreationQueueStorage.requeueRetryableJobs({
+      resumableJobIds: [],
+      unresolvedJobIds: ['hosted-job'],
+    })
+
+    expect(job).toMatchObject({ status: 'running', errorMessage: null })
+  })
+
+  it('picks a hosted job back up in a tab that did not start it', () => {
+    // Hosted work belongs to the gateway, so tab ownership must not strand it.
+    StudyGuideCreationQueueStorage.upsert({
+      ...hostedJob,
+      ownerTabId: 'a-tab-that-is-gone',
+    })
+
+    const [job] = StudyGuideCreationQueueStorage.requeueRetryableJobs({
+      tabId: 'a-brand-new-tab',
+      resumableJobIds: ['hosted-job'],
+    })
+
+    expect(job.status).toBe('queued')
+  })
+
+  it('resumes a collecting job so the later pages are still collected', () => {
+    StudyGuideCreationQueueStorage.upsert({
+      ...hostedJob,
+      status: 'collecting',
+    })
+
+    const [job] = StudyGuideCreationQueueStorage.requeueRetryableJobs({
+      resumableJobIds: ['hosted-job'],
+    })
+
+    expect(job.status).toBe('queued')
+  })
+})

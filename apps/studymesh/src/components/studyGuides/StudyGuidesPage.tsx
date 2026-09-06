@@ -25,8 +25,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import { alpha, lighten } from '@mui/material/styles'
-import type { Theme } from '@mui/material/styles'
+import { alpha } from '@mui/material/styles'
 import AddIcon from '@mui/icons-material/Add'
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
@@ -36,7 +35,6 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditIcon from '@mui/icons-material/Edit'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
-import MenuBookIcon from '@mui/icons-material/MenuBook'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import PushPinIcon from '@mui/icons-material/PushPin'
 import ReplayIcon from '@mui/icons-material/Replay'
@@ -60,9 +58,6 @@ import {
 import { getAllUserKnownTopics } from '../../profileContext'
 import {
   applyHostedPreviewEvent,
-  hasHostedPreviewSignal,
-  hostedPreviewPercent,
-  hostedPreviewStages,
   splitHostedPreviewRows,
   HOSTED_STUDY_GUIDE_PAGE_COUNT,
   HostedPreviewState,
@@ -81,20 +76,14 @@ import {
 import HostedPreviewChecklist from './HostedPreviewChecklist'
 
 /**
- * A streamed guide reports real work finished, so the bar stops being a
- * stopwatch dressed up as progress. Everything else keeps the time estimate.
+ * Runs on the clock rather than on finished steps. Counting milestones made it
+ * lurch a quarter at a time and sit still in between, which read as broken; the
+ * checklist below already says which step is happening.
  */
 const creationProgressPercent = (
-  preview: HostedPreviewState | undefined,
   elapsedSeconds: number,
   estimateSeconds: number,
 ): number => {
-  // Only once the preview actually says something. A preview that exists but is
-  // still empty would otherwise pin the bar at 0% while the clock ran.
-  if (preview && hasHostedPreviewSignal(preview)) {
-    return hostedPreviewPercent(preview)
-  }
-
   const ratio = elapsedSeconds / Math.max(estimateSeconds, 1)
   return Math.min(95, Math.round(ratio * 100))
 }
@@ -163,24 +152,6 @@ const quickPromptOptions = [
  * is written: the card offers "Start reading" at that point and the rest fills
  * in behind them. Measured at ~17-20s against the real model.
  */
-/**
- * Slow drift for the stretch after page 1 is readable.
- *
- * From there the guide is already openable and the remaining pages arrive in
- * the background, so the bar should look alive rather than stalled.
- */
-const guideProgressWave = (theme: Theme) => {
-  const base = theme.palette.primary.main
-  const crest = lighten(base, 0.5)
-
-  return {
-    backgroundImage: `linear-gradient(90deg, ${base}, ${crest}, ${base})`,
-    backgroundSize: '200% 100%',
-    animation: 'rabbitholeGuideWave 2.6s ease-in-out infinite',
-    '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-  }
-}
-
 const getGenerationEstimateSeconds = (): number => {
   const provider = readQuickCreateAiSettings().provider || 'hosted'
 
@@ -835,7 +806,10 @@ const StudyGuidesPage = () => {
         ...createStudyGuideRecord(studyPath, { id: job.id }),
         description: job.prompt,
       })
+      // 'collecting' hides the creating card while the job keeps running, so
+      // the learner just sees a finished guide with the pages it has so far.
       StudyGuideCreationQueueStorage.update(job.id, {
+        status: 'collecting',
         resultStudyGuideId: job.id,
       })
       loadGuides()
@@ -1507,17 +1481,10 @@ const StudyGuidesPage = () => {
             )
             const preview = jobPreviews[guide.id]
             const isReadable = Boolean(guide.resultStudyGuideId)
-            const stages = preview ? hostedPreviewStages(preview) : null
-            const singleBarPercent = creationProgressPercent(
-              preview,
-              elapsedSeconds,
-              guide.estimateSeconds,
-            )
-            // Reaching page 1 fills its own bar; the rest gets a second one.
-            const firstBarPercent = stages
-              ? Math.max(stages.firstPagePercent, singleBarPercent)
-              : singleBarPercent
-            const secondBarPercent = stages ? stages.remainderPercent : 0
+            // Reaching page 1 is what fills it, whenever that happens.
+            const firstBarPercent = isReadable
+              ? 100
+              : creationProgressPercent(elapsedSeconds, guide.estimateSeconds)
             const previewRows = preview
               ? splitHostedPreviewRows(preview, t)
               : null
@@ -1785,62 +1752,6 @@ const StudyGuidesPage = () => {
                           </Typography>
                         </Box>
                       )}
-                      {/* Page 1 is written and saved, so the learner can start
-                          now rather than waiting for the whole guide. */}
-                      {isRunning && guide.resultStudyGuideId ? (
-                        <Button
-                          variant="contained"
-                          size="small"
-                          startIcon={<MenuBookIcon />}
-                          onClick={() =>
-                            navigate(`/workspace/${guide.resultStudyGuideId}`)
-                          }
-                          sx={{
-                            alignSelf: 'flex-start',
-                            fontWeight: 700,
-                            textTransform: 'none',
-                          }}
-                        >
-                          {t('studyGuides.startReading')}
-                        </Button>
-                      ) : null}
-                      {/* What is still being written, kept separate from the
-                          part the learner already has. */}
-                      {isReadable && preview && previewRows ? (
-                        <Box
-                          sx={(theme) => ({
-                            p: 1.5,
-                            borderRadius: 2,
-                            bgcolor: alpha(theme.palette.primary.main, 0.055),
-                          })}
-                        >
-                          <LinearProgress
-                            variant="determinate"
-                            value={secondBarPercent}
-                            aria-label={`${secondBarPercent}%`}
-                            sx={(theme) => ({
-                              height: 9,
-                              borderRadius: 1,
-                              bgcolor: alpha(theme.palette.primary.main, 0.14),
-                              '@keyframes rabbitholeGuideWave': {
-                                '0%': { backgroundPosition: '200% 50%' },
-                                '100%': { backgroundPosition: '0% 50%' },
-                              },
-                              '& .MuiLinearProgress-bar': {
-                                borderRadius: 1,
-                                ...guideProgressWave(theme),
-                              },
-                            })}
-                          />
-                          <Box sx={{ mt: 1.25 }}>
-                            <HostedPreviewChecklist
-                              preview={preview}
-                              rows={previewRows.remainder}
-                              t={t}
-                            />
-                          </Box>
-                        </Box>
-                      ) : null}
                       {/* Hosted generation runs on the server, so closing the
                           tab is safe. Local and bring-your-own providers still
                           generate in this tab and genuinely do need it open. */}

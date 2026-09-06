@@ -662,9 +662,7 @@ describe('StudyGuidesPage create flow', () => {
     await screen.findByText('Creating')
 
     expect(screen.getByText('Key idea')).toBeInTheDocument()
-    expect(screen.getByText('Page 1')).toBeInTheDocument()
-    expect(screen.queryByText('Page 2')).not.toBeInTheDocument()
-    expect(screen.queryByText('Page 3')).not.toBeInTheDocument()
+    expect(screen.getByText('Page')).toBeInTheDocument()
     expect(screen.queryByText('Final quiz')).not.toBeInTheDocument()
   })
 
@@ -687,9 +685,10 @@ describe('StudyGuidesPage create flow', () => {
     })
   })
 
-  it('offers Start reading as soon as page 1 is written', async () => {
-    // The point of the whole early-read path: a guide worth opening exists
-    // long before the generation finishes.
+  it('turns into a normal guide as soon as page 1 is written', async () => {
+    // No extra button and no second progress bar: once page 1 exists the guide
+    // is real, so the creating card stands down and the guide card takes over
+    // with the pages it has so far.
     let releaseGeneration: (() => void) | undefined
     vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
       async ({ id, onPreview }) => {
@@ -704,40 +703,30 @@ describe('StudyGuidesPage create flow', () => {
 
     await createGuideFromPrompt('Early read prompt')
 
-    const startReading = await screen.findByRole('button', {
-      name: /start reading/i,
-    })
+    expect(await screen.findByText('Early Page Guide')).toBeInTheDocument()
     expect(buildReadableStudyPathState).toHaveBeenCalledWith(
       expect.objectContaining({ guideText: '{"streamed":"guide"}' }),
     )
 
-    // Still generating: the card is present and only one call was paid for.
-    expect(screen.getByText('Creating')).toBeInTheDocument()
-    expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(1)
-
-    // Only /study-guides is routed here, so leaving it unmounts the probe.
-    fireEvent.click(startReading)
+    // The creating card is gone, and only one generation was paid for.
     await waitFor(() => {
-      expect(screen.queryByTestId('location')).not.toBeInTheDocument()
+      expect(screen.queryByText('Creating')).not.toBeInTheDocument()
     })
+    expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(1)
 
     releaseGeneration?.()
   })
 
-  it('does not offer Start reading before page 1 exists', async () => {
+  it('keeps showing the creating card before page 1 exists', async () => {
     vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
       () => new Promise(() => undefined),
     )
     renderStudyGuidesPage('/study-guides')
 
     await createGuideFromPrompt('No early page prompt')
-    await screen.findByText('Creating')
 
-    expect(
-      screen.queryByRole('button', { name: /start reading/i }),
-    ).not.toBeInTheDocument()
+    expect(await screen.findByText('Creating')).toBeInTheDocument()
   })
-
   it('auto-requeues retryable fetch failures without showing a failed card', async () => {
     vi.mocked(generateStudyPathStateFromPrompt)
       .mockRejectedValueOnce(new Error('Failed to fetch'))

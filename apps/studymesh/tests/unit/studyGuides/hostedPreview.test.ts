@@ -188,8 +188,8 @@ describe('rebuilding a checklist from a gateway snapshot', () => {
       'Half a guide',
       'studyGuides.preview.keyIdea',
       'One',
-      'studyGuides.preview.page 2',
-      'studyGuides.preview.page 3',
+      'studyGuides.preview.page',
+      'studyGuides.preview.page',
       'studyGuides.preview.finalQuiz',
     ])
     expect(
@@ -220,12 +220,14 @@ describe('the checklist declares its whole shape up front', () => {
   it('lists every page before any of them has arrived', () => {
     const rows = buildHostedPreviewRows(makeHostedPreview(0), t)
 
+    // Unwritten pages are simply "page": the real title replaces it the
+    // moment it arrives, and the card only ever shows one of them at a time.
     expect(rows.map((row) => row.label)).toEqual([
       'studyGuides.preview.naming',
       'studyGuides.preview.keyIdea',
-      'studyGuides.preview.page 1',
-      'studyGuides.preview.page 2',
-      'studyGuides.preview.page 3',
+      'studyGuides.preview.page',
+      'studyGuides.preview.page',
+      'studyGuides.preview.page',
       'studyGuides.preview.finalQuiz',
     ])
     expect(rows.every((row) => !row.done)).toBe(true)

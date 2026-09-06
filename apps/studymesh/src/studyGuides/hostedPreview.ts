@@ -144,7 +144,9 @@ export const buildHostedPreviewRows = (
     const page = preview.pages[index]
     rows.push({
       id: `page-${index}`,
-      label: page?.title || `${t('studyGuides.preview.page')} ${index + 1}`,
+      // No number: the placeholder is replaced by the real page title the
+      // moment it arrives, and only one unwritten page is ever on screen.
+      label: page?.title || t('studyGuides.preview.page'),
       done: Boolean(page?.done),
     })
   })

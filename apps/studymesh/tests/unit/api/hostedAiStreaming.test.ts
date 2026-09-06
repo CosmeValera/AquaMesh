@@ -457,7 +457,7 @@ describe('hosted Study Guide job resumption', () => {
     const jobs = makeJobsTable()
     stubGatewayFetch(
       [
-        jsonResponse(bufferedResponsesPayload(GUIDE)),
+        { ok: true, status: 200, body: makeSseStream(JSON.stringify(GUIDE)) },
         jsonResponse(bufferedResponsesPayload(QUIZ)),
       ],
       jobs,
@@ -515,7 +515,27 @@ describe('hosted Study Guide job resumption', () => {
     expect(countCalls(fetchMock, 'hosted_ai_begin_usage')).toBe(0)
   })
 
-  it('takes over a job whose function died', async () => {
+  it('refuses to restart an abandoned job on its own', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable([
+      {
+        client_job_id: 'job-stale',
+        status: 'running',
+        updated_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      },
+    ])
+    const fetchMock = stubGatewayFetch([], jobs)
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(resumableRequest('job-stale'), res)
+
+    // Restarting costs Carrots, so it waits to be asked.
+    expect(response.body).toMatchObject({ ok: true, dead: true })
+    expect(countCalls(fetchMock, '/v1/responses')).toBe(0)
+    expect(countCalls(fetchMock, 'hosted_ai_begin_usage')).toBe(0)
+  })
+
+  it('takes over an abandoned job when the learner asks for a retry', async () => {
     stubHostedEnv()
     const jobs = makeJobsTable([
       {
@@ -526,14 +546,17 @@ describe('hosted Study Guide job resumption', () => {
     ])
     const fetchMock = stubGatewayFetch(
       [
-        jsonResponse(bufferedResponsesPayload(GUIDE)),
+        { ok: true, status: 200, body: makeSseStream(JSON.stringify(GUIDE)) },
         jsonResponse(bufferedResponsesPayload(QUIZ)),
       ],
       jobs,
     )
     const { response, res } = makeStreamingResponse()
 
-    await hostedAiHandler(resumableRequest('job-stale'), res)
+    await hostedAiHandler(
+      { ...resumableRequest('job-stale'), body: { ...resumableRequest('job-stale').body, retry: true } },
+      res,
+    )
 
     expect((response.body as { ok: boolean }).ok).toBe(true)
     expect(countCalls(fetchMock, '/v1/responses')).toBe(2)

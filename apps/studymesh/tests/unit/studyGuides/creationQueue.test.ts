@@ -104,7 +104,7 @@ describe('StudyGuideCreationQueueStorage', () => {
     StudyGuideCreationQueueStorage.upsert({
       id: 'running-job',
       prompt: 'Study chemistry',
-      provider: 'hosted',
+      provider: 'gemini',
       status: 'running',
       estimateSeconds: 20,
     })
@@ -114,21 +114,21 @@ describe('StudyGuideCreationQueueStorage', () => {
         {
           id: 'running-job',
           status: 'queued',
-          autoRetryCount: 1,
           errorMessage: null,
         },
       ],
     )
   })
 
-  it('stops hosted auto retry after one recovery attempt', () => {
+  it('never restarts a hosted job the gateway cannot vouch for', () => {
+    // Re-running it would be a fresh paid generation, and nobody clicked.
     StudyGuideCreationQueueStorage.upsert({
       id: 'running-job',
       prompt: 'Study chemistry',
       provider: 'hosted',
       status: 'running',
       estimateSeconds: 20,
-      autoRetryCount: 1,
+      autoRetryCount: 0,
     })
 
     expect(StudyGuideCreationQueueStorage.requeueRetryableJobs()).toMatchObject(
@@ -136,7 +136,7 @@ describe('StudyGuideCreationQueueStorage', () => {
         {
           id: 'running-job',
           status: 'failed',
-          autoRetryCount: 1,
+          autoRetryCount: 0,
           errorMessage: HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
         },
       ],
@@ -147,7 +147,7 @@ describe('StudyGuideCreationQueueStorage', () => {
     StudyGuideCreationQueueStorage.upsert({
       id: 'network-job',
       prompt: 'Study physics',
-      provider: 'hosted',
+      provider: 'gemini',
       status: 'failed',
       estimateSeconds: 20,
       errorMessage: 'Failed to fetch',
@@ -164,7 +164,6 @@ describe('StudyGuideCreationQueueStorage', () => {
     const jobs = StudyGuideCreationQueueStorage.requeueRetryableJobs()
     expect(jobs.find((job) => job.id === 'network-job')).toMatchObject({
       status: 'queued',
-      autoRetryCount: 1,
       errorMessage: null,
     })
     expect(jobs.find((job) => job.id === 'provider-job')).toMatchObject({
@@ -196,10 +195,13 @@ describe('resuming work a closed tab left behind', () => {
     window.localStorage.clear()
   })
 
+  // Who may resume a job is about tabs, not providers. A BYO provider keeps
+  // that the subject: a hosted job additionally needs the gateway to vouch for
+  // it, which is covered separately.
   const runningJob = {
     id: 'job-1',
     prompt: 'Teach me why queues stall.',
-    provider: 'hosted' as const,
+    provider: 'gemini' as const,
     status: 'running' as const,
     estimateSeconds: 60,
     autoRetryCount: 0,
@@ -255,7 +257,7 @@ describe('who may resume a job when several tabs are open', () => {
   const job = (overrides: Record<string, unknown> = {}) => ({
     id: 'job-1',
     prompt: 'Teach me why queues stall.',
-    provider: 'hosted' as const,
+    provider: 'gemini' as const,
     status: 'running' as const,
     estimateSeconds: 60,
     autoRetryCount: 0,
@@ -406,7 +408,7 @@ describe('resuming a job the gateway still owns', () => {
     expect(job.errorMessage).toBeNull()
   })
 
-  it('still counts a retry when the gateway has no such job', () => {
+  it('offers a retry rather than taking one when the gateway has no job', () => {
     StudyGuideCreationQueueStorage.upsert({
       ...interruptedHostedJob,
       autoRetryCount: 0,
@@ -416,7 +418,10 @@ describe('resuming a job the gateway still owns', () => {
       resumableJobIds: [],
     })
 
-    expect(job).toMatchObject({ status: 'queued', autoRetryCount: 1 })
+    expect(job).toMatchObject({
+      status: 'failed',
+      errorMessage: HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
+    })
   })
 
   it('gives up on an unknown job that is out of retries', () => {

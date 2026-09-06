@@ -661,10 +661,23 @@ const studyGuideJobsFetch = (
   );
 };
 
+/**
+ * `supabaseFetch` never rejects on a non-2xx, so an unreadable table used to
+ * look exactly like an empty one. That mattered enormously: a failed read made
+ * `claimStudyGuideJob` believe no job existed and start a second paid
+ * generation on every refresh. A broken query must be loud, not empty.
+ */
 const readJobRows = async (
   response: Response,
 ): Promise<HostedStudyGuideJobRow[]> => {
   const payload = await readResponseJson(response);
+
+  if (!response.ok) {
+    throw new Error(
+      `hosted_study_guide_jobs request failed (${response.status}): ${getSupabaseErrorMessage(payload)}`,
+    );
+  }
+
   return Array.isArray(payload) ? (payload as HostedStudyGuideJobRow[]) : [];
 };
 
@@ -720,22 +733,41 @@ export const claimStudyGuideJob = async (
   prompt: string,
   allowRetry = false,
 ): Promise<StudyGuideJobClaim> => {
-  const inserted = await studyGuideJobsFetch("", {
-    method: "POST",
-    prefer: "return=representation,resolution=ignore-duplicates",
-    body: JSON.stringify({
-      user_id: userId,
-      client_job_id: clientJobId,
-      status: "running",
-      prompt: prompt.slice(0, 4000),
-    }),
-  });
-
-  if ((await readJobRows(inserted)).length) {
+  let insertedRows: HostedStudyGuideJobRow[];
+  try {
+    insertedRows = await readJobRows(
+      await studyGuideJobsFetch("", {
+        method: "POST",
+        prefer: "return=representation,resolution=ignore-duplicates",
+        body: JSON.stringify({
+          user_id: userId,
+          client_job_id: clientJobId,
+          status: "running",
+          prompt: prompt.slice(0, 4000),
+        }),
+      }),
+    );
+  } catch (error) {
+    // No jobs table on this deployment. Generation still works, it just is not
+    // resumable — the behaviour before jobs existed.
+    console.error("[hosted-ai] study guide jobs unavailable", error);
     return { outcome: "claimed" };
   }
 
-  const existing = await readStudyGuideJob(userId, clientJobId);
+  if (insertedRows.length) {
+    return { outcome: "claimed" };
+  }
+
+  let existing: HostedStudyGuideJobRow | undefined;
+  try {
+    existing = await readStudyGuideJob(userId, clientJobId);
+  } catch (error) {
+    // The insert conflicted, so a job for this id definitely exists — we just
+    // cannot see it. Reporting it as running costs nothing; claiming would
+    // start a second paid generation on a guess.
+    console.error("[hosted-ai] could not read an existing job", error);
+    return { outcome: "running" };
+  }
 
   if (!existing) {
     // The row vanished between the conflict and the read. Treat it as ours.
@@ -806,8 +838,14 @@ export const claimStudyGuideJob = async (
     : { outcome: "running", createdAt: existing.created_at };
 };
 
-/** Coalescing window for progress writes, so a guide costs a handful, not one per event. */
-const STUDY_GUIDE_PROGRESS_WRITE_MS = 1500;
+/**
+ * Coalescing window for progress writes.
+ *
+ * At 1.5s a long guide could issue ~100 row updates, each firing the row's
+ * touch trigger. Five seconds of staleness is invisible on a bar that runs for
+ * a minute or more, and costs a fraction of the writes.
+ */
+const STUDY_GUIDE_PROGRESS_WRITE_MS = 5000;
 
 /**
  * Records what the generation has finished, for a tab that is not watching.
@@ -816,6 +854,8 @@ const STUDY_GUIDE_PROGRESS_WRITE_MS = 1500;
  * losing a write costs the learner a slightly stale checklist, so nothing here
  * is allowed to interrupt or fail the generation.
  */
+let warnedAboutProgressWrites = false;
+
 export const createStudyGuideProgressRecorder = (
   userId: string,
   clientJobId: string,
@@ -838,7 +878,19 @@ export const createStudyGuideProgressRecorder = (
     void studyGuideJobsFetch(jobFilter(userId, clientJobId), {
       method: "PATCH",
       body: JSON.stringify({ progress: latest }),
-    }).catch(() => undefined);
+    })
+      .then((response) => {
+        // Silently discarding these is how a checklist that never advances
+        // becomes impossible to explain - most likely the progress column
+        // migration has not been applied.
+        if (!response.ok && !warnedAboutProgressWrites) {
+          warnedAboutProgressWrites = true;
+          console.error(
+            `[hosted-ai] progress writes are failing (${response.status}); is supabase-hosted-study-guide-jobs-progress.sql applied?`,
+          );
+        }
+      })
+      .catch(() => undefined);
   };
 
   return {
@@ -872,18 +924,33 @@ export const finishStudyGuideJob = async (
     | { status: "succeeded"; response: HostedAiGatewayResponse }
     | { status: "failed"; message: string },
 ): Promise<void> => {
-  await studyGuideJobsFetch(jobFilter(userId, clientJobId), {
-    method: "PATCH",
-    body: JSON.stringify(
-      outcome.status === "succeeded"
-        ? { status: "succeeded", result: outcome.response, error_message: null }
-        : { status: "failed", error_message: outcome.message.slice(0, 2000) },
-    ),
-  }).catch((error) => {
-    // The guide is generated and paid for either way; failing to record it
-    // only costs the learner a resume, so it must not fail the request.
-    console.error("[hosted-ai] could not record job outcome", error);
-  });
+  const body = JSON.stringify(
+    outcome.status === "succeeded"
+      ? { status: "succeeded", result: outcome.response, error_message: null }
+      : { status: "failed", error_message: outcome.message.slice(0, 2000) },
+  );
+
+  // Worth one retry: losing this write strands a guide that was generated and
+  // charged for. The row stays `running`, goes stale, and the learner is then
+  // asked to pay again for a guide that already exists.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await studyGuideJobsFetch(
+        jobFilter(userId, clientJobId),
+        { method: "PATCH", body },
+      );
+      if (response.ok) {
+        return;
+      }
+
+      throw new Error(`status ${response.status}`);
+    } catch (error) {
+      if (attempt === 1) {
+        // Never fails the request: the learner has their guide either way.
+        console.error("[hosted-ai] could not record job outcome", error);
+      }
+    }
+  }
 };
 
 const normalizeStatus = (value: unknown): HostedAiStatus => {

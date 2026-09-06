@@ -539,13 +539,29 @@ const awaitHostedStudyGuideJob = async (
   signal?: AbortSignal,
 ): Promise<HostedAiGatewayResponse> => {
   const deadline = Date.now() + STUDY_GUIDE_JOB_POLL_TIMEOUT_MS
+  let consecutiveFailures = 0
 
   for (;;) {
     await wait(STUDY_GUIDE_JOB_POLL_MS, signal)
-    const payload = await callHostedAiGateway(
-      { action: 'studyGuideJob', clientJobId },
-      signal,
-    )
+
+    let payload: HostedAiGatewayResponse
+    try {
+      payload = await callHostedAiGateway(
+        { action: 'studyGuideJob', clientJobId },
+        signal,
+      )
+      consecutiveFailures = 0
+    } catch (error) {
+      // A blip while polling is not a lost guide. Only give up once the
+      // gateway has been unreachable for a while.
+      consecutiveFailures += 1
+      if (consecutiveFailures >= 4 || Date.now() > deadline) {
+        throw error
+      }
+
+      continue
+    }
+
     const job = payload.job
 
     if (job?.status === 'succeeded' && job.response) {

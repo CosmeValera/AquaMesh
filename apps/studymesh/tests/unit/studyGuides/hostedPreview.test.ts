@@ -4,7 +4,9 @@ import {
   applyHostedPreviewEvent,
   buildHostedPreviewRows,
   describeHostedPreviewStep,
+  hasHostedPreviewSignal,
   hostedPreviewPercent,
+  makeHostedPreviewFromSnapshot,
   makeHostedPreview,
 } from '../../../src/studyGuides/hostedPreview'
 import type { HostedAiPreviewEvent } from '../../../src/quickCreate/ai/hostedCredits'
@@ -126,5 +128,80 @@ describe('hosted Study Guide preview state', () => {
     expect(state.pages).toHaveLength(3)
     expect(state.pages[2]).toEqual({ title: 'Third', done: true })
     expect(state.pages[0]).toEqual({ title: '', done: false })
+  })
+})
+
+describe('rebuilding a checklist from a gateway snapshot', () => {
+  it('matches what watching the same events live would have produced', () => {
+    const live = replay(TIMELINE)
+    const snapshot = {
+      title: live.title,
+      emoji: live.emoji,
+      keyIdea: live.keyIdea,
+      bridgeTopics: live.bridgeTopics,
+      pages: live.pages,
+      stage: live.stage,
+    }
+
+    const resumed = makeHostedPreviewFromSnapshot(snapshot, 1000)
+
+    expect(resumed).toEqual(live)
+    expect(buildHostedPreviewRows(resumed, t)).toEqual(
+      buildHostedPreviewRows(live, t),
+    )
+    expect(hostedPreviewPercent(resumed)).toBe(hostedPreviewPercent(live))
+  })
+
+  it('keeps the original start time so elapsed does not restart', () => {
+    const resumed = makeHostedPreviewFromSnapshot({ title: 'Kept' }, 12345)
+
+    expect(resumed.startedAt).toBe(12345)
+  })
+
+  it('reports no signal for a blank snapshot, so the bar can fall back', () => {
+    expect(hasHostedPreviewSignal(makeHostedPreviewFromSnapshot({}, 0))).toBe(
+      false,
+    )
+    expect(hasHostedPreviewSignal(makeHostedPreviewFromSnapshot(undefined, 0))).toBe(
+      false,
+    )
+    expect(
+      hasHostedPreviewSignal(makeHostedPreviewFromSnapshot({ title: 'x' }, 0)),
+    ).toBe(true)
+  })
+
+  it('survives a partial snapshot without inventing rows', () => {
+    const resumed = makeHostedPreviewFromSnapshot(
+      { title: 'Half a guide', pages: [{ title: 'One', done: true }] },
+      0,
+    )
+
+    expect(resumed.keyIdea).toBe('')
+    expect(resumed.bridgeTopics).toEqual([])
+    expect(resumed.pages).toEqual([{ title: 'One', done: true }])
+    expect(buildHostedPreviewRows(resumed, t).map((row) => row.label)).toEqual([
+      'Half a guide',
+      'studyGuides.preview.keyIdea',
+      'One',
+      'studyGuides.preview.finalQuiz',
+    ])
+  })
+
+  it('keeps advancing from a snapshot when live events resume', () => {
+    const resumed = makeHostedPreviewFromSnapshot(
+      { title: 'Guide', pages: [{ title: 'One', done: true }] },
+      0,
+    )
+    const advanced = applyHostedPreviewEvent(resumed, {
+      type: 'pageTitle',
+      index: 1,
+      title: 'Two',
+    })
+
+    expect(advanced.pages).toEqual([
+      { title: 'One', done: true },
+      { title: 'Two', done: false },
+    ])
+    expect(advanced.startedAt).toBe(0)
   })
 })

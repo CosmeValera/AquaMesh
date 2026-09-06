@@ -40,24 +40,18 @@ vi.mock('../../../../src/components/hostedAi/useHostedAiStatus', () => ({
 
 // The page asks the gateway which hosted jobs it still owns before it will run
 // anything. Default: it owns them, which is the ordinary resume case.
-vi.mock('../../../../src/quickCreate/ai/hostedClient', async (importOriginal) => {
-  const actual =
-    await importOriginal<
-      typeof import('../../../../src/quickCreate/ai/hostedClient')
-    >()
+type HostedClientModule =
+  typeof import('../../../../src/quickCreate/ai/hostedClient')
 
-  return {
-    ...actual,
-    getHostedStudyGuideJobs: vi.fn(async (ids: readonly string[]) =>
-      Object.fromEntries(
-        ids.map((clientJobId) => [
-          clientJobId,
-          { clientJobId, status: 'running' },
-        ]),
-      ),
-    ),
-  }
-})
+const mockOwnedJobs = async (ids: readonly string[]) =>
+  Object.fromEntries(
+    ids.map((clientJobId) => [clientJobId, { clientJobId, status: 'running' }]),
+  )
+
+vi.mock('../../../../src/quickCreate/ai/hostedClient', async (original) => ({
+  ...(await original<HostedClientModule>()),
+  getHostedStudyGuideJobs: vi.fn(mockOwnedJobs),
+}))
 
 vi.mock('../../../../src/studyGuides/generation', () => ({
   generateStudyPathStateFromPrompt: vi.fn(async ({ id }) => ({

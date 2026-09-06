@@ -145,11 +145,20 @@ interface FetchInit {
   headers?: Record<string, string>
 }
 
+interface JobProgress {
+  title?: string
+  keyIdea?: string
+  pages?: Array<{ title: string; done: boolean }>
+  stage?: string
+}
+
 interface JobRow {
   client_job_id: string
   status: 'running' | 'succeeded' | 'failed'
   result?: unknown
   error_message?: string | null
+  progress?: JobProgress
+  created_at?: string
   updated_at: string
 }
 
@@ -160,6 +169,8 @@ interface JobRow {
  */
 const makeJobsTable = (seed: JobRow[] = []) => {
   const rows = new Map(seed.map((row) => [row.client_job_id, { ...row }]))
+  // Every progress snapshot the gateway wrote, in order.
+  const progressWrites: JobProgress[] = []
 
   const idFromQuery = (target: string) =>
     decodeURIComponent(
@@ -219,6 +230,10 @@ const makeJobsTable = (seed: JobRow[] = []) => {
         }
       }
 
+      if (body.progress) {
+        progressWrites.push(body.progress)
+      }
+
       Object.assign(row, body, { updated_at: new Date().toISOString() })
       return jsonResponse([row])
     }
@@ -226,7 +241,7 @@ const makeJobsTable = (seed: JobRow[] = []) => {
     return jsonResponse([])
   }
 
-  return { rows, handle }
+  return { rows, progressWrites, handle }
 }
 
 /** `openAiResponses` are answered in order, one per call to /v1/responses. */
@@ -658,5 +673,140 @@ describe('hosted Study Guide job resumption', () => {
     expect((response.body as { ok: boolean }).ok).toBe(true)
     expect(jobs.rows.size).toBe(0)
     expect(countCalls(fetchMock, '/v1/responses')).toBe(2)
+  })
+})
+
+describe('hosted Study Guide progress recording', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it('records what the guide has finished, so a refresh can re-attach', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable()
+    stubGatewayFetch(
+      [
+        { ok: true, status: 200, body: makeSseStream(JSON.stringify(GUIDE)) },
+        jsonResponse(bufferedResponsesPayload(QUIZ)),
+      ],
+      jobs,
+    )
+    const { res } = makeStreamingResponse()
+
+    await hostedAiHandler(resumableRequest('job-progress'), res)
+
+    const progress = jobs.progressWrites.at(-1)
+    expect(progress?.title).toBe('Vector Basics')
+    expect(progress?.keyIdea).toBe(GUIDE.quickStart.keyIdea)
+    expect(progress?.pages?.map((page) => page.title)).toEqual([
+      'What a vector is',
+      'Adding vectors',
+      'Scaling vectors',
+    ])
+    expect(progress?.pages?.every((page) => page.done)).toBe(true)
+    expect(progress?.stage).toBe('quiz')
+  })
+
+  it('coalesces progress writes rather than one per event', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable()
+    stubGatewayFetch(
+      [
+        { ok: true, status: 200, body: makeSseStream(JSON.stringify(GUIDE)) },
+        jsonResponse(bufferedResponsesPayload(QUIZ)),
+      ],
+      jobs,
+    )
+    const { res } = makeStreamingResponse()
+
+    await hostedAiHandler(resumableRequest('job-throttle'), res)
+
+    // Milestones force a write; everything between them is coalesced.
+    expect(jobs.progressWrites.length).toBeLessThanOrEqual(10)
+    expect(jobs.progressWrites.length).toBeGreaterThan(0)
+  })
+
+  it('hands back the recorded progress to a client that is resuming', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable([
+      {
+        client_job_id: 'job-live',
+        status: 'running',
+        progress: { title: 'Half written', pages: [{ title: 'One', done: true }] },
+        created_at: '2026-01-01T00:00:00.000Z',
+        updated_at: new Date().toISOString(),
+      },
+    ])
+    const { response, res } = makeStreamingResponse()
+    stubGatewayFetch([], jobs)
+
+    await hostedAiHandler(resumableRequest('job-live'), res)
+
+    expect(response.body).toMatchObject({
+      ok: true,
+      pending: true,
+      progress: { title: 'Half written' },
+      createdAt: '2026-01-01T00:00:00.000Z',
+    })
+  })
+
+  it('never claims a job it could not read', async () => {
+    stubHostedEnv()
+    // The row exists (the insert conflicts) but the read fails, which is what
+    // an unapplied migration looks like. Claiming here would charge twice.
+    const fetchMock = vi.fn((url: string, init?: FetchInit) => {
+      const target = String(url)
+
+      if (target.includes('/auth/v1/user')) {
+        return Promise.resolve(jsonResponse({ id: 'user-1' }))
+      }
+
+      if (target.includes('/rest/v1/hosted_study_guide_jobs')) {
+        return Promise.resolve(
+          (init?.method || 'GET').toUpperCase() === 'POST'
+            ? jsonResponse([])
+            : jsonResponse({ message: 'column does not exist' }, false, 400),
+        )
+      }
+
+      return Promise.resolve(jsonResponse({}, false, 500))
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(resumableRequest('job-unreadable'), res)
+
+    expect(response.body).toMatchObject({ ok: true, pending: true })
+    expect(countCalls(fetchMock, '/v1/responses')).toBe(0)
+    expect(countCalls(fetchMock, 'hosted_ai_begin_usage')).toBe(0)
+  })
+
+  it('reports an abandoned job as dead when asked about it', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable([
+      {
+        client_job_id: 'job-old',
+        status: 'running',
+        updated_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      },
+    ])
+    stubGatewayFetch([], jobs)
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: { action: 'studyGuideJob', clientJobId: 'job-old' },
+      },
+      res,
+    )
+
+    expect(response.body).toMatchObject({
+      ok: true,
+      job: { clientJobId: 'job-old', status: 'dead' },
+    })
   })
 })

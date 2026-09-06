@@ -454,9 +454,99 @@ export const createHostedAiTransport = ({
   }
 }
 
+/**
+ * Which of these generations the gateway still has, so the queue can tell a
+ * free resume from a paid retry. Costs no Carrots and calls no model. An
+ * unreachable or job-less gateway simply reports none, which leaves the
+ * queue's own retry rules in charge.
+ */
+export const getResumableHostedStudyGuideJobs = async (
+  clientJobIds: readonly string[],
+): Promise<string[]> => {
+  const resumable = await Promise.all(
+    clientJobIds.map(async (clientJobId) => {
+      try {
+        const payload = await callHostedAiGateway({
+          action: 'studyGuideJob',
+          clientJobId,
+        })
+        const status = payload.job?.status
+        return status === 'running' || status === 'succeeded'
+          ? clientJobId
+          : undefined
+      } catch {
+        return undefined
+      }
+    }),
+  )
+
+  return resumable.filter((id): id is string => Boolean(id))
+}
+
+const STUDY_GUIDE_JOB_POLL_MS = 3000
+/** Comfortably past the gateway's own generation timeout. */
+const STUDY_GUIDE_JOB_POLL_TIMEOUT_MS = 5 * 60 * 1000
+
+const wait = (ms: number, signal?: AbortSignal): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms)
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer)
+        reject(new DOMException('Aborted', 'AbortError'))
+      },
+      { once: true },
+    )
+  })
+
+/**
+ * Waits for a generation that is already running on the server.
+ *
+ * Reached after a refresh or a reopened tab: the work was paid for and is
+ * still going, so the only thing left to do is collect it. No model call and
+ * no charge happen on this path.
+ */
+const awaitHostedStudyGuideJob = async (
+  clientJobId: string,
+  signal?: AbortSignal,
+): Promise<HostedAiGatewayResponse> => {
+  const deadline = Date.now() + STUDY_GUIDE_JOB_POLL_TIMEOUT_MS
+
+  for (;;) {
+    await wait(STUDY_GUIDE_JOB_POLL_MS, signal)
+    const payload = await callHostedAiGateway(
+      { action: 'studyGuideJob', clientJobId },
+      signal,
+    )
+    const job = payload.job
+
+    if (job?.status === 'succeeded' && job.response) {
+      return job.response
+    }
+
+    if (job?.status === 'failed') {
+      throw new Error(
+        job.errorMessage || 'Hosted AI could not finish this Study Guide.',
+      )
+    }
+
+    if (!job) {
+      throw new Error('Hosted AI lost track of this Study Guide.')
+    }
+
+    if (Date.now() > deadline) {
+      throw new Error(
+        'Hosted AI is still working on this Study Guide. Reopen it in a moment.',
+      )
+    }
+  }
+}
+
 export const createHostedStudyGuideTransportWithQuickStart = ({
   userKnownTopics,
   outputLanguage,
+  clientJobId,
   onQuickStart,
   onBridgeBlocks,
   onLearnedSkillOptions,
@@ -464,6 +554,8 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
   onPreview,
 }: {
   userKnownTopics?: string[]
+  /** Makes the generation resumable, and safe to request more than once. */
+  clientJobId?: string
   outputLanguage?: StrongAiCallOptions['outputLanguage']
   onQuickStart: (
     quickStart: NonNullable<HostedAiGatewayResponse['quickStart']>,
@@ -484,6 +576,8 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
     signal,
   }: StrongAiCallOptions) => {
     const surface: HostedAiSurface = 'study-guide'
+    // A resumable job may cost nothing, but the balance still has to cover a
+    // first attempt, and the server is the one that decides which this is.
     await assertHostedAiCreditsAvailable(surface)
     dispatchHostedAiVisualSpend(surface)
 
@@ -496,13 +590,20 @@ export const createHostedStudyGuideTransportWithQuickStart = ({
         parts,
         responseSchema,
         timeoutMs,
+        ...(clientJobId ? { clientJobId } : {}),
         quickStartOptions: {
           ...(userKnownTopics?.length ? { userKnownTopics } : {}),
         },
       }
-      const payload = onPreview
+      const firstPayload = onPreview
         ? await callHostedAiGatewayStreaming(gatewayRequest, onPreview, signal)
         : await callHostedAiGateway(gatewayRequest, signal)
+      // The same guide is already being generated, so wait for that one rather
+      // than starting - and paying for - a second.
+      const payload =
+        firstPayload.pending && clientJobId
+          ? await awaitHostedStudyGuideJob(clientJobId, signal)
+          : firstPayload
       const text = payload.text?.trim()
 
       if (!text) {

@@ -59,6 +59,7 @@ import {
   makeHostedPreview,
 } from '../../studyGuides/hostedPreview'
 import type { HostedAiPreviewEvent } from '../../quickCreate/ai/hostedCredits'
+import { getResumableHostedStudyGuideJobs } from '../../quickCreate/ai/hostedClient'
 import HostedPreviewChecklist from './HostedPreviewChecklist'
 
 /**
@@ -374,6 +375,8 @@ const StudyGuidesPage = () => {
     () => new Set(),
   )
   const [now, setNow] = useState(Date.now())
+  // Whether pending jobs have been checked against the gateway yet.
+  const [jobsReconciled, setJobsReconciled] = useState(false)
   // Live preview per running hosted job, keyed by job id.
   const [jobPreviews, setJobPreviews] = useState<
     Record<string, HostedPreviewState>
@@ -403,13 +406,68 @@ const StudyGuidesPage = () => {
     }
   }
 
+  // A refresh or a reopened tab lands here with jobs the gateway may already
+  // have finished. Asking first is what turns "start again and pay again" into
+  // "collect what is already paid for".
+  useEffect(() => {
+    let cancelled = false
+
+    const findResumableJobIds = async (): Promise<string[]> => {
+      const hostedJobIds = StudyGuideCreationQueueStorage.getAll()
+        .filter(
+          (job) =>
+            job.provider === 'hosted' &&
+            (job.status === 'running' ||
+              job.status === 'interrupted' ||
+              job.status === 'queued'),
+        )
+        .map((job) => job.id)
+
+      return hostedJobIds.length
+        ? getResumableHostedStudyGuideJobs(hostedJobIds)
+        : []
+    }
+
+    const reconcile = async () => {
+      let resumableJobIds: string[] = []
+      try {
+        resumableJobIds = await findResumableJobIds()
+      } catch {
+        // Unreachable gateway, blocked storage. Nothing is known to be
+        // resumable, which just leaves the queue's own retry rules in charge.
+      }
+
+      if (cancelled) {
+        return
+      }
+
+      try {
+        StudyGuideCreationQueueStorage.requeueRetryableJobs({
+          tabId: getCreationTabId(),
+          activeJobIds: Array.from(jobsRunningInThisTab),
+          resumableJobIds,
+        })
+        loadPendingGuides()
+      } finally {
+        // Generation is gated on this, so it has to be set even on failure or
+        // nothing would ever run again.
+        setJobsReconciled(true)
+      }
+    }
+
+    void reconcile()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   useEffect(() => {
     isMountedRef.current = true
     loadGuides()
-    StudyGuideCreationQueueStorage.requeueRetryableJobs({
-      tabId: getCreationTabId(),
-      activeJobIds: Array.from(jobsRunningInThisTab),
-    })
+    // Requeueing waits for the gateway's answer, which the reconcile pass
+    // above fetches. Picking jobs up before then would spend the retry budget
+    // on work the gateway is still doing.
     loadPendingGuides()
     window.addEventListener(STUDY_GUIDES_CHANGED_EVENT, loadGuides)
     window.addEventListener(
@@ -733,6 +791,10 @@ const StudyGuidesPage = () => {
   }
 
   useEffect(() => {
+    if (!jobsReconciled) {
+      return
+    }
+
     const activeJobs = Array.from(activeJobsRef.current.values())
     let availableLocalSlots =
       MAX_LOCAL_BROWSER_CONCURRENCY -
@@ -776,7 +838,7 @@ const StudyGuidesPage = () => {
       availableRemoteSlots -= 1
       void runQueuedGuide(job)
     })
-  }, [pendingGuides])
+  }, [jobsReconciled, pendingGuides])
 
   const submitCreateGuide = async () => {
     const prompt = createGuidePrompt.trim()

@@ -62,6 +62,8 @@ type ProviderOptions = {
   onProgress?: (event: LocalAiProgressEvent) => void
   /** Hosted only. Shows the guide forming instead of a blind spinner. */
   onPreview?: (event: HostedAiPreviewEvent) => void
+  /** Hosted only. Makes the generation resumable, and safe to ask for twice. */
+  clientJobId?: string
   signal?: AbortSignal
 }
 
@@ -585,6 +587,7 @@ export const generateStudyPathWithAi = async (
       strongTransport: createHostedStudyGuideTransportWithQuickStart({
         userKnownTopics: knowledgeContextPlan.topics,
         outputLanguage: options.outputLanguage,
+        clientJobId: options.clientJobId,
         onPreview: options.onPreview,
         onQuickStart: (quickStart) => {
           hostedQuickStart = quickStart

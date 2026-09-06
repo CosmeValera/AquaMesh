@@ -139,14 +139,111 @@ const stubHostedEnv = () => {
   vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-role-key')
 }
 
+interface FetchInit {
+  method?: string
+  body?: unknown
+  headers?: Record<string, string>
+}
+
+interface JobRow {
+  client_job_id: string
+  status: 'running' | 'succeeded' | 'failed'
+  result?: unknown
+  error_message?: string | null
+  updated_at: string
+}
+
+/**
+ * Stands in for the hosted_study_guide_jobs table, including the unique index
+ * on (user_id, client_job_id) that the whole no-double-charge guarantee rests
+ * on. Seeded rows let a test act as a refresh of an earlier request.
+ */
+const makeJobsTable = (seed: JobRow[] = []) => {
+  const rows = new Map(seed.map((row) => [row.client_job_id, { ...row }]))
+
+  const idFromQuery = (target: string) =>
+    decodeURIComponent(
+      new URL(target, 'https://supabase.test').searchParams
+        .get('client_job_id')
+        ?.replace('eq.', '') || '',
+    )
+
+  const handle = (target: string, init: FetchInit = {}) => {
+    const method = (init.method || 'GET').toUpperCase()
+    const body = init.body ? JSON.parse(String(init.body)) : {}
+
+    if (method === 'POST') {
+      if (rows.has(body.client_job_id)) {
+        // resolution=ignore-duplicates: a conflict returns nothing.
+        return jsonResponse([])
+      }
+
+      const row: JobRow = {
+        client_job_id: body.client_job_id,
+        status: 'running',
+        updated_at: new Date().toISOString(),
+      }
+      rows.set(row.client_job_id, row)
+      return jsonResponse([row])
+    }
+
+    const id = idFromQuery(target)
+
+    if (method === 'GET') {
+      const row = rows.get(id)
+      return jsonResponse(row ? [row] : [])
+    }
+
+    if (method === 'DELETE') {
+      rows.delete(id)
+      return jsonResponse([])
+    }
+
+    if (method === 'PATCH') {
+      const row = rows.get(id)
+      if (!row) {
+        return jsonResponse([])
+      }
+
+      // The steal path only matches a row that is already stale.
+      if (target.includes('updated_at=lt.')) {
+        const cutoff = Date.parse(
+          decodeURIComponent(
+            new URL(target, 'https://supabase.test').searchParams.get(
+              'updated_at',
+            ) || '',
+          ).replace('lt.', ''),
+        )
+        if (!(Date.parse(row.updated_at) < cutoff)) {
+          return jsonResponse([])
+        }
+      }
+
+      Object.assign(row, body, { updated_at: new Date().toISOString() })
+      return jsonResponse([row])
+    }
+
+    return jsonResponse([])
+  }
+
+  return { rows, handle }
+}
+
 /** `openAiResponses` are answered in order, one per call to /v1/responses. */
-const stubGatewayFetch = (openAiResponses: unknown[]) => {
+const stubGatewayFetch = (
+  openAiResponses: unknown[],
+  jobs = makeJobsTable(),
+) => {
   let modelCall = 0
-  const fetchMock = vi.fn((url: string) => {
+  const fetchMock = vi.fn((url: string, init?: FetchInit) => {
     const target = String(url)
 
     if (target.includes('/auth/v1/user')) {
       return Promise.resolve(jsonResponse({ id: 'user-1' }))
+    }
+
+    if (target.includes('/rest/v1/hosted_study_guide_jobs')) {
+      return Promise.resolve(jobs.handle(target, init))
     }
 
     if (target.includes('/rest/v1/rpc/hosted_ai_begin_usage')) {
@@ -169,6 +266,22 @@ const stubGatewayFetch = (openAiResponses: unknown[]) => {
 
   return fetchMock
 }
+
+const countCalls = (fetchMock: ReturnType<typeof vi.fn>, fragment: string) =>
+  fetchMock.mock.calls.filter((call) => String(call[0]).includes(fragment))
+    .length
+
+const resumableRequest = (clientJobId: string, stream = false) => ({
+  method: 'POST',
+  headers: { authorization: 'Bearer token' },
+  body: {
+    action: 'generateWithQuickStart',
+    surface: 'study-guide',
+    stream,
+    clientJobId,
+    parts: [{ text: 'Learner prompt: teach me vectors.' }],
+  },
+})
 
 const studyGuideRequest = (stream: boolean) => ({
   method: 'POST',
@@ -329,5 +442,198 @@ describe('hosted Study Guide preview stream', () => {
     expect(targets.some((url) => url.includes('hosted_ai_finish_usage'))).toBe(
       true,
     )
+  })
+})
+
+describe('hosted Study Guide job resumption', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it('records the finished guide against the job', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable()
+    stubGatewayFetch(
+      [
+        jsonResponse(bufferedResponsesPayload(GUIDE)),
+        jsonResponse(bufferedResponsesPayload(QUIZ)),
+      ],
+      jobs,
+    )
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(resumableRequest('job-abc'), res)
+
+    expect((response.body as { ok: boolean }).ok).toBe(true)
+    const row = jobs.rows.get('job-abc')
+    expect(row?.status).toBe('succeeded')
+    expect((row?.result as { text: string }).text).toContain('What a vector is')
+  })
+
+  it('returns the same guide for a replay without charging or calling a model', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable([
+      {
+        client_job_id: 'job-done',
+        status: 'succeeded',
+        result: { ok: true, text: 'ALREADY GENERATED GUIDE' },
+        updated_at: new Date().toISOString(),
+      },
+    ])
+    const fetchMock = stubGatewayFetch([], jobs)
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(resumableRequest('job-done'), res)
+
+    expect(response.body).toMatchObject({
+      ok: true,
+      text: 'ALREADY GENERATED GUIDE',
+    })
+    // The two things that cost money never happened.
+    expect(countCalls(fetchMock, '/v1/responses')).toBe(0)
+    expect(countCalls(fetchMock, 'hosted_ai_begin_usage')).toBe(0)
+  })
+
+  it('reports a generation already in flight instead of starting a second', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable([
+      {
+        client_job_id: 'job-live',
+        status: 'running',
+        updated_at: new Date().toISOString(),
+      },
+    ])
+    const fetchMock = stubGatewayFetch([], jobs)
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(resumableRequest('job-live'), res)
+
+    expect(response.body).toMatchObject({ ok: true, pending: true })
+    expect(countCalls(fetchMock, '/v1/responses')).toBe(0)
+    expect(countCalls(fetchMock, 'hosted_ai_begin_usage')).toBe(0)
+  })
+
+  it('takes over a job whose function died', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable([
+      {
+        client_job_id: 'job-stale',
+        status: 'running',
+        updated_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      },
+    ])
+    const fetchMock = stubGatewayFetch(
+      [
+        jsonResponse(bufferedResponsesPayload(GUIDE)),
+        jsonResponse(bufferedResponsesPayload(QUIZ)),
+      ],
+      jobs,
+    )
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(resumableRequest('job-stale'), res)
+
+    expect((response.body as { ok: boolean }).ok).toBe(true)
+    expect(countCalls(fetchMock, '/v1/responses')).toBe(2)
+    expect(jobs.rows.get('job-stale')?.status).toBe('succeeded')
+  })
+
+  it('lets a failed job be retried, and records a failure', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable([
+      {
+        client_job_id: 'job-failed',
+        status: 'failed',
+        error_message: 'earlier failure',
+        updated_at: new Date().toISOString(),
+      },
+    ])
+    stubGatewayFetch(
+      [
+        jsonResponse({ error: { message: 'Incorrect API key' } }, false, 401),
+        jsonResponse({ error: { message: 'Incorrect API key' } }, false, 401),
+      ],
+      jobs,
+    )
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(resumableRequest('job-failed'), res)
+
+    expect((response.body as { ok: boolean }).ok).toBe(false)
+    expect(jobs.rows.get('job-failed')?.status).toBe('failed')
+  })
+
+  it('reads a job only within the caller account', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable([
+      {
+        client_job_id: 'job-x',
+        status: 'succeeded',
+        result: { ok: true, text: 'guide' },
+        updated_at: new Date().toISOString(),
+      },
+    ])
+    const fetchMock = stubGatewayFetch([], jobs)
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: { action: 'studyGuideJob', clientJobId: 'job-x' },
+      },
+      res,
+    )
+
+    expect(response.body).toMatchObject({
+      ok: true,
+      job: { clientJobId: 'job-x', status: 'succeeded' },
+    })
+    const jobQuery = fetchMock.mock.calls
+      .map((call) => String(call[0]))
+      .find((url) => url.includes('hosted_study_guide_jobs'))
+    expect(jobQuery).toContain('user_id=eq.user-1')
+  })
+
+  it('rejects a job id that is not shaped like one', async () => {
+    stubHostedEnv()
+    stubGatewayFetch([])
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(
+      {
+        method: 'POST',
+        headers: { authorization: 'Bearer token' },
+        body: { action: 'studyGuideJob', clientJobId: "x'; drop table--" },
+      },
+      res,
+    )
+
+    expect(response.statusCode).toBe(400)
+    expect(response.body).toMatchObject({
+      ok: false,
+      error: { code: 'invalid_request' },
+    })
+  })
+
+  it('generates normally when no job id is supplied', async () => {
+    stubHostedEnv()
+    const jobs = makeJobsTable()
+    const fetchMock = stubGatewayFetch(
+      [
+        jsonResponse(bufferedResponsesPayload(GUIDE)),
+        jsonResponse(bufferedResponsesPayload(QUIZ)),
+      ],
+      jobs,
+    )
+    const { response, res } = makeStreamingResponse()
+
+    await hostedAiHandler(studyGuideRequest(false), res)
+
+    expect((response.body as { ok: boolean }).ok).toBe(true)
+    expect(jobs.rows.size).toBe(0)
+    expect(countCalls(fetchMock, '/v1/responses')).toBe(2)
   })
 })

@@ -291,9 +291,16 @@ export const StudyGuideCreationQueueStorage = {
   requeueRetryableJobs({
     tabId = '',
     activeJobIds = [],
+    resumableJobIds = [],
   }: {
     tabId?: string
     activeJobIds?: readonly string[]
+    /**
+     * Jobs the gateway confirms it still owns. Picking one of these back up
+     * collects work already paid for rather than buying it again, so it never
+     * spends the retry budget and is never given up on.
+     */
+    resumableJobIds?: readonly string[]
   } = {}): StudyGuideCreationJob[] {
     const current = readQueue()
     let changed = false
@@ -311,7 +318,8 @@ export const StudyGuideCreationQueueStorage = {
       }
 
       changed = true
-      if (!shouldAutoRetryJob(job)) {
+      const isResumable = resumableJobIds.includes(job.id)
+      if (!isResumable && !shouldAutoRetryJob(job)) {
         return {
           ...job,
           status: 'failed' as const,
@@ -326,7 +334,7 @@ export const StudyGuideCreationQueueStorage = {
         status: 'queued' as const,
         updatedAt: nowIso(),
         autoRetryCount:
-          job.provider === 'hosted'
+          job.provider === 'hosted' && !isResumable
             ? job.autoRetryCount + 1
             : job.autoRetryCount,
         startedAt: null,

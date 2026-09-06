@@ -347,3 +347,89 @@ describe('claimed skill on a queued job', () => {
     ).toBe('reviewing open-source contributions')
   })
 })
+
+describe('resuming a job the gateway still owns', () => {
+  beforeEach(() => {
+    const storage = new Map<string, string>()
+    vi.mocked(window.localStorage.getItem).mockImplementation(
+      (key: string) => storage.get(key) ?? null,
+    )
+    vi.mocked(window.localStorage.setItem).mockImplementation(
+      (key: string, value: string) => {
+        storage.set(key, value)
+      },
+    )
+    vi.mocked(window.localStorage.removeItem).mockImplementation(
+      (key: string) => {
+        storage.delete(key)
+      },
+    )
+    vi.mocked(window.localStorage.clear).mockImplementation(() => {
+      storage.clear()
+    })
+    window.localStorage.clear()
+  })
+
+  const interruptedHostedJob = {
+    id: 'server-owned-job',
+    prompt: 'Study photosynthesis',
+    provider: 'hosted' as const,
+    status: 'interrupted' as const,
+    estimateSeconds: 45,
+  }
+
+  it('does not spend the retry budget collecting work already paid for', () => {
+    StudyGuideCreationQueueStorage.upsert({
+      ...interruptedHostedJob,
+      autoRetryCount: 0,
+    })
+
+    const [job] = StudyGuideCreationQueueStorage.requeueRetryableJobs({
+      resumableJobIds: ['server-owned-job'],
+    })
+
+    expect(job).toMatchObject({ status: 'queued', autoRetryCount: 0 })
+  })
+
+  it('keeps picking a resumable job up past the retry limit', () => {
+    // A learner who refreshes twice must still get the guide they paid for.
+    StudyGuideCreationQueueStorage.upsert({
+      ...interruptedHostedJob,
+      autoRetryCount: 5,
+    })
+
+    const [job] = StudyGuideCreationQueueStorage.requeueRetryableJobs({
+      resumableJobIds: ['server-owned-job'],
+    })
+
+    expect(job).toMatchObject({ status: 'queued', autoRetryCount: 5 })
+    expect(job.errorMessage).toBeNull()
+  })
+
+  it('still counts a retry when the gateway has no such job', () => {
+    StudyGuideCreationQueueStorage.upsert({
+      ...interruptedHostedJob,
+      autoRetryCount: 0,
+    })
+
+    const [job] = StudyGuideCreationQueueStorage.requeueRetryableJobs({
+      resumableJobIds: [],
+    })
+
+    expect(job).toMatchObject({ status: 'queued', autoRetryCount: 1 })
+  })
+
+  it('gives up on an unknown job that is out of retries', () => {
+    StudyGuideCreationQueueStorage.upsert({
+      ...interruptedHostedJob,
+      autoRetryCount: 1,
+    })
+
+    const [job] = StudyGuideCreationQueueStorage.requeueRetryableJobs({
+      resumableJobIds: ['a-different-job'],
+    })
+
+    expect(job.status).toBe('failed')
+    expect(job.errorMessage).toBe(HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE)
+  })
+})

@@ -136,6 +136,13 @@ export interface HostedAiGatewayRequest {
     | 'generate'
     | 'generateWithQuickStart'
     | 'generatePodcast'
+    | 'studyGuideJob'
+  /**
+   * Idempotency key for a Study Guide generation, unique per user. A refresh,
+   * a second tab, or a replayed request carrying the same id attaches to the
+   * job already running instead of starting a second paid generation.
+   */
+  clientJobId?: string
   surface?: HostedAiSurface
   stage?: HostedAiStage
   model?: string
@@ -194,9 +201,23 @@ export interface HostedAiPodcast {
   createdAt: string
 }
 
+export interface HostedAiStudyGuideJob {
+  clientJobId: string
+  status: 'running' | 'succeeded' | 'failed'
+  /** Present once the job succeeded. The same body a live call returns. */
+  response?: HostedAiGatewayResponse
+  errorMessage?: string
+}
+
 export interface HostedAiGatewayResponse {
   ok: boolean
   text?: string
+  /**
+   * The generation is already running elsewhere and no new one was started.
+   * The caller should wait for the job rather than treat this as an answer.
+   */
+  pending?: boolean
+  job?: HostedAiStudyGuideJob
   quickStart?: StudyGuideQuickStart
   bridgeBlocks?: StudyGuideKnowledgeBridgeBlock[]
   /** Skill names offered after the quiz, generated with the guide. */

@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 
+import { waitUntil } from "@vercel/functions";
+
 import { applyCors, getHeader } from "./cors";
 import { loadLocalApiEnv } from "./local-env";
 import { createPartialJsonReader } from "./streamingJson";
@@ -351,6 +353,23 @@ const errorResponse = (
   error: { code, message },
 });
 
+/**
+ * Asks the platform to keep running work after the response is done with.
+ *
+ * Outside Vercel there is nothing to ask, and the promise is simply awaited by
+ * the caller as before, so local dev and tests behave the same.
+ */
+const keepAlive = (work: Promise<unknown>): void => {
+  try {
+    waitUntil(work);
+  } catch {
+    // Not running on Vercel. The caller still awaits it.
+  }
+
+  // Nothing else observes a rejection here; the caller reports it.
+  void work.catch(() => undefined);
+};
+
 interface PreviewStream {
   emit(event: HostedAiPreviewEvent): void;
   /** True once a line went out, so headers are committed and status is 200. */
@@ -365,6 +384,20 @@ interface PreviewStream {
  * the model produces output - no Carrots, bad token, provider refused - still
  * answers with its real HTTP status and today's error body.
  */
+/** Ends the request the way it was started: as a stream, or as one body. */
+const finishResponse = (
+  res: VercelResponse,
+  preview: PreviewStream | undefined,
+  body: HostedAiGatewayResponse,
+): void => {
+  if (preview?.started()) {
+    preview.finish(body);
+    return;
+  }
+
+  json(res, 200, body);
+};
+
 const createPreviewStream = (res: VercelResponse): PreviewStream => {
   let started = false;
   let closed = false;
@@ -567,6 +600,183 @@ const callSupabaseRpc = async <T>(
   }
 
   return payload as T;
+};
+
+/**
+ * How long a job may sit in `running` before another request may take it over.
+ *
+ * Longer than any real generation, so a live job is never stolen; short enough
+ * that a deploy or a crash mid-generation does not strand the learner.
+ */
+const STUDY_GUIDE_JOB_STALE_MS = 5 * 60 * 1000;
+const STUDY_GUIDE_JOBS_PATH = "/rest/v1/hosted_study_guide_jobs";
+const CLIENT_JOB_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+
+interface HostedStudyGuideJobRow {
+  client_job_id: string;
+  status: "running" | "succeeded" | "failed";
+  result?: HostedAiGatewayResponse | null;
+  error_message?: string | null;
+  updated_at?: string;
+}
+
+/**
+ * Client-supplied, so it is never trusted as given. It is only ever used
+ * scoped to the caller's own user_id, which caps the damage of a guessed value
+ * at attaching to a job that caller already owns.
+ */
+export const isValidClientJobId = (value: unknown): value is string =>
+  typeof value === "string" && CLIENT_JOB_ID_PATTERN.test(value);
+
+const studyGuideJobsFetch = (
+  query: string,
+  init: RequestInit & { prefer?: string } = {},
+): Promise<Response> => {
+  const { prefer, ...rest } = init;
+  return supabaseFetch(
+    `${STUDY_GUIDE_JOBS_PATH}${query}`,
+    getEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    {
+      ...rest,
+      headers: { ...(prefer ? { prefer } : {}), ...(rest.headers || {}) },
+    },
+  );
+};
+
+const readJobRows = async (
+  response: Response,
+): Promise<HostedStudyGuideJobRow[]> => {
+  const payload = await readResponseJson(response);
+  return Array.isArray(payload) ? (payload as HostedStudyGuideJobRow[]) : [];
+};
+
+const jobFilter = (userId: string, clientJobId: string): string =>
+  `?user_id=eq.${encodeURIComponent(userId)}&client_job_id=eq.${encodeURIComponent(clientJobId)}`;
+
+export const readStudyGuideJob = async (
+  userId: string,
+  clientJobId: string,
+): Promise<HostedStudyGuideJobRow | undefined> => {
+  const response = await studyGuideJobsFetch(
+    `${jobFilter(userId, clientJobId)}&select=client_job_id,status,result,error_message,updated_at&limit=1`,
+    { method: "GET" },
+  );
+
+  return (await readJobRows(response))[0];
+};
+
+export type StudyGuideJobClaim =
+  | { outcome: "claimed" }
+  /** Someone already finished this exact job. Nothing more is owed. */
+  | { outcome: "succeeded"; response: HostedAiGatewayResponse }
+  /** Still being generated, by this or another tab. */
+  | { outcome: "running" };
+
+/**
+ * Takes ownership of a generation, or reports what already happened to it.
+ *
+ * The unique index on (user_id, client_job_id) is what makes this safe: a
+ * refresh, a second tab, or a replayed request all lose the insert race and
+ * attach instead of starting a second paid generation.
+ */
+export const claimStudyGuideJob = async (
+  userId: string,
+  clientJobId: string,
+  prompt: string,
+): Promise<StudyGuideJobClaim> => {
+  const inserted = await studyGuideJobsFetch("", {
+    method: "POST",
+    prefer: "return=representation,resolution=ignore-duplicates",
+    body: JSON.stringify({
+      user_id: userId,
+      client_job_id: clientJobId,
+      status: "running",
+      prompt: prompt.slice(0, 4000),
+    }),
+  });
+
+  if ((await readJobRows(inserted)).length) {
+    return { outcome: "claimed" };
+  }
+
+  const existing = await readStudyGuideJob(userId, clientJobId);
+
+  if (!existing) {
+    // The row vanished between the conflict and the read. Treat it as ours.
+    return { outcome: "claimed" };
+  }
+
+  if (existing.status === "succeeded" && existing.result) {
+    return { outcome: "succeeded", response: existing.result };
+  }
+
+  if (existing.status === "failed") {
+    // A failed attempt must not block a real retry. Reclaiming the row rather
+    // than deleting it keeps the job's identity, so this attempt's outcome has
+    // somewhere to be recorded and a later replay still finds it.
+    const reclaimed = await studyGuideJobsFetch(
+      `${jobFilter(userId, clientJobId)}&status=eq.failed`,
+      {
+        method: "PATCH",
+        prefer: "return=representation",
+        body: JSON.stringify({
+          status: "running",
+          error_message: null,
+          result: null,
+        }),
+      },
+    );
+
+    return (await readJobRows(reclaimed)).length
+      ? { outcome: "claimed" }
+      : { outcome: "running" };
+  }
+
+  const updatedAt = Date.parse(existing.updated_at || "");
+  const isStale =
+    Number.isFinite(updatedAt) && Date.now() - updatedAt > STUDY_GUIDE_JOB_STALE_MS;
+
+  if (!isStale) {
+    return { outcome: "running" };
+  }
+
+  // Nothing has touched it for long enough that its function is gone. Take it
+  // over, but only by winning this conditional update.
+  const stolen = await studyGuideJobsFetch(
+    `${jobFilter(userId, clientJobId)}&status=eq.running&updated_at=lt.${encodeURIComponent(
+      new Date(Date.now() - STUDY_GUIDE_JOB_STALE_MS).toISOString(),
+    )}`,
+    {
+      method: "PATCH",
+      prefer: "return=representation",
+      body: JSON.stringify({ status: "running" }),
+    },
+  );
+
+  return (await readJobRows(stolen)).length
+    ? { outcome: "claimed" }
+    : { outcome: "running" };
+};
+
+export const finishStudyGuideJob = async (
+  userId: string,
+  clientJobId: string,
+  outcome:
+    | { status: "succeeded"; response: HostedAiGatewayResponse }
+    | { status: "failed"; message: string },
+): Promise<void> => {
+  await studyGuideJobsFetch(jobFilter(userId, clientJobId), {
+    method: "PATCH",
+    body: JSON.stringify(
+      outcome.status === "succeeded"
+        ? { status: "succeeded", result: outcome.response, error_message: null }
+        : { status: "failed", error_message: outcome.message.slice(0, 2000) },
+    ),
+  }).catch((error) => {
+    // The guide is generated and paid for either way; failing to record it
+    // only costs the learner a resume, so it must not fail the request.
+    console.error("[hosted-ai] could not record job outcome", error);
+  });
 };
 
 const normalizeStatus = (value: unknown): HostedAiStatus => {
@@ -3801,19 +4011,91 @@ export default async function handler(
       return;
     }
 
-    if (request.action === "generateWithQuickStart") {
-      const response = await handleGenerate(
-        user.id,
-        request,
-        true,
-        preview ? (event) => preview.emit(event) : undefined,
-      );
-      if (preview?.started()) {
-        preview.finish(response);
+    if (request.action === "studyGuideJob") {
+      if (!isValidClientJobId(request.clientJobId)) {
+        json(
+          res,
+          400,
+          errorResponse("invalid_request", "Invalid job id."),
+        );
         return;
       }
 
-      json(res, 200, response);
+      const job = await readStudyGuideJob(user.id, request.clientJobId);
+      json(res, 200, {
+        ok: true,
+        job: job
+          ? {
+              clientJobId: job.client_job_id,
+              status: job.status,
+              ...(job.status === "succeeded" && job.result
+                ? { response: job.result }
+                : {}),
+              ...(job.error_message ? { errorMessage: job.error_message } : {}),
+            }
+          : undefined,
+      });
+      return;
+    }
+
+    if (request.action === "generateWithQuickStart") {
+      const clientJobId = isValidClientJobId(request.clientJobId)
+        ? request.clientJobId
+        : undefined;
+
+      if (clientJobId) {
+        const claim = await claimStudyGuideJob(
+          user.id,
+          clientJobId,
+          getHostedRequestText(request),
+        );
+
+        // Already generated and paid for. Hand back the same guide and charge
+        // nothing: this is a refresh, a second tab, or a replayed request.
+        if (claim.outcome === "succeeded") {
+          finishResponse(res, preview, claim.response);
+          return;
+        }
+
+        if (claim.outcome === "running") {
+          finishResponse(res, preview, { ok: true, pending: true });
+          return;
+        }
+      }
+
+      const work = (async () => {
+        try {
+          const response = await handleGenerate(
+            user.id,
+            request,
+            true,
+            preview ? (event) => preview.emit(event) : undefined,
+          );
+          if (clientJobId) {
+            await finishStudyGuideJob(user.id, clientJobId, {
+              status: "succeeded",
+              response,
+            });
+          }
+
+          return response;
+        } catch (error) {
+          if (clientJobId) {
+            await finishStudyGuideJob(user.id, clientJobId, {
+              status: "failed",
+              message:
+                error instanceof Error ? error.message : "Generation failed.",
+            });
+          }
+
+          throw error;
+        }
+      })();
+
+      // Keeps the work alive past a client disconnect, so closing the tab no
+      // longer throws away a guide the learner has already paid for.
+      keepAlive(work);
+      finishResponse(res, preview, await work);
       return;
     }
 

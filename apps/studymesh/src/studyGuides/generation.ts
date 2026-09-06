@@ -183,6 +183,9 @@ export const generateStudyPathStateFromPrompt = async ({
     signal,
     userKnownTopics: getAllUserKnownTopics(),
     onPreview,
+    // The queue's own job id doubles as the server-side idempotency key, so a
+    // refresh resumes this generation rather than paying for another.
+    clientJobId: id,
   })
   const title = draft.folderName || draft.title || 'Study Guide'
   const count = draft.dashboards.length

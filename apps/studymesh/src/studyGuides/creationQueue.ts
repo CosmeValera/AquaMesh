@@ -11,6 +11,11 @@ export type StudyGuideCreationProvider = QuickCreateAiProvider
 export type StudyGuideCreationStatus =
   | 'queued'
   | 'running'
+  /**
+   * The gateway already finished this one and the client is only fetching it.
+   * Deliberately shows no card: the learner should just see the guide appear.
+   */
+  | 'collecting'
   | 'interrupted'
   | 'failed'
   | 'succeeded'
@@ -70,7 +75,7 @@ export const getCreationTabId = (): string => {
 }
 
 export const HOSTED_STUDY_GUIDE_AUTO_RETRY_LIMIT = 1
-export const HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE = `Creation was interrupted again. Retry will spend ${getHostedAiCreditCost(
+export const HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE = `This guide stopped before it was finished. Retrying spends ${getHostedAiCreditCost(
   'study-guide',
 )} Carrots.`
 export const isRetryableStudyGuideCreationError = (
@@ -90,6 +95,7 @@ const nowIso = () => new Date().toISOString()
 const isCreationStatus = (value: unknown): value is StudyGuideCreationStatus =>
   value === 'queued' ||
   value === 'running' ||
+  value === 'collecting' ||
   value === 'interrupted' ||
   value === 'failed' ||
   value === 'succeeded' ||
@@ -319,6 +325,18 @@ export const StudyGuideCreationQueueStorage = {
 
       changed = true
       const isResumable = resumableJobIds.includes(job.id)
+      // Re-running a hosted job the gateway does not have is a fresh paid
+      // generation. Nobody clicked anything, so it is offered, not taken.
+      if (!isResumable && job.provider === 'hosted') {
+        return {
+          ...job,
+          status: 'failed' as const,
+          updatedAt: nowIso(),
+          finishedAt: nowIso(),
+          errorMessage: HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
+        }
+      }
+
       if (!isResumable && !shouldAutoRetryJob(job)) {
         return {
           ...job,

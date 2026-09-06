@@ -54,12 +54,21 @@ import {
 import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
 import {
   applyHostedPreviewEvent,
+  hasHostedPreviewSignal,
   hostedPreviewPercent,
   HostedPreviewState,
-  makeHostedPreview,
+  makeHostedPreviewFromSnapshot,
 } from '../../studyGuides/hostedPreview'
-import type { HostedAiPreviewEvent } from '../../quickCreate/ai/hostedCredits'
-import { getResumableHostedStudyGuideJobs } from '../../quickCreate/ai/hostedClient'
+import type {
+  HostedAiPreviewEvent,
+  HostedAiStudyGuideJob,
+  HostedAiStudyGuideProgress,
+} from '../../quickCreate/ai/hostedCredits'
+import {
+  getHostedStudyGuideJobs,
+  HostedStudyGuideDeadJobError,
+  isResumableHostedStudyGuideJob,
+} from '../../quickCreate/ai/hostedClient'
 import HostedPreviewChecklist from './HostedPreviewChecklist'
 
 /**
@@ -71,7 +80,9 @@ const creationProgressPercent = (
   elapsedSeconds: number,
   estimateSeconds: number,
 ): number => {
-  if (preview) {
+  // Only once the preview actually says something. A preview that exists but is
+  // still empty would otherwise pin the bar at 0% while the clock ran.
+  if (preview && hasHostedPreviewSignal(preview)) {
     return hostedPreviewPercent(preview)
   }
 
@@ -151,11 +162,37 @@ const getActiveAiProvider = () =>
 
 const studyGuideCreditCost = getHostedAiCreditCost('study-guide')
 
+// 'collecting' is deliberately absent: that guide is already made and paid for,
+// so the learner should just see it appear rather than watch it be fetched.
 const isVisiblePendingStatus = (status: StudyGuideCreationStatus): boolean =>
   status === 'queued' ||
   status === 'running' ||
   status === 'interrupted' ||
   status === 'failed'
+
+/** Statuses the runner should pick up, visible or not. */
+const isRunnablePendingStatus = (status: StudyGuideCreationStatus): boolean =>
+  status === 'queued' || status === 'collecting'
+
+/**
+ * When this generation was first asked for.
+ *
+ * The gateway's timestamp wins, because it is the same one across every tab
+ * and page life. `startedAt` is deliberately never used: it is re-stamped on
+ * every attempt, which is what made a refreshed card restart its clock at zero.
+ */
+const resolveJobStartedAt = (
+  serverCreatedAt: string | undefined,
+  job: { createdAt: string },
+): number => {
+  const fromServer = Date.parse(serverCreatedAt || '')
+  if (Number.isFinite(fromServer)) {
+    return fromServer
+  }
+
+  const fromQueue = Date.parse(job.createdAt || '')
+  return Number.isFinite(fromQueue) ? fromQueue : Date.now()
+}
 
 const sortPendingGuidesForDisplay = (guides: PendingGuide[]) =>
   [...guides].sort(
@@ -381,6 +418,14 @@ const StudyGuidesPage = () => {
   const [jobPreviews, setJobPreviews] = useState<
     Record<string, HostedPreviewState>
   >({})
+  // What the gateway knows about each job: its recorded progress and the time
+  // it was first requested. Survives a page life; the preview does not.
+  const [jobServerState, setJobServerState] = useState<
+    Record<
+      string,
+      { progress?: HostedAiStudyGuideProgress; createdAt?: string }
+    >
+  >({})
   const activeJobsRef = useRef<
     Map<
       string,
@@ -412,26 +457,27 @@ const StudyGuidesPage = () => {
   useEffect(() => {
     let cancelled = false
 
-    const findResumableJobIds = async (): Promise<string[]> => {
+    const askGateway = async (): Promise<
+      Record<string, HostedAiStudyGuideJob>
+    > => {
       const hostedJobIds = StudyGuideCreationQueueStorage.getAll()
         .filter(
           (job) =>
             job.provider === 'hosted' &&
             (job.status === 'running' ||
+              job.status === 'collecting' ||
               job.status === 'interrupted' ||
               job.status === 'queued'),
         )
         .map((job) => job.id)
 
-      return hostedJobIds.length
-        ? getResumableHostedStudyGuideJobs(hostedJobIds)
-        : []
+      return hostedJobIds.length ? getHostedStudyGuideJobs(hostedJobIds) : {}
     }
 
     const reconcile = async () => {
-      let resumableJobIds: string[] = []
+      let jobs: Record<string, HostedAiStudyGuideJob> = {}
       try {
-        resumableJobIds = await findResumableJobIds()
+        jobs = await askGateway()
       } catch {
         // Unreachable gateway, blocked storage. Nothing is known to be
         // resumable, which just leaves the queue's own retry rules in charge.
@@ -442,6 +488,29 @@ const StudyGuidesPage = () => {
       }
 
       try {
+        const resumableJobIds = Object.values(jobs)
+          .filter((job) => isResumableHostedStudyGuideJob(job))
+          .map((job) => job.clientJobId)
+
+        // A guide that finished while the tab was shut is not "being created".
+        // Marking it hides the card, so only the finished guide appears.
+        Object.values(jobs).forEach((job) => {
+          if (job.status === 'succeeded') {
+            StudyGuideCreationQueueStorage.update(job.clientJobId, {
+              status: 'collecting',
+            })
+          }
+        })
+
+        setJobServerState(
+          Object.fromEntries(
+            Object.values(jobs).map((job) => [
+              job.clientJobId,
+              { progress: job.progress, createdAt: job.createdAt },
+            ]),
+          ),
+        )
+
         StudyGuideCreationQueueStorage.requeueRetryableJobs({
           tabId: getCreationTabId(),
           activeJobIds: Array.from(jobsRunningInThisTab),
@@ -696,16 +765,24 @@ const StudyGuidesPage = () => {
       provider: job.provider,
     })
     jobsRunningInThisTab.add(job.id)
+    const isCollecting = job.status === 'collecting'
     StudyGuideCreationQueueStorage.update(job.id, {
-      status: 'running',
+      // A collecting job stays hidden: it is being fetched, not created.
+      status: isCollecting ? 'collecting' : 'running',
       startedAt,
       finishedAt: null,
       errorMessage: null,
     })
-    if (job.provider === 'hosted') {
+    if (job.provider === 'hosted' && !isCollecting) {
+      // Seeded from whatever the gateway already recorded, so a resumed card
+      // shows the real checklist instead of an empty one that looks stuck.
+      const known = jobServerState[job.id]
       setJobPreviews((current) => ({
         ...current,
-        [job.id]: makeHostedPreview(Date.now()),
+        [job.id]: makeHostedPreviewFromSnapshot(
+          known?.progress,
+          resolveJobStartedAt(known?.createdAt, job),
+        ),
       }))
     }
 
@@ -720,6 +797,31 @@ const StudyGuidesPage = () => {
           ? { ...current, [job.id]: applyHostedPreviewEvent(preview, event) }
           : current
       })
+    }
+
+    // Fires when this call attached to a generation already in flight.
+    const handleResumed = (state: {
+      progress?: HostedAiStudyGuideProgress
+      createdAt?: string
+    }) => {
+      if (generationController.signal.aborted) {
+        return
+      }
+
+      setJobServerState((current) => ({
+        ...current,
+        [job.id]: { ...current[job.id], ...state },
+      }))
+      setJobPreviews((current) => ({
+        ...current,
+        [job.id]: makeHostedPreviewFromSnapshot(
+          state.progress,
+          resolveJobStartedAt(
+            state.createdAt || jobServerState[job.id]?.createdAt,
+            job,
+          ),
+        ),
+      }))
     }
 
     const clearPreview = () =>
@@ -741,6 +843,8 @@ const StudyGuidesPage = () => {
         provider: job.provider,
         signal: generationController.signal,
         onPreview: job.provider === 'hosted' ? handlePreview : undefined,
+        onResumed: job.provider === 'hosted' ? handleResumed : undefined,
+        retry: job.provider === 'hosted' ? job.autoRetryCount > 0 : undefined,
       })
       clearPreview()
       if (generationController.signal.aborted) {
@@ -761,7 +865,11 @@ const StudyGuidesPage = () => {
 
       const errorMessage =
         error instanceof Error ? error.message : t('studyGuides.failedMessage')
+      // The gateway says this generation stopped and is not coming back.
+      // Restarting spends Carrots, so it waits for the learner to ask.
+      const isDead = error instanceof HostedStudyGuideDeadJobError
       const canAutoRetry =
+        !isDead &&
         isRetryableStudyGuideCreationError(errorMessage) &&
         canAutoRetryPendingGuide(job)
       const nextStatus = canAutoRetry ? 'queued' : 'failed'
@@ -775,7 +883,7 @@ const StudyGuidesPage = () => {
             : job.autoRetryCount,
         errorMessage:
           nextStatus === 'failed' &&
-          isRetryableStudyGuideCreationError(errorMessage) &&
+          (isDead || isRetryableStudyGuideCreationError(errorMessage)) &&
           job.provider === 'hosted'
             ? HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE
             : nextStatus === 'failed'
@@ -807,10 +915,12 @@ const StudyGuidesPage = () => {
     // every open tab used to run the same job and the account paid once per
     // tab. A job with no owner predates the field and stays adoptable.
     const tabId = getCreationTabId()
-    const queuedJobs = [...pendingGuides]
+    // Read from storage, not the rendered list: a 'collecting' job has to run
+    // without ever being shown.
+    const queuedJobs = StudyGuideCreationQueueStorage.getAll()
       .filter(
         (guide) =>
-          guide.status === 'queued' &&
+          isRunnablePendingStatus(guide.status) &&
           (!guide.ownerTabId || guide.ownerTabId === tabId),
       )
       .sort(
@@ -1274,11 +1384,18 @@ const StudyGuidesPage = () => {
               </Stack>
             </Paper>
           ) : null}
-          {pendingGuides.map((guide) => {
+          {/* Held until the gateway has been asked, so a guide that already
+              finished never flashes an "interrupted" card on the way in. */}
+          {(jobsReconciled ? pendingGuides : []).map((guide) => {
             const elapsedSeconds = Math.max(
               0,
               Math.floor(
-                (now - Date.parse(guide.startedAt || guide.createdAt)) / 1000,
+                (now -
+                  resolveJobStartedAt(
+                    jobServerState[guide.id]?.createdAt,
+                    guide,
+                  )) /
+                  1000,
               ),
             )
             const preview = jobPreviews[guide.id]
@@ -1522,7 +1639,7 @@ const StudyGuidesPage = () => {
                               },
                             })}
                           />
-                          {preview ? (
+                          {preview && hasHostedPreviewSignal(preview) ? (
                             <Box sx={{ mt: 1.25 }}>
                               <HostedPreviewChecklist
                                 preview={preview}

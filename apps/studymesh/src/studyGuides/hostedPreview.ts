@@ -1,4 +1,8 @@
-import type { HostedAiPreviewEvent } from '../quickCreate/ai/hostedCredits'
+import { foldHostedStudyGuideProgress } from '../quickCreate/ai/hostedCredits'
+import type {
+  HostedAiPreviewEvent,
+  HostedAiStudyGuideProgress,
+} from '../quickCreate/ai/hostedCredits'
 import type { InterfaceTextKey } from '../language/interfaceLanguage'
 
 export interface HostedPreviewPage {
@@ -33,45 +37,47 @@ export const makeHostedPreview = (startedAt: number): HostedPreviewState => ({
   stage: 'monolith',
 })
 
+/** Rebuilds the checklist from a snapshot the gateway recorded for this job. */
+export const makeHostedPreviewFromSnapshot = (
+  snapshot: HostedAiStudyGuideProgress | undefined,
+  startedAt: number,
+): HostedPreviewState => ({
+  startedAt,
+  title: snapshot?.title || '',
+  emoji: snapshot?.emoji || '',
+  keyIdea: snapshot?.keyIdea || '',
+  bridgeTopics: snapshot?.bridgeTopics || [],
+  pages: (snapshot?.pages || []).map((page) => ({
+    title: page.title || '',
+    done: Boolean(page.done),
+  })),
+  stage: snapshot?.stage === 'quiz' ? 'quiz' : 'monolith',
+})
+
+/** True once the snapshot says anything at all, so a blank one is detectable. */
+export const hasHostedPreviewSignal = (preview: HostedPreviewState): boolean =>
+  Boolean(preview.title || preview.keyIdea || preview.pages.length)
+
 export const applyHostedPreviewEvent = (
   current: HostedPreviewState,
   event: HostedAiPreviewEvent,
-): HostedPreviewState => {
-  if (event.type === 'meta') {
-    return { ...current, title: event.title, emoji: event.emoji || '' }
-  }
-
-  if (event.type === 'quickStart') {
-    return { ...current, keyIdea: event.keyIdea }
-  }
-
-  if (event.type === 'bridge') {
-    return { ...current, bridgeTopics: event.topics }
-  }
-
-  if (event.type === 'pageTitle' || event.type === 'page') {
-    const pages = [...current.pages]
-    while (pages.length <= event.index) {
-      pages.push({ title: '', done: false })
-    }
-
-    pages[event.index] = {
-      title: event.title || pages[event.index].title,
-      done: event.type === 'page' || pages[event.index].done,
-    }
-    return { ...current, pages }
-  }
-
-  if (event.type === 'stage') {
-    return { ...current, stage: event.stage }
-  }
-
-  if (event.type === 'reset') {
-    return makeHostedPreview(current.startedAt)
-  }
-
-  return current
-}
+): HostedPreviewState =>
+  // The fold is shared with the gateway so a watched card and a resumed card
+  // can never advance differently. Only startedAt is ours to keep.
+  makeHostedPreviewFromSnapshot(
+    foldHostedStudyGuideProgress(
+      {
+        title: current.title,
+        emoji: current.emoji,
+        keyIdea: current.keyIdea,
+        bridgeTopics: current.bridgeTopics,
+        pages: current.pages,
+        stage: current.stage,
+      },
+      event,
+    ),
+    current.startedAt,
+  )
 
 export interface HostedPreviewRow {
   id: string

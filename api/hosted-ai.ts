@@ -5,11 +5,16 @@ import { waitUntil } from "@vercel/functions";
 import { applyCors, getHeader } from "./cors";
 import { loadLocalApiEnv } from "./local-env";
 import { createPartialJsonReader } from "./streamingJson";
+import {
+  foldHostedStudyGuideProgress,
+  isHostedStudyGuideProgressMilestone,
+} from "../apps/studymesh/src/quickCreate/ai/hostedCredits";
 import type {
   HostedAiGatewayPart,
   HostedAiGatewayRequest,
   HostedAiGatewayResponse,
   HostedAiPreviewEvent,
+  HostedAiStudyGuideProgress,
   HostedAiPodcast,
   HostedAiPodcastChapter,
   HostedAiPodcastTranscriptTurn,
@@ -359,12 +364,23 @@ const errorResponse = (
  * Outside Vercel there is nothing to ask, and the promise is simply awaited by
  * the caller as before, so local dev and tests behave the same.
  */
+let warnedAboutMissingRequestContext = false;
+
 const keepAlive = (work: Promise<unknown>): void => {
-  try {
-    waitUntil(work);
-  } catch {
-    // Not running on Vercel. The caller still awaits it.
+  // waitUntil resolves the platform request context and optional-chains off it,
+  // so off-platform - `vercel dev` included - this is a silent no-op and a
+  // disconnect kills the generation. Say so once rather than look mysterious.
+  const hasRequestContext = Boolean(
+    globalThis[Symbol.for("@vercel/request-context") as never],
+  );
+  if (!hasRequestContext && !warnedAboutMissingRequestContext) {
+    warnedAboutMissingRequestContext = true;
+    console.warn(
+      "[hosted-ai] no Vercel request context: generation will not outlive a client disconnect",
+    );
   }
+
+  waitUntil(work);
 
   // Nothing else observes a rejection here; the caller reports it.
   void work.catch(() => undefined);
@@ -617,6 +633,8 @@ interface HostedStudyGuideJobRow {
   status: "running" | "succeeded" | "failed";
   result?: HostedAiGatewayResponse | null;
   error_message?: string | null;
+  progress?: HostedAiStudyGuideProgress | null;
+  created_at?: string;
   updated_at?: string;
 }
 
@@ -650,6 +668,14 @@ const readJobRows = async (
   return Array.isArray(payload) ? (payload as HostedStudyGuideJobRow[]) : [];
 };
 
+const isStudyGuideJobStale = (row: HostedStudyGuideJobRow): boolean => {
+  const updatedAt = Date.parse(row.updated_at || "");
+  return (
+    Number.isFinite(updatedAt) &&
+    Date.now() - updatedAt > STUDY_GUIDE_JOB_STALE_MS
+  );
+};
+
 const jobFilter = (userId: string, clientJobId: string): string =>
   `?user_id=eq.${encodeURIComponent(userId)}&client_job_id=eq.${encodeURIComponent(clientJobId)}`;
 
@@ -658,7 +684,7 @@ export const readStudyGuideJob = async (
   clientJobId: string,
 ): Promise<HostedStudyGuideJobRow | undefined> => {
   const response = await studyGuideJobsFetch(
-    `${jobFilter(userId, clientJobId)}&select=client_job_id,status,result,error_message,updated_at&limit=1`,
+    `${jobFilter(userId, clientJobId)}&select=client_job_id,status,result,error_message,progress,created_at,updated_at&limit=1`,
     { method: "GET" },
   );
 
@@ -670,7 +696,16 @@ export type StudyGuideJobClaim =
   /** Someone already finished this exact job. Nothing more is owed. */
   | { outcome: "succeeded"; response: HostedAiGatewayResponse }
   /** Still being generated, by this or another tab. */
-  | { outcome: "running" };
+  | {
+      outcome: "running";
+      progress?: HostedAiStudyGuideProgress;
+      createdAt?: string;
+    }
+  /**
+   * Abandoned: nothing has touched it for long enough that whatever was
+   * generating it is gone. Taking it over costs Carrots, so it needs a click.
+   */
+  | { outcome: "dead"; progress?: HostedAiStudyGuideProgress };
 
 /**
  * Takes ownership of a generation, or reports what already happened to it.
@@ -683,6 +718,7 @@ export const claimStudyGuideJob = async (
   userId: string,
   clientJobId: string,
   prompt: string,
+  allowRetry = false,
 ): Promise<StudyGuideJobClaim> => {
   const inserted = await studyGuideJobsFetch("", {
     method: "POST",
@@ -734,14 +770,26 @@ export const claimStudyGuideJob = async (
 
   const updatedAt = Date.parse(existing.updated_at || "");
   const isStale =
-    Number.isFinite(updatedAt) && Date.now() - updatedAt > STUDY_GUIDE_JOB_STALE_MS;
+    Number.isFinite(updatedAt) &&
+    Date.now() - updatedAt > STUDY_GUIDE_JOB_STALE_MS;
 
   if (!isStale) {
-    return { outcome: "running" };
+    return {
+      outcome: "running",
+      progress: existing.progress || undefined,
+      createdAt: existing.created_at,
+    };
   }
 
-  // Nothing has touched it for long enough that its function is gone. Take it
-  // over, but only by winning this conditional update.
+  // Nothing has touched it for long enough that whatever was generating it is
+  // gone. Restarting spends Carrots, so it does not happen on its own: the
+  // learner is told, and only their retry gets past here.
+  if (!allowRetry) {
+    return { outcome: "dead", progress: existing.progress || undefined };
+  }
+
+  // Take it over, but only by winning this conditional update, so two tabs
+  // retrying at once cannot both start a generation.
   const stolen = await studyGuideJobsFetch(
     `${jobFilter(userId, clientJobId)}&status=eq.running&updated_at=lt.${encodeURIComponent(
       new Date(Date.now() - STUDY_GUIDE_JOB_STALE_MS).toISOString(),
@@ -749,13 +797,72 @@ export const claimStudyGuideJob = async (
     {
       method: "PATCH",
       prefer: "return=representation",
-      body: JSON.stringify({ status: "running" }),
+      body: JSON.stringify({ status: "running", progress: null }),
     },
   );
 
   return (await readJobRows(stolen)).length
     ? { outcome: "claimed" }
-    : { outcome: "running" };
+    : { outcome: "running", createdAt: existing.created_at };
+};
+
+/** Coalescing window for progress writes, so a guide costs a handful, not one per event. */
+const STUDY_GUIDE_PROGRESS_WRITE_MS = 1500;
+
+/**
+ * Records what the generation has finished, for a tab that is not watching.
+ *
+ * Writes are coalesced and fire-and-forget. Progress is only ever a nicety —
+ * losing a write costs the learner a slightly stale checklist, so nothing here
+ * is allowed to interrupt or fail the generation.
+ */
+export const createStudyGuideProgressRecorder = (
+  userId: string,
+  clientJobId: string,
+) => {
+  let latest: HostedAiStudyGuideProgress | undefined;
+  let lastWriteAt = 0;
+  let pending: ReturnType<typeof setTimeout> | undefined;
+
+  const write = () => {
+    if (pending) {
+      clearTimeout(pending);
+      pending = undefined;
+    }
+
+    if (!latest) {
+      return;
+    }
+
+    lastWriteAt = Date.now();
+    void studyGuideJobsFetch(jobFilter(userId, clientJobId), {
+      method: "PATCH",
+      body: JSON.stringify({ progress: latest }),
+    }).catch(() => undefined);
+  };
+
+  return {
+    /** `flush` forces a write for a milestone worth showing immediately. */
+    record(progress: HostedAiStudyGuideProgress, flush = false): void {
+      latest = progress;
+
+      if (flush || Date.now() - lastWriteAt >= STUDY_GUIDE_PROGRESS_WRITE_MS) {
+        write();
+        return;
+      }
+
+      if (!pending) {
+        pending = setTimeout(write, STUDY_GUIDE_PROGRESS_WRITE_MS);
+      }
+    },
+
+    stop(): void {
+      if (pending) {
+        clearTimeout(pending);
+        pending = undefined;
+      }
+    },
+  };
 };
 
 export const finishStudyGuideJob = async (
@@ -4027,11 +4134,18 @@ export default async function handler(
         job: job
           ? {
               clientJobId: job.client_job_id,
-              status: job.status,
+              // A running row nothing has touched for the stale window is not
+              // coming back, and the card has to say so rather than spin.
+              status:
+                job.status === "running" && isStudyGuideJobStale(job)
+                  ? ("dead" as const)
+                  : job.status,
               ...(job.status === "succeeded" && job.result
                 ? { response: job.result }
                 : {}),
               ...(job.error_message ? { errorMessage: job.error_message } : {}),
+              ...(job.progress ? { progress: job.progress } : {}),
+              ...(job.created_at ? { createdAt: job.created_at } : {}),
             }
           : undefined,
       });
@@ -4048,6 +4162,7 @@ export default async function handler(
           user.id,
           clientJobId,
           getHostedRequestText(request),
+          request.retry === true,
         );
 
         // Already generated and paid for. Hand back the same guide and charge
@@ -4058,10 +4173,47 @@ export default async function handler(
         }
 
         if (claim.outcome === "running") {
-          finishResponse(res, preview, { ok: true, pending: true });
+          // Carries what has been written so far, so a resuming card can paint
+          // the real checklist immediately instead of after its first poll.
+          finishResponse(res, preview, {
+            ok: true,
+            pending: true,
+            ...(claim.progress ? { progress: claim.progress } : {}),
+            ...(claim.createdAt ? { createdAt: claim.createdAt } : {}),
+          });
+          return;
+        }
+
+        if (claim.outcome === "dead") {
+          finishResponse(res, preview, {
+            ok: true,
+            dead: true,
+            ...(claim.progress ? { progress: claim.progress } : {}),
+          });
           return;
         }
       }
+
+      const progressRecorder = clientJobId
+        ? createStudyGuideProgressRecorder(user.id, clientJobId)
+        : undefined;
+      let progressSnapshot: HostedAiStudyGuideProgress = {};
+      const onPreview =
+        preview || progressRecorder
+          ? (event: HostedAiPreviewEvent) => {
+              preview?.emit(event);
+              if (progressRecorder) {
+                progressSnapshot = foldHostedStudyGuideProgress(
+                  progressSnapshot,
+                  event,
+                );
+                progressRecorder.record(
+                  progressSnapshot,
+                  isHostedStudyGuideProgressMilestone(event),
+                );
+              }
+            }
+          : undefined;
 
       const work = (async () => {
         try {
@@ -4069,8 +4221,9 @@ export default async function handler(
             user.id,
             request,
             true,
-            preview ? (event) => preview.emit(event) : undefined,
+            onPreview,
           );
+          progressRecorder?.stop();
           if (clientJobId) {
             await finishStudyGuideJob(user.id, clientJobId, {
               status: "succeeded",
@@ -4080,6 +4233,7 @@ export default async function handler(
 
           return response;
         } catch (error) {
+          progressRecorder?.stop();
           if (clientJobId) {
             await finishStudyGuideJob(user.id, clientJobId, {
               status: "failed",

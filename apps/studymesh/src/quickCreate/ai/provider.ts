@@ -25,7 +25,10 @@ import {
   createHostedAiTransport,
   createHostedStudyGuideTransportWithQuickStart,
 } from './hostedClient'
-import type { HostedAiPreviewEvent } from './hostedCredits'
+import type {
+  HostedAiPreviewEvent,
+  HostedAiStudyGuideProgress,
+} from './hostedCredits'
 import {
   buildStudyGuideKnowledgeBridgeBlocksPrompt,
   buildStudyGuideKnownTopicPrefilterPrompt,
@@ -64,6 +67,13 @@ type ProviderOptions = {
   onPreview?: (event: HostedAiPreviewEvent) => void
   /** Hosted only. Makes the generation resumable, and safe to ask for twice. */
   clientJobId?: string
+  /** Hosted only. Set from an explicit user retry, which may spend Carrots. */
+  retry?: boolean
+  /** Hosted only. Fires when this turned out to be a resume, not a new run. */
+  onResumed?: (state: {
+    progress?: HostedAiStudyGuideProgress
+    createdAt?: string
+  }) => void
   signal?: AbortSignal
 }
 
@@ -588,7 +598,9 @@ export const generateStudyPathWithAi = async (
         userKnownTopics: knowledgeContextPlan.topics,
         outputLanguage: options.outputLanguage,
         clientJobId: options.clientJobId,
+        retry: options.retry,
         onPreview: options.onPreview,
+        onResumed: options.onResumed,
         onQuickStart: (quickStart) => {
           hostedQuickStart = quickStart
         },

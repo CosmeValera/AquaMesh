@@ -16,7 +16,10 @@ import {
   type StudyMaterialResourceType,
 } from '../quickCreate/ai'
 import type { HostedAiPodcast } from '../quickCreate/ai'
-import type { HostedAiPreviewEvent } from '../quickCreate/ai/hostedCredits'
+import type {
+  HostedAiPreviewEvent,
+  HostedAiStudyGuideProgress,
+} from '../quickCreate/ai/hostedCredits'
 import {
   normalizeQuickCreateActionInput,
   type QuickCreateActionInput,
@@ -148,6 +151,8 @@ export const generateStudyPathStateFromPrompt = async ({
   signal,
   provider: providerOverride,
   onPreview,
+  onResumed,
+  retry,
 }: {
   id: string
   prompt: string
@@ -156,6 +161,13 @@ export const generateStudyPathStateFromPrompt = async ({
   provider?: QuickCreateAiProvider
   /** Hosted only. Reports the guide forming so the card can show it. */
   onPreview?: (event: HostedAiPreviewEvent) => void
+  /** Hosted only. Fires when this attached to a generation already running. */
+  onResumed?: (state: {
+    progress?: HostedAiStudyGuideProgress
+    createdAt?: string
+  }) => void
+  /** Hosted only. Set from an explicit user retry; it may spend Carrots. */
+  retry?: boolean
 }): Promise<StudyPathContainerState> => {
   const settings = readQuickCreateAiSettings()
   const provider = providerOverride || settings.provider || 'hosted'
@@ -183,6 +195,8 @@ export const generateStudyPathStateFromPrompt = async ({
     signal,
     userKnownTopics: getAllUserKnownTopics(),
     onPreview,
+    onResumed,
+    retry,
     // The queue's own job id doubles as the server-side idempotency key, so a
     // refresh resumes this generation rather than paying for another.
     clientJobId: id,

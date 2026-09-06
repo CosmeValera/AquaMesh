@@ -143,6 +143,12 @@ export interface HostedAiGatewayRequest {
    * job already running instead of starting a second paid generation.
    */
   clientJobId?: string
+  /**
+   * Set only when the learner explicitly asked to retry. Without it the gateway
+   * refuses to take over an abandoned generation, because doing so spends
+   * Carrots and nobody clicked anything.
+   */
+  retry?: boolean
   surface?: HostedAiSurface
   stage?: HostedAiStage
   model?: string
@@ -201,12 +207,33 @@ export interface HostedAiPodcast {
   createdAt: string
 }
 
+/**
+ * What the generation has finished so far, so a page life that did not start it
+ * can still show the checklist. Display state only — the guide itself always
+ * comes from the job's finished response.
+ */
+export interface HostedAiStudyGuideProgress {
+  title?: string
+  emoji?: string
+  keyIdea?: string
+  bridgeTopics?: string[]
+  pages?: Array<{ title: string; done: boolean }>
+  stage?: 'monolith' | 'quiz'
+}
+
 export interface HostedAiStudyGuideJob {
   clientJobId: string
-  status: 'running' | 'succeeded' | 'failed'
+  /**
+   * `dead` means the generation stopped without finishing and nothing is coming.
+   * It is never retried automatically, because a retry costs Carrots.
+   */
+  status: 'running' | 'succeeded' | 'failed' | 'dead'
   /** Present once the job succeeded. The same body a live call returns. */
   response?: HostedAiGatewayResponse
   errorMessage?: string
+  progress?: HostedAiStudyGuideProgress
+  /** When the generation was first requested, for a truthful elapsed time. */
+  createdAt?: string
 }
 
 export interface HostedAiGatewayResponse {
@@ -217,6 +244,11 @@ export interface HostedAiGatewayResponse {
    * The caller should wait for the job rather than treat this as an answer.
    */
   pending?: boolean
+  /** Set with `pending`, so a resuming card can paint before its first poll. */
+  progress?: HostedAiStudyGuideProgress
+  createdAt?: string
+  /** The generation stopped without finishing. Only a click may retry it. */
+  dead?: boolean
   job?: HostedAiStudyGuideJob
   quickStart?: StudyGuideQuickStart
   bridgeBlocks?: StudyGuideKnowledgeBridgeBlock[]
@@ -260,6 +292,59 @@ export type HostedAiPreviewEvent =
   | { type: 'reset' }
   | { type: 'done'; response: HostedAiGatewayResponse }
   | { type: 'error'; response: HostedAiGatewayResponse }
+
+/**
+ * Folds one preview event into a progress snapshot.
+ *
+ * Shared deliberately: the gateway uses it to record what a generation has
+ * finished, and the browser uses it to advance the same checklist live. One
+ * implementation means a resumed card and a watched card cannot disagree.
+ */
+export const foldHostedStudyGuideProgress = (
+  current: HostedAiStudyGuideProgress,
+  event: HostedAiPreviewEvent,
+): HostedAiStudyGuideProgress => {
+  if (event.type === 'meta') {
+    return { ...current, title: event.title, emoji: event.emoji || '' }
+  }
+
+  if (event.type === 'quickStart') {
+    return { ...current, keyIdea: event.keyIdea }
+  }
+
+  if (event.type === 'bridge') {
+    return { ...current, bridgeTopics: event.topics }
+  }
+
+  if (event.type === 'pageTitle' || event.type === 'page') {
+    const pages = [...(current.pages || [])]
+    while (pages.length <= event.index) {
+      pages.push({ title: '', done: false })
+    }
+
+    pages[event.index] = {
+      title: event.title || pages[event.index].title,
+      done: event.type === 'page' || pages[event.index].done,
+    }
+    return { ...current, pages }
+  }
+
+  if (event.type === 'stage') {
+    return { ...current, stage: event.stage }
+  }
+
+  if (event.type === 'reset') {
+    return {}
+  }
+
+  return current
+}
+
+/** Milestones worth writing through immediately rather than coalescing. */
+export const isHostedStudyGuideProgressMilestone = (
+  event: HostedAiPreviewEvent,
+): boolean =>
+  event.type === 'stage' || event.type === 'page' || event.type === 'reset'
 
 export const getHostedAiCreditCost = (surface: HostedAiSurface): number =>
   HOSTED_AI_CREDIT_COSTS[surface]

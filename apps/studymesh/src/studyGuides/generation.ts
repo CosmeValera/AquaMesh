@@ -8,6 +8,7 @@ import {
   generateHostedAiPodcast,
   generateQuickCreateWithAi,
   generateStudyPathWithAi,
+  generateStudyPathWithGemini,
   isStrongAiProvider,
   readQuickCreateAiSettings,
   resolveQuickCreateAiCredentials,
@@ -40,6 +41,7 @@ import {
   appendStudyGuideWidgetPage,
 } from './pages'
 import { getStudyGuideEmoji } from './storage'
+import { HOSTED_STUDY_GUIDE_PAGE_COUNT } from './hostedPreview'
 import {
   buildStudyGuideKnownSkillInstruction,
   buildStudyGuideNextIdeaPrompt,
@@ -201,8 +203,104 @@ export const generateStudyPathStateFromPrompt = async ({
     // refresh resumes this generation rather than paying for another.
     clientJobId: id,
   })
+  return buildStudyPathStateFromDraft({
+    id,
+    prompt,
+    draft,
+    resolvedLanguage,
+    provider,
+  })
+}
+
+/**
+ * Builds the guide a learner can start reading while the rest is still written.
+ *
+ * `guideText` is the streamed page-1 guide, in the same wire shape as a finished
+ * one. It goes through the normal parse with `allowPartialPages`, so page 1 is
+ * normalized exactly as it would be in the finished guide, but the missing pages
+ * are left missing rather than replaced with deterministic filler.
+ */
+export const buildReadableStudyPathState = async ({
+  id,
+  prompt,
+  guideText,
+}: {
+  id: string
+  prompt: string
+  guideText: string
+}): Promise<StudyPathContainerState> => {
+  const resolvedLanguage = resolveContentLanguage({ text: prompt })
+  // Deliberately the strong-generation parser, not the provider dispatcher: the
+  // dispatcher would demand credentials for a call that never happens, because
+  // `strongTransport` just hands back the guide the gateway already streamed.
+  // This is the same way provider.ts drives its own hosted branch.
+  const draft = await generateStudyPathWithGemini({
+    apiToken: '',
+    model: 'streamed',
+    strongProvider: 'cerebras',
+    strongTransport: async () => guideText,
+    singleRequest: true,
+    studyGuideProfile: 'lean',
+    allowPartialPages: true,
+    title: 'Study Guide',
+    folderName: '',
+    prompt,
+    outputLanguage: resolvedLanguage.language,
+  })
+
+  // Only the finished guide's last page carries a quiz, and this guide has no
+  // last page yet. The parser's normalizer promotes an explicit 'none' to the
+  // lesson plan's fallback, which for a single page is the final one, so the
+  // partial draft is corrected here rather than deep inside that normalizer.
+  const lessonsOnly: AiStudyPathDraft = {
+    ...draft,
+    dashboards: draft.dashboards.map((dashboard) => ({
+      ...dashboard,
+      dashboardPurpose: 'lesson',
+      practiceType: 'none',
+    })),
+  }
+
+  return buildStudyPathStateFromDraft({
+    id,
+    prompt,
+    draft: lessonsOnly,
+    resolvedLanguage,
+    provider: 'hosted',
+    totalPages: HOSTED_STUDY_GUIDE_PAGE_COUNT,
+  })
+}
+
+/**
+ * Turns a finished draft into the guide the learner reads.
+ *
+ * Split out so a guide that is still being written can reuse it: the streamed
+ * page-1 guide goes through exactly this, so page 1 is constructed identically
+ * whether it arrives early or with the rest.
+ */
+export const buildStudyPathStateFromDraft = ({
+  id,
+  prompt,
+  draft,
+  resolvedLanguage,
+  provider,
+  totalPages,
+}: {
+  id: string
+  prompt: string
+  draft: AiStudyPathDraft
+  resolvedLanguage: ReturnType<typeof resolveContentLanguage>
+  /** Local AI produces no source summaries, so its widget is left out. */
+  provider: QuickCreateAiProvider
+  /**
+   * How many pages the finished guide will have, when that is known ahead of
+   * the pages themselves. A guide being read while it is still written would
+   * otherwise say "page 1 of 1" and then jump to "of 3".
+   */
+  totalPages?: number
+}): StudyPathContainerState => {
   const title = draft.folderName || draft.title || 'Study Guide'
-  const count = draft.dashboards.length
+  const count = Math.max(totalPages || 0, draft.dashboards.length)
   const dashboards: StudyPathDashboardItem[] = draft.dashboards.map(
     (dashboard, index) => {
       const dashboardKey = `${id}-${index + 1}`

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { buildEnhancedStudyGuideText } from '../../../../../api/hosted-ai'
 import { generateStudyPathWithAi } from '../../../src/quickCreate/ai/strongGeneration'
+import { buildReadableStudyPathState } from '../../../src/studyGuides/generation'
 
 /**
  * The gate for reading page 1 early.
@@ -153,5 +154,60 @@ describe('a partial Study Guide is a stable prefix of the finished one', () => {
       PAGES.map((page) => page.title),
     )
     expect(draft.quickStart?.keyIdea).toBe(BLUEPRINT.quickStart.keyIdea)
+  })
+})
+
+/**
+ * The app's own entry point, not the parser underneath it.
+ *
+ * The tests above import `generateStudyPathWithAi` straight from
+ * strongGeneration, which is the right function — so they all passed while the
+ * app was broken. `buildReadableStudyPathState` is what the creation card
+ * actually calls, and it used to reach the provider dispatcher instead, which
+ * demanded credentials for a call that never happens.
+ */
+describe('buildReadableStudyPathState, as the card calls it', () => {
+  it('turns a streamed one-page guide into a one-page state', async () => {
+    const state = await buildReadableStudyPathState({
+      id: 'job-early',
+      prompt: 'Teach me how a sourdough starter works',
+      guideText: buildText(1, false),
+    })
+
+    expect(state.pathId).toBe('job-early')
+    expect(state.dashboards).toHaveLength(1)
+    expect(state.dashboards[0].name).toBe(PAGES[0].title)
+    expect(state.dashboards[0].dashboardKey).toBe('job-early-1')
+    expect(state.quickStart?.keyIdea).toBe(BLUEPRINT.quickStart.keyIdea)
+    expect(state.selectedIndex).toBe(0)
+  })
+
+  it('needs no provider credentials, because no model is called', async () => {
+    // The streamed guide is the input; asking for a key would be nonsense.
+    await expect(
+      buildReadableStudyPathState({
+        id: 'job-nokey',
+        prompt: 'Teach me how a sourdough starter works',
+        guideText: buildText(1, false),
+      }),
+    ).resolves.toMatchObject({ pathId: 'job-nokey' })
+  })
+
+  it('keeps page 1 identical to the finished guide page 1', async () => {
+    const [early, complete] = await Promise.all([
+      buildReadableStudyPathState({
+        id: 'job-same',
+        prompt: 'Teach me how a sourdough starter works',
+        guideText: buildText(1, false),
+      }),
+      buildReadableStudyPathState({
+        id: 'job-same',
+        prompt: 'Teach me how a sourdough starter works',
+        guideText: buildText(3, true),
+      }),
+    ])
+
+    expect(complete.dashboards).toHaveLength(3)
+    expect(early.dashboards[0]).toEqual(complete.dashboards[0])
   })
 })

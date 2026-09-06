@@ -240,6 +240,12 @@ export interface GenerateStudyPathWithAiOptions {
   strongTransport?: StrongAiModelTransport
   singleRequest?: boolean
   studyGuideProfile?: StudyGuideGenerationProfile
+  /**
+   * Accepts a guide with fewer pages than expected instead of repairing it with
+   * deterministic filler. Only for a guide still being written, so a learner
+   * reading page 1 early sees their real page and nothing invented.
+   */
+  allowPartialPages?: boolean
   outputLanguage?: StudyMeshLanguageCode
   signal?: AbortSignal
   title: string
@@ -2443,6 +2449,7 @@ export const generateStudyPathWithAi = async ({
   strongTransport,
   singleRequest = false,
   studyGuideProfile = 'standard',
+  allowPartialPages = false,
   outputLanguage,
   signal,
   title,
@@ -2723,12 +2730,17 @@ ${originalJson}`
       repairRetryUsed = false
     }
   }
+  // Too few dashboards normally means the model produced a broken guide, and
+  // the deterministic pages below repair it. `allowPartialPages` is for the
+  // opposite case: a guide that is simply not finished being written yet, where
+  // inventing pages would show the learner filler instead of their real guide.
+  const keepShortGuide = allowPartialPages && rawDashboards.length > 0
   const autoPlannedDashboardCount =
-    rawDashboards.length >= 3
+    rawDashboards.length >= 3 || keepShortGuide
       ? Math.min(7, rawDashboards.length)
       : STUDY_PATH_FALLBACK_DASHBOARD_COUNT
   const normalizedRawDashboards =
-    rawDashboards.length >= 3
+    rawDashboards.length >= 3 || keepShortGuide
       ? rawDashboards.slice(0, autoPlannedDashboardCount)
       : stepNames.map((stepName, index) => {
           const existing = rawDashboards[index]

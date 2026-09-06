@@ -9,7 +9,10 @@ import {
   STUDY_GUIDES_STORAGE_FULL_MESSAGE,
   StudyGuideStorage,
 } from '../../../../src/studyGuides/storage'
-import { generateStudyPathStateFromPrompt } from '../../../../src/studyGuides/generation'
+import {
+  buildReadableStudyPathState,
+  generateStudyPathStateFromPrompt,
+} from '../../../../src/studyGuides/generation'
 import {
   HOSTED_STUDY_GUIDE_MANUAL_RETRY_MESSAGE,
   STUDY_GUIDE_CREATION_QUEUE_KEY,
@@ -80,6 +83,27 @@ vi.mock('../../../../src/studyGuides/generation', () => ({
         dashboardIndex: 1,
         dashboardCount: 1,
         folderName: 'AI Named Guide',
+        createdBy: 'generator',
+        deletable: false,
+      },
+    ],
+    selectedIndex: 0,
+    pinnedDashboardKeys: [],
+  })),
+  buildReadableStudyPathState: vi.fn(async ({ id }) => ({
+    pathId: id,
+    title: 'Early Page Guide',
+    folderName: 'Early Page Guide',
+    emoji: '📖',
+    dashboards: [
+      {
+        id: `${id}-dashboard-1`,
+        name: '01 - First page',
+        layout: { type: 'row' },
+        dashboardKey: `${id}-1`,
+        dashboardIndex: 1,
+        dashboardCount: 1,
+        folderName: 'Early Page Guide',
         createdBy: 'generator',
         deletable: false,
       },
@@ -606,7 +630,9 @@ describe('StudyGuidesPage create flow', () => {
 
     await createGuideFromPrompt('Refresh-sensitive prompt')
     await screen.findByText('Creating')
-    expect(screen.getByText(/keep this tab open/i)).toBeInTheDocument()
+    // Hosted generation lives on the server, so the card must not tell the
+    // learner to keep the tab open. Local and BYO providers still do.
+    expect(screen.queryByText(/keep this tab open/i)).not.toBeInTheDocument()
     expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(1)
 
     firstRender.unmount()
@@ -620,6 +646,57 @@ describe('StudyGuidesPage create flow', () => {
     resolvers[0]('Resumed Guide')
 
     expect(await screen.findByText('Resumed Guide')).toBeInTheDocument()
+  })
+
+  it('offers Start reading as soon as page 1 is written', async () => {
+    // The point of the whole early-read path: a guide worth opening exists
+    // long before the generation finishes.
+    let releaseGeneration: (() => void) | undefined
+    vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
+      async ({ id, onPreview }) => {
+        onPreview?.({ type: 'readableGuide', text: '{"streamed":"guide"}' })
+        await new Promise<void>((resolve) => {
+          releaseGeneration = resolve
+        })
+        return makeGeneratedStudyPath(id, 'Finished Guide')
+      },
+    )
+    renderStudyGuidesPage('/study-guides')
+
+    await createGuideFromPrompt('Early read prompt')
+
+    const startReading = await screen.findByRole('button', {
+      name: /start reading/i,
+    })
+    expect(buildReadableStudyPathState).toHaveBeenCalledWith(
+      expect.objectContaining({ guideText: '{"streamed":"guide"}' }),
+    )
+
+    // Still generating: the card is present and only one call was paid for.
+    expect(screen.getByText('Creating')).toBeInTheDocument()
+    expect(generateStudyPathStateFromPrompt).toHaveBeenCalledTimes(1)
+
+    // Only /study-guides is routed here, so leaving it unmounts the probe.
+    fireEvent.click(startReading)
+    await waitFor(() => {
+      expect(screen.queryByTestId('location')).not.toBeInTheDocument()
+    })
+
+    releaseGeneration?.()
+  })
+
+  it('does not offer Start reading before page 1 exists', async () => {
+    vi.mocked(generateStudyPathStateFromPrompt).mockImplementation(
+      () => new Promise(() => undefined),
+    )
+    renderStudyGuidesPage('/study-guides')
+
+    await createGuideFromPrompt('No early page prompt')
+    await screen.findByText('Creating')
+
+    expect(
+      screen.queryByRole('button', { name: /start reading/i }),
+    ).not.toBeInTheDocument()
   })
 
   it('auto-requeues retryable fetch failures without showing a failed card', async () => {

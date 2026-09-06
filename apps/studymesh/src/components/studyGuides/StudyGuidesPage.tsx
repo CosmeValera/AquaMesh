@@ -35,6 +35,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditIcon from '@mui/icons-material/Edit'
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined'
+import MenuBookIcon from '@mui/icons-material/MenuBook'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import PushPinIcon from '@mui/icons-material/PushPin'
 import ReplayIcon from '@mui/icons-material/Replay'
@@ -51,7 +52,10 @@ import {
   StudyGuideStorage,
   createStudyGuideRecord,
 } from '../../studyGuides/storage'
-import { generateStudyPathStateFromPrompt } from '../../studyGuides/generation'
+import {
+  buildReadableStudyPathState,
+  generateStudyPathStateFromPrompt,
+} from '../../studyGuides/generation'
 import { getAllUserKnownTopics } from '../../profileContext'
 import {
   applyHostedPreviewEvent,
@@ -766,6 +770,41 @@ const StudyGuidesPage = () => {
     }
   }
 
+  /**
+   * Saves the page-1 guide so the learner can open it while the rest is still
+   * being written. `resultStudyGuideId` is what the card reads to offer the
+   * button, and the finished guide later overwrites this same record.
+   */
+  const saveReadableGuide = async (job: PendingGuide, guideText: string) => {
+    try {
+      const studyPath = await buildReadableStudyPathState({
+        id: job.id,
+        prompt: job.prompt,
+        guideText,
+      })
+      if (!isMountedRef.current) {
+        return
+      }
+
+      StudyGuideStorage.save({
+        ...createStudyGuideRecord(studyPath, { id: job.id }),
+        description: job.prompt,
+      })
+      StudyGuideCreationQueueStorage.update(job.id, {
+        resultStudyGuideId: job.id,
+      })
+      loadGuides()
+    } catch (error) {
+      // Purely an early bonus: the full guide is still coming, so this must not
+      // touch the generation or the queue. It is still loud, because a silent
+      // failure here looks exactly like the feature not existing.
+      console.error(
+        '[studyGuides] page 1 was streamed but could not be made readable, so "Start reading" will not appear',
+        error,
+      )
+    }
+  }
+
   const runQueuedGuide = async (job: PendingGuide) => {
     if (activeJobsRef.current.has(job.id)) {
       return
@@ -802,6 +841,14 @@ const StudyGuidesPage = () => {
 
     const handlePreview = (event: HostedAiPreviewEvent) => {
       if (generationController.signal.aborted) {
+        return
+      }
+
+      // Page 1 is written, so there is already a guide worth opening. Saving it
+      // now is what turns a 45s wait into a ~17s one; the rest keeps generating
+      // and overwrites this with the finished guide.
+      if (event.type === 'readableGuide') {
+        void saveReadableGuide(job, event.text)
         return
       }
 
@@ -1678,7 +1725,29 @@ const StudyGuidesPage = () => {
                           </Typography>
                         </Box>
                       )}
-                      {isRunning ? (
+                      {/* Page 1 is written and saved, so the learner can start
+                          now rather than waiting for the whole guide. */}
+                      {isRunning && guide.resultStudyGuideId ? (
+                        <Button
+                          variant="contained"
+                          size="small"
+                          startIcon={<MenuBookIcon />}
+                          onClick={() =>
+                            navigate(`/workspace/${guide.resultStudyGuideId}`)
+                          }
+                          sx={{
+                            alignSelf: 'flex-start',
+                            fontWeight: 700,
+                            textTransform: 'none',
+                          }}
+                        >
+                          {t('studyGuides.startReading')}
+                        </Button>
+                      ) : null}
+                      {/* Hosted generation runs on the server, so closing the
+                          tab is safe. Local and bring-your-own providers still
+                          generate in this tab and genuinely do need it open. */}
+                      {isRunning && guide.provider !== 'hosted' ? (
                         <Stack
                           direction="row"
                           spacing={1}
